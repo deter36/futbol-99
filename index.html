@@ -407,34 +407,36 @@ main {
 
 /* Cells near goal zones have visual goal indicators */
 .field-cell.near-goal-left {
-    background: linear-gradient(to right, #44ff44 0%, #44ff44 12%, #3a6b1f 12%, #3a6b1f 100%);
-    border-left: 8px solid #00ff00;
+    background: linear-gradient(to right, #1565C0 0%, #1565C0 12%, #3a6b1f 12%, #3a6b1f 100%);
+    border-left: 8px solid #2196F3;
     box-shadow:
-        inset 8px 0 15px rgba(68, 255, 68, 0.5),
-        -3px 0 10px rgba(0, 255, 0, 0.6);
+        inset 8px 0 15px rgba(33, 150, 243, 0.5),
+        -3px 0 10px rgba(33, 150, 243, 0.65);
 }
 
 .field-cell.near-goal-right {
-    background: linear-gradient(to left, #4444ff 0%, #4444ff 12%, #3a6b1f 8%, #3a6b1f 100%);
-    border-right: 8px solid #0000ff;
+    background: linear-gradient(to left, #C62828 0%, #C62828 12%, #3a6b1f 8%, #3a6b1f 100%);
+    border-right: 8px solid #EF5350;
     box-shadow:
-        inset -8px 0 15px rgba(68, 68, 255, 0.5),
-        3px 0 10px rgba(0, 0, 255, 0.6);
+        inset -8px 0 15px rgba(239, 83, 80, 0.5),
+        3px 0 10px rgba(239, 83, 80, 0.65);
 }
 
 .field-cell.selected {
-    background: #ffeb3b;
-    box-shadow: 0 0 15px #ffeb3b;
+    background: #43A047;
+    box-shadow: 0 0 18px rgba(67, 160, 71, 0.95);
 }
 
 .field-cell.valid-move {
-    background: #8bc34a;
+    background: #64B5F6;
     cursor: pointer;
 }
 
 .field-cell.valid-target {
-    background: #ff9800;
+    background: #FFEB3B;
+    color: #1b1b1b;
     cursor: pointer;
+    box-shadow: 0 0 14px rgba(255, 235, 59, 0.8);
 }
 
 .field-cell.marked-zone {
@@ -443,6 +445,28 @@ main {
 
 .card.defense-side {
     background: linear-gradient(135deg, #607D8B, #90A4AE);
+}
+
+.player-token {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 900;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+}
+
+.player-token.player-team {
+    background: #1565C0;
+}
+
+.player-token.ai-team {
+    background: #C62828;
 }
 
 /* Cards */
@@ -1245,8 +1269,12 @@ function getColumnHeight(x) {
     return x % 2 === 0 ? FIELD_HEIGHT : FIELD_HEIGHT - 1;
 }
 
-function getPitchZones(cell) {
-    const third = cell.x <= 5 ? 'defensive' : cell.x <= 10 ? 'midfield' : 'attacking';
+function getPitchZones(cell, perspectiveTeam = 'player') {
+    let third = cell.x <= 5 ? 'defensive' : cell.x <= 10 ? 'midfield' : 'attacking';
+    if (perspectiveTeam === 'ai') {
+        if (third === 'defensive') third = 'attacking';
+        else if (third === 'attacking') third = 'defensive';
+    }
     const shortColumn = cell.x % 2 === 1;
     let lane = cell.y <= 3 ? 'left' : cell.y <= 8 ? 'center' : 'right';
     let laneLabel = lane;
@@ -1674,7 +1702,7 @@ function canSelectForCommand(cell, card) {
     if (isSelectedForCommand(cell)) return false;
 
     const command = card.command;
-    const zones = getPitchZones(cell);
+    const zones = getPitchZones(cell, gameState.currentTurn);
     if (command.mode === 'third' && zones.third !== command.third) return false;
 
     const selectedCount = gameState.commandActivation.selectedPlayers.length;
@@ -1744,7 +1772,7 @@ function canMoveCommandPlayer(cell) {
 }
 
 function getCommandActionsForCell(card, cell) {
-    const third = getPitchZones(cell).third;
+    const third = getPitchZones(cell, gameState.currentTurn).third;
     return card.command.actions[third] || [];
 }
 
@@ -1773,7 +1801,7 @@ function chooseCommandAction(action) {
 }
 
 function getPassTargetLanes(action, passerCell) {
-    const zones = getPitchZones(passerCell);
+    const zones = getPitchZones(passerCell, gameState.currentTurn);
     if (action === 'pass lane') return zones.lanes;
     if (action === 'pass inside') return ['center'];
     if (action === 'pass outside') return ['left', 'right'];
@@ -1782,9 +1810,16 @@ function getPassTargetLanes(action, passerCell) {
 }
 
 function getPassTargetThirds(action, passerCell) {
-    const third = getPitchZones(passerCell).third;
+    const third = getPitchZones(passerCell, gameState.currentTurn).third;
     if (action === 'cross') return ['attacking'];
+    if (action === 'pass lane') return getSameOrAdjacentThirds(third);
     return [third];
+}
+
+function getSameOrAdjacentThirds(third) {
+    if (third === 'defensive') return ['defensive', 'midfield'];
+    if (third === 'midfield') return ['defensive', 'midfield', 'attacking'];
+    return ['midfield', 'attacking'];
 }
 
 function isValidCommandActionTarget(action, actorCell, targetCell) {
@@ -1800,7 +1835,7 @@ function isValidCommandActionTarget(action, actorCell, targetCell) {
     if (['pass lane', 'pass inside', 'pass outside', 'cross'].includes(action)) {
         if (!actorCell.ball) return false;
         if (!targetCell.player || targetCell.player.team !== team || targetCell === actorCell) return false;
-        const targetZones = getPitchZones(targetCell);
+        const targetZones = getPitchZones(targetCell, team);
         const allowedLanes = getPassTargetLanes(action, actorCell);
         const allowedThirds = getPassTargetThirds(action, actorCell);
         return allowedLanes.some(lane => targetZones.lanes.includes(lane)) && allowedThirds.includes(targetZones.third);
@@ -3296,7 +3331,7 @@ function endTurn() {
             gameState.actionsRemaining = ACTIONS_PER_TURN;
             gameState.coins = 0;
             gameState.aiCoachUsed = false; // Reset coach ability for new turn
-            log(gameState.manualControlMode ? '🔵 AI turn (Manual Control)' : 'AI turn started');
+            log(gameState.manualControlMode ? '🔴 Red turn (Manual Control)' : 'Red turn started');
             render();
            
             // Only auto-play AI if not in manual control mode
@@ -3309,7 +3344,7 @@ function endTurn() {
             gameState.actionsRemaining = ACTIONS_PER_TURN;
             gameState.coins = 0;
             gameState.playerCoachUsed = false; // Reset coach ability for new turn
-            log(gameState.manualControlMode ? '🟢 Player turn (Manual Control)' : 'Your turn!');
+            log(gameState.manualControlMode ? '🔵 Blue turn (Manual Control)' : 'Your turn!');
             render();
         }
     }, 800);
@@ -3798,8 +3833,9 @@ function renderCell(cell, container) {
        
         if (cell.player) {
             const playerIcon = document.createElement('div');
-            playerIcon.textContent = cell.player.team === 'player' ? '🟢' : '🔵';
-            playerIcon.style.fontSize = '1.4rem';
+            playerIcon.className = `player-token ${cell.player.team === 'player' ? 'player-team' : 'ai-team'}`;
+            playerIcon.textContent = cell.player.team === 'player' ? 'B' : 'R';
+            playerIcon.title = cell.player.team === 'player' ? 'Blue team' : 'Red team';
             cellDiv.appendChild(playerIcon);
            
             if (cell.ball) {
@@ -4193,7 +4229,7 @@ function renderCell(cell, container) {
             }
         }
        
-        if (gameState.selectedPlayer === cell) {
+        if (gameState.selectedPlayer === cell && cell.player && cell.player.team === gameState.currentTurn) {
             cellDiv.classList.add('selected');
         }
        
@@ -4355,7 +4391,7 @@ function renderHand() {
         const playerSection = document.createElement('div');
         playerSection.className = 'hand-section';
         const playerLabel = document.createElement('h3');
-        playerLabel.textContent = `🟢 Player Hand ${gameState.currentTurn === 'player' ? '(YOUR TURN)' : ''}`;
+        playerLabel.textContent = `🔵 Blue Hand ${gameState.currentTurn === 'player' ? '(YOUR TURN)' : ''}`;
         playerLabel.className = 'hand-label';
         if (gameState.currentTurn === 'player') playerLabel.classList.add('active-turn');
         playerSection.appendChild(playerLabel);
@@ -4405,7 +4441,7 @@ function renderHand() {
         const aiSection = document.createElement('div');
         aiSection.className = 'hand-section';
         const aiLabel = document.createElement('h3');
-        aiLabel.textContent = `🔵 AI Hand ${gameState.currentTurn === 'ai' ? '(YOUR TURN)' : ''}`;
+        aiLabel.textContent = `🔴 Red Hand ${gameState.currentTurn === 'ai' ? '(YOUR TURN)' : ''}`;
         aiLabel.className = 'hand-label';
         if (gameState.currentTurn === 'ai') aiLabel.classList.add('active-turn');
         aiSection.appendChild(aiLabel);
@@ -4761,7 +4797,7 @@ function renderUI() {
        
         // Update end turn button text in manual mode
         if (gameState.manualControlMode) {
-            endTurnBtn.textContent = `End ${gameState.currentTurn === 'player' ? '🟢 Player' : '🔵 AI'} Turn`;
+            endTurnBtn.textContent = `End ${gameState.currentTurn === 'player' ? '🔵 Blue' : '🔴 Red'} Turn`;
         } else {
             endTurnBtn.textContent = 'End Turn';
         }
@@ -4853,7 +4889,7 @@ function initGame() {
     startKickoffPass('player');
    
     render();
-    log('Game started! You control the 🟢 green team on the left. Get the ⚽ ball to the blue goal!');
+    log('Game started! You control the 🔵 blue team on the left. Get the ⚽ ball to the red goal!');
 }
 
 // ========================================

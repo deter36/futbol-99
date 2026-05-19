@@ -56,27 +56,33 @@ main {
 
 .game-layout {
     display: grid;
-    grid-template-columns: auto 260px 1fr;
-    gap: 8px;
+    grid-template-columns: auto minmax(430px, 1fr);
+    gap: 10px;
     align-items: start;
 }
 
 .game-status-panel {
+    grid-column: 1 / -1;
+    grid-row: 1;
     display: flex;
-    flex-direction: column;
-    gap: 15px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: stretch;
 }
 
 .cards-panel {
+    grid-column: 2;
+    grid-row: 2;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 10px;
 }
 
 .status-section {
     background: rgba(0, 0, 0, 0.4);
-    padding: 15px;
-    border-radius: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
     border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -93,7 +99,7 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 15px;
+    gap: 10px;
 }
 
 .score-item {
@@ -110,7 +116,7 @@ main {
 }
 
 .score-value {
-    font-size: 3rem;
+    font-size: 1.8rem;
     font-weight: bold;
     color: #FFD700;
     text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
@@ -118,7 +124,7 @@ main {
 }
 
 .score-divider {
-    font-size: 2rem;
+    font-size: 1.3rem;
     opacity: 0.5;
 }
 
@@ -128,7 +134,7 @@ main {
 }
 
 .turn-indicator {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: bold;
     color: #4CAF50;
     text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
@@ -169,8 +175,23 @@ main {
     color: #FFD700;
 }
 
+.game-status-panel .resources-section {
+    gap: 8px;
+}
+
+.game-status-panel .resource-item {
+    padding: 6px 10px;
+}
+
+.game-status-panel .resource-icon,
+.game-status-panel .resource-value {
+    font-size: 1.1rem;
+}
+
 /* Soccer Field */
 .game-board-container {
+    grid-column: 1;
+    grid-row: 2;
     background: rgba(255, 255, 255, 0.1);
     padding: 5px;
     border-radius: 10px;
@@ -242,6 +263,76 @@ main {
 
 .pitch-lane-divider-one { left: 31.75%; }
 .pitch-lane-divider-two { left: 68.25%; }
+
+.pitch-marking {
+    position: absolute;
+    z-index: 4;
+    pointer-events: none;
+    border-color: rgba(255, 255, 255, 0.72);
+}
+
+.pitch-midfield-line {
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.62);
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.35);
+}
+
+.pitch-center-circle {
+    left: 50%;
+    top: 50%;
+    width: 23%;
+    aspect-ratio: 1;
+    border: 3px solid rgba(255, 255, 255, 0.68);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.pitch-kickoff-dot {
+    left: 50%;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.86);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+}
+
+.pitch-penalty-box {
+    left: 31.75%;
+    width: 36.5%;
+    height: 17%;
+    border: 3px solid rgba(255, 255, 255, 0.68);
+}
+
+.pitch-penalty-box.attack {
+    top: -3px;
+}
+
+.pitch-penalty-box.defense {
+    bottom: -3px;
+}
+
+.pitch-penalty-arc {
+    left: 42.5%;
+    width: 15%;
+    height: 8%;
+    border: 3px solid rgba(255, 255, 255, 0.68);
+    border-radius: 50%;
+    clip-path: inset(50% -4px -4px -4px);
+}
+
+.pitch-penalty-arc.attack {
+    top: 13%;
+}
+
+.pitch-penalty-arc.defense {
+    bottom: 13%;
+    clip-path: inset(-4px -4px 50% -4px);
+}
 
 .soccer-field {
     --hex-w: 65px;
@@ -472,8 +563,12 @@ main {
 /* Cards */
 .hand-container, .market-container {
     background: rgba(255, 255, 255, 0.1);
-    padding: 15px;
-    border-radius: 10px;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.market-container {
+    display: none;
 }
 
 .hand-container h2, .market-container h2 {
@@ -495,13 +590,13 @@ main {
 /* Manual control mode hand sections */
 .hand-section {
     width: 100%;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 }
 
 .hand-label {
-    font-size: 1.2rem;
-    margin-bottom: 10px;
-    padding: 10px;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+    padding: 7px;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 8px;
     text-align: center;
@@ -526,17 +621,17 @@ main {
 
 .hand-cards {
     display: flex;
-    gap: 15px;
+    gap: 8px;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: flex-start;
 }
 
 .card {
-    width: 150px;
+    width: 118px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: 3px solid #fff;
-    border-radius: 10px;
-    padding: 10px;
+    border-radius: 8px;
+    padding: 7px;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
     position: relative;
@@ -600,12 +695,12 @@ main {
 .card-header {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
     font-weight: bold;
 }
 
 .card-name {
-    font-size: 1rem;
+    font-size: 0.95rem;
 }
 
 .card-cost {
@@ -639,7 +734,7 @@ main {
 }
 
 .command-summary {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     line-height: 1.35;
     background: rgba(0, 0, 0, 0.28);
     padding: 7px;
@@ -651,7 +746,7 @@ main {
     border-top: 1px solid rgba(255, 255, 255, 0.28);
     padding-top: 5px;
     margin-top: 5px;
-    font-size: 0.72rem;
+    font-size: 0.66rem;
     line-height: 1.3;
 }
 
@@ -951,7 +1046,7 @@ main {
     }
    
     .card {
-        width: 160px;
+        width: 118px;
     }
 }
 
@@ -988,7 +1083,7 @@ main {
     }
    
     .card {
-        width: 140px;
+        width: 118px;
     }
 }
 
@@ -1024,14 +1119,15 @@ main {
 /* Button Section */
 .button-section {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .button-section .btn {
-    width: 100%;
-    padding: 12px;
-    font-size: 1rem;
+    width: auto;
+    padding: 8px 12px;
+    font-size: 0.9rem;
 }
 
 /* Accessibility improvements */
@@ -1071,6 +1167,13 @@ main {
                         <div class="pitch-third-label pitch-view-defensive">DEFENSIVE</div>
                         <div class="pitch-lane-divider pitch-lane-divider-one"></div>
                         <div class="pitch-lane-divider pitch-lane-divider-two"></div>
+                        <div class="pitch-marking pitch-midfield-line"></div>
+                        <div class="pitch-marking pitch-center-circle"></div>
+                        <div class="pitch-marking pitch-kickoff-dot"></div>
+                        <div class="pitch-marking pitch-penalty-box attack"></div>
+                        <div class="pitch-marking pitch-penalty-arc attack"></div>
+                        <div class="pitch-marking pitch-penalty-box defense"></div>
+                        <div class="pitch-marking pitch-penalty-arc defense"></div>
                         <div id="soccer-field" class="soccer-field" role="grid" aria-label="Soccer field">
                             <!-- Field will be generated by JS -->
                         </div>
@@ -1216,6 +1319,7 @@ let gameState = {
     offenseResolveIndex: 0,
     resolvingRole: null,
     resolvingPlannedCard: false,
+    resolutionStep: 0,
     comboPassPending: null, // Stores pending pass info for combo cards like Playmaker
     pendingMoveMark: null,
     defensiveMarks: [],
@@ -1340,6 +1444,18 @@ function clearDefensiveMarksForTeam(team) {
     gameState.defensiveMarks = gameState.defensiveMarks.filter(mark => mark.team !== team);
 }
 
+function expireDefensiveMarks() {
+    gameState.defensiveMarks = gameState.defensiveMarks.filter(mark =>
+        gameState.resolutionStep < (mark.createdStep || 0) + 2
+    );
+}
+
+function clearMarksForActivatedPlayer(team, playerId) {
+    gameState.defensiveMarks = gameState.defensiveMarks.filter(mark =>
+        !(mark.team === team && mark.defender.id === playerId && gameState.resolutionStep > (mark.createdStep || 0))
+    );
+}
+
 function generateId() {
     return Math.random().toString(36).substr(2, 9);
 }
@@ -1442,7 +1558,9 @@ function getMarkedThreat(cell, defendingTeam) {
     for (const mark of gameState.defensiveMarks) {
         if (mark.team !== defendingTeam) continue;
 
-        const defenderCell = getCell(mark.defender.x, mark.defender.y);
+        const defenderCell = mark.defender.id
+            ? getCellWithPlayer(defendingTeam, mark.defender.id)
+            : getCell(mark.defender.x, mark.defender.y);
         if (!defenderCell || !defenderCell.player || defenderCell.player.team !== defendingTeam) continue;
 
         const coversCell = mark.zones.some(zone => zone.x === cell.x && zone.y === cell.y);
@@ -1662,9 +1780,10 @@ function applyDefensiveMark(card, defenderCell, zones) {
 
     gameState.defensiveMarks.push({
         team,
-        defender: { x: defenderCell.x, y: defenderCell.y },
+        defender: { id: defenderCell.player.id, x: defenderCell.x, y: defenderCell.y },
         zones: zones.map(zone => ({ x: zone.x, y: zone.y })),
-        source: effect.name
+        source: effect.name,
+        createdStep: gameState.resolutionStep
     });
 
     log(`${effect.name}: defender at (${defenderCell.x}, ${defenderCell.y}) now covers ${zones.length} adjacent hex${zones.length === 1 ? '' : 'es'}.`);
@@ -1673,6 +1792,12 @@ function applyDefensiveMark(card, defenderCell, zones) {
 
 function getCommandCellLanes(cell) {
     return getPitchZones(cell).lanes;
+}
+
+function getSelectedCommandPlayer(cell) {
+    const commandState = gameState.commandActivation;
+    if (!commandState || !cell.player || cell.player.team !== gameState.currentTurn) return null;
+    return commandState.selectedPlayers.find(selected => selected.playerId === cell.player.id) || null;
 }
 
 function getCommandMaxSelections(command) {
@@ -1693,8 +1818,7 @@ function getCommandSelectedLaneCounts(commandState) {
 }
 
 function isSelectedForCommand(cell) {
-    const commandState = gameState.commandActivation;
-    return !!commandState && commandState.selectedPlayers.some(selected => selected.playerId === cell.player?.id);
+    return !!getSelectedCommandPlayer(cell);
 }
 
 function canSelectForCommand(cell, card) {
@@ -1722,6 +1846,7 @@ function canSelectForCommand(cell, card) {
 function selectCommandPlayer(cell, card) {
     const command = card.command;
     const lane = getCommandSelectionLane(cell, command);
+    clearMarksForActivatedPlayer(gameState.currentTurn, cell.player.id);
     gameState.commandActivation.selectedPlayers.push({
         playerId: cell.player.id,
         lane,
@@ -1768,10 +1893,14 @@ function canMoveCommandPlayer(cell) {
     if (!commandState || commandState.phase !== 'move') return false;
     if (!cell.player || cell.player.team !== gameState.currentTurn) return false;
     if (commandState.movedPlayerIds.includes(cell.player.id)) return false;
-    return commandState.selectedPlayers.some(selected => selected.playerId === cell.player.id);
+    return !!getSelectedCommandPlayer(cell);
 }
 
 function getCommandActionsForCell(card, cell) {
+    const selected = getSelectedCommandPlayer(cell);
+    if (!selected) return [];
+    const zones = getPitchZones(cell, gameState.currentTurn);
+    if (!zones.lanes.includes(selected.lane)) return [];
     const third = getPitchZones(cell, gameState.currentTurn).third;
     return card.command.actions[third] || [];
 }
@@ -1822,6 +1951,20 @@ function getSameOrAdjacentThirds(third) {
     return ['midfield', 'attacking'];
 }
 
+function isOnsidePassTarget(targetCell, team) {
+    const defendingTeam = team === 'player' ? 'ai' : 'player';
+    const defenders = gameState.field.filter(cell => cell.player && cell.player.team === defendingTeam);
+    if (defenders.length === 0) return true;
+
+    if (team === 'player') {
+        const lastDefenderX = Math.max(...defenders.map(cell => cell.x));
+        return targetCell.x <= lastDefenderX + 1;
+    }
+
+    const lastDefenderX = Math.min(...defenders.map(cell => cell.x));
+    return targetCell.x >= lastDefenderX - 1;
+}
+
 function isValidCommandActionTarget(action, actorCell, targetCell) {
     const team = gameState.currentTurn;
     const opposingTeam = team === 'player' ? 'ai' : 'player';
@@ -1838,7 +1981,9 @@ function isValidCommandActionTarget(action, actorCell, targetCell) {
         const targetZones = getPitchZones(targetCell, team);
         const allowedLanes = getPassTargetLanes(action, actorCell);
         const allowedThirds = getPassTargetThirds(action, actorCell);
-        return allowedLanes.some(lane => targetZones.lanes.includes(lane)) && allowedThirds.includes(targetZones.third);
+        return allowedLanes.some(lane => targetZones.lanes.includes(lane)) &&
+            allowedThirds.includes(targetZones.third) &&
+            isOnsidePassTarget(targetCell, team);
     }
     if (action === 'shoot' || action === 'header') {
         if (!actorCell.ball) return false;
@@ -1871,7 +2016,7 @@ function resolveCommandActionTarget(targetCell) {
     }
 
     if (action === 'tackle') {
-        stealBall(targetCell, 0.5);
+        stealBall(actorCell, 0.5);
         completeCardPlay(card, team);
         return;
     }
@@ -1902,9 +2047,10 @@ function applyCommandMark(card, defenderCell, zones) {
     );
     gameState.defensiveMarks.push({
         team: gameState.currentTurn,
-        defender: { x: defenderCell.x, y: defenderCell.y },
+        defender: { id: defenderCell.player.id, x: defenderCell.x, y: defenderCell.y },
         zones: zones.map(zone => ({ x: zone.x, y: zone.y })),
-        source: gameState.commandActivation.action
+        source: gameState.commandActivation.action,
+        createdStep: gameState.resolutionStep
     });
     log(`${card.name}: marked ${zones.length} hex${zones.length === 1 ? '' : 'es'}.`);
     completeCardPlay(card, gameState.currentTurn);
@@ -1938,6 +2084,10 @@ function rollD6Check(label, penalty) {
 function executeZonePass(passerCell, targetCell) {
     const team = gameState.currentTurn;
     const defendingTeam = team === 'player' ? 'ai' : 'player';
+    if (!isOnsidePassTarget(targetCell, team)) {
+        log(`Offside: pass target at (${targetCell.x}, ${targetCell.y}) is beyond the last defender line.`);
+        return;
+    }
     const defenders = countDefendersBetween(passerCell, targetCell, defendingTeam);
     if (rollD6Check('Pass', defenders * 2)) {
         getCellWithBall().ball = false;
@@ -1984,7 +2134,7 @@ function executePressTackle(card, targetCell) {
     if (distance(tackler.x, tackler.y, ballCell.x, ballCell.y) > 1) {
         log(`${effect.name}: defender is not close enough to tackle.`);
     } else {
-        stealBall(ballCell, effect.success);
+        stealBall(tackler, effect.success);
     }
 }
 
@@ -2226,6 +2376,7 @@ function getTeamWithPossession() {
 
 function startPlanningRound() {
     if (gameState.kickoffPending || gameState.goalKickPending) return;
+    expireDefensiveMarks();
 
     const offense = getTeamWithPossession();
     gameState.offenseTeam = offense;
@@ -2323,6 +2474,8 @@ function revealNextOffenseCard() {
 }
 
 function startPlannedCardResolution(card, team, role) {
+    gameState.resolutionStep++;
+    expireDefensiveMarks();
     gameState.currentTurn = team;
     gameState.gamePhase = 'resolving_card';
     gameState.resolvingRole = role;
@@ -2976,8 +3129,9 @@ function selectGoalKickDefender(defenderCell) {
     startRepositioning(goalKickShootingTeam, goalKickDefendingTeam);
 }
 
-function stealBall(targetCell, successChance) {
+function stealBall(tacklerCell, successChance) {
     const ballCell = getCellWithBall();
+    if (!ballCell || !tacklerCell || !tacklerCell.player) return;
     const roll = Math.random();
    
     log(`🛡️ Tackle attempt! Success chance: ${(successChance * 100).toFixed(0)}%`);
@@ -2985,8 +3139,8 @@ function stealBall(targetCell, successChance) {
    
     if (roll < successChance) {
         ballCell.ball = false;
-        targetCell.ball = true;
-        log(`✅ Ball stolen! Now at (${targetCell.x}, ${targetCell.y})`);
+        tacklerCell.ball = true;
+        log(`✅ Ball stolen! Now at (${tacklerCell.x}, ${tacklerCell.y})`);
     } else {
         log(`❌ Tackle failed! Opponent keeps possession.`);
     }
@@ -3010,7 +3164,8 @@ function setupRestartFormation(teamWithBall = 'player') {
     const defendingTeam = teamWithBall === 'player' ? 'ai' : 'player';
     const attackingDirection = attackingTeam === 'player' ? 1 : -1;
 
-    // Ball carrier starts on the true center hex.
+    // Auto-setup prototype: ball carrier starts on the true center hex,
+    // and both teams have at least one player in each lane.
     placePlayer(attackingTeam, 1, 8, 6, true);
 
     // The other four attackers are spread around the center in a wider shape.
@@ -3957,7 +4112,7 @@ function renderCell(cell, container) {
                             cellDiv.onclick = () => resolveCommandActionTarget(cell);
                         }
                     } else {
-                        const isActivated = cell.player && commandState.selectedPlayers.some(selected => selected.playerId === cell.player.id);
+                        const isActivated = !!getSelectedCommandPlayer(cell);
                         if (isActivated && getCommandActionsForCell(gameState.selectedCard, cell).length > 0) {
                             cellDiv.classList.add('valid-target');
                             cellDiv.onclick = () => chooseCommandActionPlayer(cell);
@@ -4654,17 +4809,7 @@ function renderCommandCard(cardDiv, card, showCost) {
         header.appendChild(cost);
     }
 
-    const type = document.createElement('div');
-    type.className = 'card-type';
-    type.textContent = 'command';
-
-    const summary = document.createElement('div');
-    summary.className = 'command-summary';
-    summary.textContent = card.description;
-
     cardDiv.appendChild(header);
-    cardDiv.appendChild(type);
-    cardDiv.appendChild(summary);
 
     ['attacking', 'midfield', 'defensive'].forEach(third => {
         const actions = card.command.actions[third];
@@ -4870,6 +5015,7 @@ function initGame() {
     // Reset phase-related state (CRITICAL: prevents game from getting stuck!)
     gameState.gamePhase = 'action';
     gameState.comboPassPending = null;
+    gameState.resolutionStep = 0;
     gameState.aiActionQueue = [];
     gameState.aiPhase = 'idle';
     gameState.repositionTeam = null;

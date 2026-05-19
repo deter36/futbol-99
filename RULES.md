@@ -129,6 +129,10 @@ Each activated player may move up to 5 movement.
 
 Only one activated player takes an action, even if the card activated multiple players.
 
+The acting player must still be in a lane covered by the card after movement.
+
+Example: if `L2` activates two Left-lane players and one of them moves into Center, only the player still in Left may take the action.
+
 ## Movement
 
 Players may move up to 5 movement when activated.
@@ -144,7 +148,7 @@ This makes marking useful as pitch control, not just pass defense.
 Current action keywords:
 
 - Mark 2 / Mark 3: choose that many adjacent hexes for the defender to cover.
-- Tackle: attempt to steal the ball from an adjacent ball carrier.
+- Tackle: attempt to steal the ball from an adjacent opposing ball carrier.
 - Pass lane: pass to a teammate in the same lane.
 - Pass inside: pass from an outside lane toward Center.
 - Pass outside: pass from Center toward Left or Right.
@@ -152,11 +156,46 @@ Current action keywords:
 - Shoot: shoot at one of the three goal hexes.
 - Header: currently treated like a shot-style action in the prototype.
 
+### Marks
+
+Marks represent temporary defensive pressure on specific hexes.
+
+When a player marks hexes, those hexes affect movement and shooting. They also create visible pressure for passing lanes.
+
+Marks last for:
+
+1. The card resolution when they are placed.
+2. The next card resolution after that.
+
+Then they expire.
+
+If the marking defender is activated during the second resolution while that mark is active, the mark is removed immediately.
+
+### Tackle
+
+Tackle targets an adjacent opposing ball carrier.
+
+Current prototype result:
+
+- 50% chance to steal the ball.
+- On success, the ball transfers to the tackling player's hex.
+- On failure, the ball carrier keeps possession.
+
 ## Passing
 
 Passes are zone-based, not range-based.
 
 The target must be a teammate in the zone allowed by the action.
+
+`Pass lane` can target a teammate in the same LCR lane and in the same or adjacent AMD third.
+
+`Pass inside`, `Pass outside`, and `Cross` use their listed lane/third restrictions.
+
+### Offside
+
+A receiving player cannot be more than 1 row beyond the last defender toward the attacking goal.
+
+Example: if the deepest defender is on row 4 from that defender's goal, the offense may pass to a player on row 3, but not beyond that.
 
 If no defender is between the passer and receiver, the pass succeeds automatically.
 
@@ -183,6 +222,8 @@ If defenders are involved:
 
 Example: one defender in the shot line and one marker on the shooter means roll 1d6 - 3. A roll of 4+ succeeds.
 
+When a goal is scored, the prototype resets to a kickoff for the team that conceded. The exact physical-game handling of unresolved planned cards after a goal is still a design question.
+
 ## Kickoffs And Goal Kicks
 
 Kickoffs require a free medium pass before normal play begins.
@@ -193,10 +234,12 @@ After the restart pass is complete, the normal planning round begins.
 
 ## Current Prototype Notes
 
-The HTML prototype represents hidden planning mechanically, but it does not yet have polished face-down card visuals.
+The HTML prototype represents hidden planning mechanically with visible planned-card rows for testing.
 
-Action choice currently uses a simple prompt after selecting the acting player.
+Action choice uses an action panel and pitch highlighting after selecting the acting player.
 
 The market and card-buying system are paused while the fixed 12-card command deck is tested.
+
+`printable-pitch.html` is a printable physical-playtest pitch file.
 
 This ruleset is intentionally in flux. The current design goal is to test whether LCR lanes, AMD thirds, planned card resolution, marking, and zone-based passing create interesting soccer tactics.

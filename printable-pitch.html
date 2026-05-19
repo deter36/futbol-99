@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Futbol '99 Printable Pitch</title>
+    <style>
+        @page {
+            size: letter landscape;
+            margin: 0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #1f3d22;
+            color: #111;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .screen-note {
+            max-width: 980px;
+            margin: 18px auto;
+            padding: 14px 18px;
+            background: #fff;
+            border-radius: 8px;
+            line-height: 1.45;
+        }
+
+        .page {
+            width: 11in;
+            height: 8.5in;
+            margin: 0 auto 18px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            page-break-after: always;
+            overflow: hidden;
+        }
+
+        .page:last-child {
+            page-break-after: auto;
+        }
+
+        svg {
+            width: 11in;
+            height: 8.5in;
+            display: block;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+            }
+
+            .screen-note {
+                display: none;
+            }
+
+            .page {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="screen-note">
+        <strong>Futbol '99 printable pitch:</strong> print this file at actual size on two landscape letter pages.
+        Stack page 1 above page 2 and tape along the faint join line.
+    </div>
+
+    <section class="page">
+        <svg id="top-half" viewBox="0 0 1000 770" aria-label="Top half of printable Futbol 99 pitch"></svg>
+    </section>
+
+    <section class="page">
+        <svg id="bottom-half" viewBox="0 770 1000 770" aria-label="Bottom half of printable Futbol 99 pitch"></svg>
+    </section>
+
+    <script>
+        const SVG_NS = 'http://www.w3.org/2000/svg';
+        const WIDTH = 1000;
+        const HEIGHT = 1540;
+        const PRINT_PITCH_WIDTH = 908;
+        const PRINT_HEX_H = PRINT_PITCH_WIDTH / 13;
+        const PRINT_HEX_W = PRINT_HEX_H * 2 / Math.sqrt(3);
+        const PRINT_PITCH_HEIGHT = PRINT_HEX_W + 16 * PRINT_HEX_W * 0.75;
+        const PITCH = {
+            x: (WIDTH - PRINT_PITCH_WIDTH) / 2,
+            y: (HEIGHT - PRINT_PITCH_HEIGHT) / 2,
+            width: PRINT_PITCH_WIDTH,
+            height: PRINT_PITCH_HEIGHT
+        };
+
+        function el(name, attrs = {}, parent) {
+            const node = document.createElementNS(SVG_NS, name);
+            Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+            if (parent) parent.appendChild(node);
+            return node;
+        }
+
+        function hexPoints(cx, cy, r) {
+            const points = [];
+            for (let i = 0; i < 6; i++) {
+                const angle = Math.PI / 180 * (60 * i - 30);
+                points.push(`${(cx + r * Math.cos(angle)).toFixed(1)},${(cy + r * Math.sin(angle)).toFixed(1)}`);
+            }
+            return points.join(' ');
+        }
+
+        function pointsToString(points) {
+            return points.map(point => `${point[0].toFixed(1)},${point[1].toFixed(1)}`).join(' ');
+        }
+
+        function getZoneBoundaryY(afterColumns) {
+            const hexW = PRINT_HEX_W;
+            const stepX = hexW * 0.75;
+            const virtualLength = hexW + 16 * stepX;
+            const boundaryX = afterColumns * stepX;
+            return PITCH.y + virtualLength - boundaryX;
+        }
+
+        function drawPitch(svg) {
+            const defs = el('defs', {}, svg);
+            const clipId = `pitch-clip-${svg.id}`;
+            const clip = el('clipPath', { id: clipId }, defs);
+            el('rect', {
+                x: PITCH.x,
+                y: PITCH.y,
+                width: PITCH.width,
+                height: PITCH.height,
+                rx: 10
+            }, clip);
+
+            const root = el('g', {}, svg);
+            el('rect', {
+                x: PITCH.x,
+                y: PITCH.y,
+                width: PITCH.width,
+                height: PITCH.height,
+                rx: 10,
+                fill: '#2f681e',
+                stroke: '#f7f7f1',
+                'stroke-width': 8
+            }, root);
+
+            const laneX1 = PITCH.x + PITCH.width * (4 / 13);
+            const laneX2 = PITCH.x + PITCH.width * (9 / 13);
+            drawHexGrid(root);
+
+            [laneX1, laneX2].forEach(x => {
+                el('line', {
+                    x1: x,
+                    y1: PITCH.y,
+                    x2: x,
+                    y2: PITCH.y + PITCH.height,
+                    stroke: '#ffffff',
+                    'stroke-width': 4,
+                    opacity: 0.62
+                }, root);
+            });
+
+            drawFieldMarkings(root, laneX1, laneX2);
+            drawGoals(root);
+            drawLaneLabels(root);
+            drawJoinGuides(root);
+        }
+
+        function drawHexGrid(root) {
+            const grid = el('g', { 'clip-path': `url(#pitch-clip-${root.ownerSVGElement.id})` }, root);
+            const cells = el('g', {}, grid);
+            const edgesLayer = el('g', {}, grid);
+            const hexW = PRINT_HEX_W;
+            const hexH = PRINT_HEX_H;
+            const halfH = hexH / 2;
+            const stepX = hexW * 0.75;
+            const virtualLength = hexW + 16 * stepX;
+
+            function mapPoint(px, py) {
+                return [
+                    PITCH.x + py,
+                    PITCH.y + virtualLength - px
+                ];
+            }
+
+            const edges = new Map();
+
+            function edgeKey(a, b) {
+                const p1 = `${a[0].toFixed(2)},${a[1].toFixed(2)}`;
+                const p2 = `${b[0].toFixed(2)},${b[1].toFixed(2)}`;
+                return p1 < p2 ? `${p1}|${p2}` : `${p2}|${p1}`;
+            }
+
+            function getColumnFill(x) {
+                if (x >= 6 && x <= 10) return '#cfd03a';
+                return '#2f7427';
+            }
+
+            function addMappedPolygon(points, fill) {
+                const mapped = points.map(point => mapPoint(point[0], point[1]));
+                el('polygon', {
+                    points: pointsToString(mapped),
+                    fill,
+                    opacity: fill === '#cfd03a' ? 0.94 : 0.86
+                }, cells);
+                for (let i = 0; i < mapped.length; i++) {
+                    const a = mapped[i];
+                    const b = mapped[(i + 1) % mapped.length];
+                    edges.set(edgeKey(a, b), [a, b]);
+                }
+            }
+
+            for (let x = 0; x < 17; x++) {
+                const colLeft = x * stepX;
+                const isShortColumn = x % 2 === 1;
+                const colHeight = isShortColumn ? 12 : 13;
+                const fill = getColumnFill(x);
+
+                if (isShortColumn) {
+                    addMappedPolygon([
+                        [colLeft, 0],
+                        [colLeft + hexW, 0],
+                        [colLeft + hexW * 0.75, halfH],
+                        [colLeft + hexW * 0.25, halfH]
+                    ], fill);
+                }
+
+                for (let y = 0; y < colHeight; y++) {
+                    const top = isShortColumn ? halfH + y * hexH : y * hexH;
+                    addMappedPolygon([
+                        [colLeft + hexW * 0.25, top],
+                        [colLeft + hexW * 0.75, top],
+                        [colLeft + hexW, top + hexH * 0.5],
+                        [colLeft + hexW * 0.75, top + hexH],
+                        [colLeft + hexW * 0.25, top + hexH],
+                        [colLeft, top + hexH * 0.5]
+                    ], fill);
+                }
+
+                if (isShortColumn) {
+                    const bottom = halfH + colHeight * hexH;
+                    addMappedPolygon([
+                        [colLeft + hexW * 0.25, bottom],
+                        [colLeft + hexW * 0.75, bottom],
+                        [colLeft + hexW, bottom + halfH],
+                        [colLeft, bottom + halfH]
+                    ], fill);
+                }
+            }
+
+            edges.forEach(([a, b]) => {
+                el('line', {
+                    x1: a[0],
+                    y1: a[1],
+                    x2: b[0],
+                    y2: b[1],
+                    stroke: '#1f4f16',
+                    'stroke-width': 1.8,
+                    'stroke-linecap': 'round',
+                    opacity: 0.82
+                }, edgesLayer);
+            });
+        }
+
+        function drawGoals(root) {
+            const goalW = PITCH.width * (3 / 13);
+            const goalH = 26;
+            const goalX = PITCH.x + (PITCH.width - goalW) / 2;
+            [
+                { y: PITCH.y - goalH / 2, fill: '#c62828', label: 'RED GOAL' },
+                { y: PITCH.y + PITCH.height - goalH / 2, fill: '#1565c0', label: 'BLUE GOAL' }
+            ].forEach(goal => {
+                el('rect', {
+                    x: goalX,
+                    y: goal.y,
+                    width: goalW,
+                    height: goalH,
+                    rx: 4,
+                    fill: goal.fill,
+                    stroke: '#ffffff',
+                    'stroke-width': 3,
+                    opacity: 0.95
+                }, root);
+                el('text', {
+                    x: goalX + goalW / 2,
+                    y: goal.y + 18,
+                    fill: '#ffffff',
+                    'font-size': 18,
+                    'font-weight': 800,
+                    'text-anchor': 'middle',
+                    'paint-order': 'stroke',
+                    stroke: '#111111',
+                    'stroke-width': 3
+                }, root).textContent = goal.label;
+            });
+        }
+
+        function drawFieldMarkings(root, laneX1, laneX2) {
+            const midY = PITCH.y + PITCH.height / 2;
+            el('line', {
+                x1: PITCH.x,
+                y1: midY,
+                x2: PITCH.x + PITCH.width,
+                y2: midY,
+                stroke: '#ffffff',
+                'stroke-width': 3,
+                opacity: 0.7
+            }, root);
+
+            el('circle', {
+                cx: PITCH.x + PITCH.width / 2,
+                cy: midY,
+                r: 118,
+                fill: 'none',
+                stroke: '#ffffff',
+                'stroke-width': 4,
+                opacity: 0.74
+            }, root);
+
+            el('circle', {
+                cx: PITCH.x + PITCH.width / 2,
+                cy: midY,
+                r: 8,
+                fill: '#ffffff',
+                opacity: 0.9
+            }, root);
+
+            const boxW = laneX2 - laneX1;
+            const boxH = 232;
+            const arcR = 70;
+            drawPenaltyArea(root, laneX1, PITCH.y, boxW, boxH, arcR, 'top');
+            drawPenaltyArea(root, laneX1, PITCH.y + PITCH.height - boxH, boxW, boxH, arcR, 'bottom');
+        }
+
+        function drawPenaltyArea(root, x, y, w, h, arcR, side) {
+            el('rect', {
+                x,
+                y,
+                width: w,
+                height: h,
+                fill: 'none',
+                stroke: '#ffffff',
+                'stroke-width': 4,
+                opacity: 0.72
+            }, root);
+
+            const cx = x + w / 2;
+            if (side === 'top') {
+                const edgeY = y + h;
+                el('path', {
+                    d: `M ${cx - arcR} ${edgeY} A ${arcR} ${arcR} 0 0 0 ${cx + arcR} ${edgeY}`,
+                    fill: 'none',
+                    stroke: '#ffffff',
+                    'stroke-width': 4,
+                    opacity: 0.72
+                }, root);
+            } else {
+                const edgeY = y;
+                el('path', {
+                    d: `M ${cx - arcR} ${edgeY} A ${arcR} ${arcR} 0 0 1 ${cx + arcR} ${edgeY}`,
+                    fill: 'none',
+                    stroke: '#ffffff',
+                    'stroke-width': 4,
+                    opacity: 0.72
+                }, root);
+            }
+        }
+
+        function drawLaneLabels(root) {
+            const labels = [
+                ['LEFT', 0.165],
+                ['CENTER', 0.5],
+                ['RIGHT', 0.835]
+            ];
+
+            labels.forEach(([label, pct]) => {
+                el('text', {
+                    x: PITCH.x + PITCH.width * pct,
+                    y: PITCH.y + PITCH.height - 26,
+                    fill: '#ffffff',
+                    'font-size': 28,
+                    'font-weight': 800,
+                    'text-anchor': 'middle',
+                    'paint-order': 'stroke',
+                    stroke: '#1c3319',
+                    'stroke-width': 4
+                }, root).textContent = label;
+            });
+
+            labels.forEach(([label, pct]) => {
+                const text = el('text', {
+                    x: PITCH.x + PITCH.width * (1 - pct),
+                    y: PITCH.y + 30,
+                    fill: '#ffffff',
+                    'font-size': 28,
+                    'font-weight': 800,
+                    'text-anchor': 'middle',
+                    transform: `rotate(180 ${PITCH.x + PITCH.width * (1 - pct)} ${PITCH.y + 30})`,
+                    'paint-order': 'stroke',
+                    stroke: '#1c3319',
+                    'stroke-width': 4
+                }, root);
+                text.textContent = label;
+            });
+        }
+
+        function drawJoinGuides(root) {
+            const y = HEIGHT / 2;
+            el('line', {
+                x1: PITCH.x,
+                y1: y,
+                x2: PITCH.x + PITCH.width,
+                y2: y,
+                stroke: '#ffffff',
+                'stroke-width': 1.5,
+                opacity: 0.35,
+                'stroke-dasharray': '12 10'
+            }, root);
+        }
+
+        drawPitch(document.getElementById('top-half'));
+        drawPitch(document.getElementById('bottom-half'));
+    </script>
+</body>
+</html>

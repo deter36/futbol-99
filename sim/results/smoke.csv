@@ -1,0 +1,55 @@
+metric,value
+matches,1000
+shots_per_match,12.6510
+goals_per_match,12.6420
+passes_attempted_per_match,5.5400
+passes_completed_per_match,4.3020
+pass_completion_rate,0.7765
+tackles_attempted_per_match,0.4090
+tackles_success_rate,0.5086
+marks_placed_per_match,111.8790
+average_marks_active,1.0292
+offside_violations_per_match,0.2150
+rounds_with_no_shot_per_match,9.5650
+turnovers_per_match,0.2080
+average_activations_per_card,1.5893
+average_movement_used,1.8038
+average_ball_depth,8.0057
+
+cards_played,count
+L+R 1/1,11321
+C2,10204
+C3,10139
+C1,10020
+L1,9959
+R1,9956
+D 1/1/1,8841
+R3,8702
+L2,8692
+R2,8687
+L3,8558
+A 1/1/1,2921
+
+actions_selected,count
+mark 2,49788
+shoot,12780
+pass lane,4564
+mark 3,4101
+cross,1692
+pass outside,657
+tackle,409
+pass inside,7
+
+card,meaningful,no_effect,no_eligible_activation
+A 1/1/1,557,278,2086
+C1,9001,972,47
+C2,9760,396,48
+C3,9840,253,46
+D 1/1/1,394,7972,475
+L+R 1/1,8197,2862,262
+L1,5107,4508,344
+L2,5803,2152,737
+L3,5739,2069,750
+R1,5016,4528,412
+R2,5810,2145,732
+R3,5826,2112,764

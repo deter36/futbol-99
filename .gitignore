@@ -1,2 +1,4 @@
 gametransfer.txt
 *.zip
+__pycache__/
+*.pyc*

@@ -1,0 +1,6 @@
+test_name,matches,seed,movement_per_activation,ball_carrier_movement,shot_target_number,goalie_enabled,goalie_shot_penalty,marked_hex_exit_cost,mark_duration,bot_style,offside_enabled,shots_per_match,goals_per_match,passes_attempted_per_match,pass_completion_rate,tackles_attempted_per_match,tackles_success_rate,marks_placed_per_match,average_marks_active,offside_violations_per_match,rounds_with_no_shot_per_match,average_movement_used,average_movement_budget_used,average_ball_depth,turnovers_per_match
+v2_move5_shot3_goalie,10000,2301,5,4,3,True,1,2,2,balanced,True,15.6299,7.6641,11.0253,0.8192,1.9072,0.4999,82.1167,0.7555,0.5217,8.0294,2.0203,2.1090,8.2099,0.9535
+v2_move5_shot4_goalie,10000,2401,5,4,4,True,1,2,2,balanced,True,16.3612,5.3228,12.6781,0.8183,2.4784,0.5030,72.0620,0.6633,0.6530,7.4442,2.0837,2.1613,8.4573,1.2466
+v2_move4_shot3_goalie,10000,2302,4,4,3,True,1,2,2,balanced,True,15.8294,7.8484,10.7360,0.8067,1.6515,0.5000,83.3612,0.7668,0.5524,7.9355,1.9419,2.0254,8.1995,0.8258
+v2_move4_shot4_goalie,10000,2402,4,4,4,True,1,2,2,balanced,True,16.7606,5.4638,12.4429,0.7992,2.1776,0.4968,73.3374,0.6751,0.6864,7.2798,1.9903,2.0635,8.4225,1.0819
+v2_move4_shot5_goalie,10000,2502,4,4,5,True,1,2,2,balanced,True,9.2538,1.3815,21.1096,0.7856,2.8137,0.4987,55.3890,0.5109,1.9101,10.5433,1.8156,1.8679,10.0113,1.4031

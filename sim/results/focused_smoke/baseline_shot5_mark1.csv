@@ -1,0 +1,73 @@
+metric,value
+movement_per_activation,5
+ball_carrier_movement,4
+mark_duration,1
+marked_hex_exit_cost,2
+defender_pass_penalty,-2
+defender_shot_penalty,-2
+marker_shot_penalty,-1
+shot_target_number,5
+shot_target_mode,flat
+center_shot_target_number,4
+wide_shot_target_number,5
+goalie_enabled,True
+goalie_shot_penalty,1
+offside_enabled,True
+bot_style,balanced
+seed,3501
+matches,100
+shots_per_match,9.3300
+goals_per_match,1.5800
+passes_attempted_per_match,21.1300
+passes_completed_per_match,17.1300
+pass_completion_rate,0.8107
+tackles_attempted_per_match,2.7200
+tackles_success_rate,0.5368
+marks_placed_per_match,57.2900
+average_marks_active,0.5277
+offside_violations_per_match,1.6800
+rounds_with_no_shot_per_match,10.6300
+turnovers_per_match,1.4600
+average_activations_per_card,1.6321
+average_movement_used,1.8857
+average_movement_budget_used,1.9444
+average_ball_depth,9.9717
+test_name,baseline_shot5_mark1
+
+cards_played,count
+C3,1144
+C2,1143
+C1,1135
+L+R 1/1,964
+A 1/1/1,898
+D 1/1/1,867
+L1,809
+L2,788
+L3,786
+R1,781
+R2,750
+R3,735
+
+actions_selected,count
+mark 2,2653
+shoot,1081
+pass lane,989
+cross,765
+pass inside,510
+tackle,272
+pass outside,156
+mark 3,141
+
+card,meaningful,no_effect,no_eligible_activation
+A 1/1/1,481,185,232
+C1,819,292,24
+C2,1010,110,23
+C3,1012,107,25
+D 1/1/1,371,329,167
+L+R 1/1,438,222,304
+L1,234,214,361
+L2,279,149,360
+L3,266,143,377
+R1,225,193,363
+R2,232,152,366
+R3,219,127,389

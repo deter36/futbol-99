@@ -1,0 +1,15 @@
+/*
+ * animations.css — Glowing effects, pulse, hover transitions
+ * Visual feedback: the pulsing glow on active turns, card hover
+ * lift effects, and any other animated/transitional effects that
+ * make the game feel responsive.
+ */
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(76, 175, 80, 0.8);
+    }
+}

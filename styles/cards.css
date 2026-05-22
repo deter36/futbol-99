@@ -1,0 +1,380 @@
+/*
+ * cards.css — Card appearance, hand area, market, planned cards
+ * How cards look (colors, sizes, hover effects), how the hand and
+ * market areas are laid out, the split-card offense/defense sides,
+ * and the planned-cards area used during the planning phase.
+ */
+
+/* Hand & Market containers */
+.hand-container, .market-container {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.market-container {
+    display: none;
+}
+
+.hand-container h2, .market-container h2 {
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+    color: #64B5F6;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.hand, .market {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    min-height: 120px;
+}
+
+/* Manual control mode hand sections */
+.hand-section {
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.hand-label {
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+    padding: 7px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    text-align: center;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.hand-label.active-turn {
+    background: rgba(76, 175, 80, 0.3);
+    border-color: #4CAF50;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+    animation: pulse 2s infinite;
+}
+
+.hand-cards {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+/* Card base */
+.card {
+    width: 118px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: 3px solid #fff;
+    border-radius: 8px;
+    padding: 7px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+
+.card.split-card {
+    padding: 8px;
+}
+
+.card-side {
+    border-radius: 7px;
+    padding: 7px;
+    border: 2px solid rgba(255, 255, 255, 0.55);
+    background: rgba(0, 0, 0, 0.22);
+    transition: opacity 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.card-side + .card-side {
+    margin-top: 6px;
+}
+
+.card-side.inactive {
+    opacity: 0.5;
+    padding: 5px 7px;
+}
+
+.card-side.active {
+    border-color: #ffeb3b;
+    background: rgba(0, 0, 0, 0.12);
+}
+
+.card-side.inactive .card-type,
+.card-side.inactive .card-description {
+    display: none;
+}
+
+.card-mode {
+    font-size: 0.68rem;
+    font-weight: bold;
+    letter-spacing: 0.04em;
+    opacity: 0.85;
+    margin-bottom: 4px;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.card.selected {
+    transform: translateY(-10px);
+    box-shadow: 0 0 20px #ffeb3b;
+    border-color: #ffeb3b;
+}
+
+.card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.card-name {
+    font-size: 0.95rem;
+}
+
+.card-cost {
+    background: #ffd700;
+    color: #333;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+}
+
+.card-type {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 8px;
+}
+
+.card-description {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 8px;
+    border-radius: 5px;
+    min-height: 60px;
+}
+
+.card-stats {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    opacity: 0.9;
+}
+
+.command-summary {
+    font-size: 0.72rem;
+    line-height: 1.35;
+    background: rgba(0, 0, 0, 0.28);
+    padding: 7px;
+    border-radius: 5px;
+    margin-bottom: 7px;
+}
+
+.command-section {
+    border-top: 1px solid rgba(255, 255, 255, 0.28);
+    padding-top: 5px;
+    margin-top: 5px;
+    font-size: 0.66rem;
+    line-height: 1.3;
+}
+
+.command-section-label {
+    display: inline-block;
+    min-width: 18px;
+    font-weight: 800;
+    color: #FFEB3B;
+}
+
+/* Planned cards area (planning phase) */
+.planned-area {
+    width: 100%;
+}
+
+.planned-row {
+    margin-top: 8px;
+}
+
+.planned-title {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #64B5F6;
+    margin-bottom: 6px;
+    text-align: center;
+    letter-spacing: 0.04em;
+}
+
+.planned-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.planned-cards .card {
+    width: 128px;
+    padding: 7px;
+    cursor: default;
+}
+
+.planned-cards .card.clickable {
+    cursor: pointer;
+}
+
+.planned-cards .card.current-card {
+    border-color: #FFEB3B;
+    box-shadow: 0 0 18px rgba(255, 235, 59, 0.75);
+}
+
+.planned-cards .card.resolved-card {
+    opacity: 0.45;
+}
+
+.planned-placeholder {
+    width: 128px;
+    min-height: 78px;
+    border: 2px dashed rgba(255, 255, 255, 0.35);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(0, 0, 0, 0.16);
+}
+
+/* Action panel (during card resolution) */
+.action-panel {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.28);
+    border: 2px solid rgba(255, 235, 59, 0.6);
+    border-radius: 8px;
+    text-align: center;
+}
+
+.action-panel-title {
+    font-size: 0.82rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.action-choice-btn {
+    padding: 7px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    font-size: 0.78rem;
+    cursor: pointer;
+}
+
+.action-choice-btn:hover,
+.action-choice-btn.selected {
+    background: rgba(255, 235, 59, 0.28);
+    border-color: #FFEB3B;
+}
+
+.sell-note {
+    font-size: 0.65rem;
+    opacity: 0.7;
+    font-style: italic;
+    margin-top: 4px;
+}
+
+/* Card Type Colors */
+.card.command {
+    background: linear-gradient(135deg, #455A64 0%, #78909C 100%);
+    color: #fff;
+}
+
+.card.movement {
+    background: linear-gradient(135deg, #4CAF50 0%, #81C784 100%);
+    color: #fff;
+}
+
+.card.pass {
+    background: linear-gradient(135deg, #2196F3 0%, #64B5F6 100%);
+    color: #fff;
+}
+
+.card.shot {
+    background: linear-gradient(135deg, #F44336 0%, #E57373 100%);
+    color: #fff;
+}
+
+.card.economy {
+    background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%);
+    color: #333;
+}
+
+.card.coach {
+    background: linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%);
+    color: #fff;
+}
+
+/* Legacy */
+.card.defend {
+    background: linear-gradient(135deg, #607D8B 0%, #90A4AE 100%);
+    color: #fff;
+}
+
+.card.defense-side {
+    background: linear-gradient(135deg, #607D8B, #90A4AE);
+}
+
+/* Coach Cards */
+.card.active-coach {
+    border: 3px solid #FFD700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+    position: relative;
+}
+
+.card.active-coach::before {
+    content: '⭐ ACTIVE ⭐';
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #FFD700;
+    color: #333;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 0.65rem;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.card.coach-used {
+    opacity: 0.6;
+}
+
+.card.coach-used::after {
+    content: '✓ USED';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #4CAF50;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    border: 2px solid #4CAF50;
+}

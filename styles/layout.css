@@ -1,0 +1,348 @@
+/*
+ * layout.css — Page structure, header, grid, buttons, game log
+ * Controls how the page is arranged: the header bar, the main grid
+ * that holds the pitch and cards side by side, all buttons, and the
+ * game log at the bottom.
+ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #fff;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.game-container {
+    max-width: 95vw;
+    margin: 0 auto;
+}
+
+header {
+    position: relative;
+    text-align: center;
+    margin-bottom: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+h1 {
+    font-size: 1.8rem;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.header-btn {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 8px 20px;
+    font-size: 0.9rem;
+}
+
+main {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+.game-layout {
+    display: grid;
+    grid-template-columns: auto minmax(430px, 1fr);
+    gap: 10px;
+    align-items: start;
+}
+
+.game-status-panel {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.cards-panel {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.status-section {
+    background: rgba(0, 0, 0, 0.4);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.status-section h2 {
+    margin: 0 0 12px 0;
+    font-size: 0.9rem;
+    color: #64B5F6;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+/* Score Section */
+.score-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.score-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.score-label {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    text-transform: uppercase;
+}
+
+.score-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #FFD700;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+    line-height: 1;
+}
+
+.score-divider {
+    font-size: 1.3rem;
+    opacity: 0.5;
+}
+
+/* Turn Section */
+.turn-display {
+    text-align: center;
+}
+
+.turn-indicator {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #4CAF50;
+    text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+}
+
+/* Resources Section */
+.resources-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.resource-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    text-align: center;
+}
+
+.resource-icon {
+    font-size: 1.8rem;
+}
+
+.resource-label {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.resource-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #FFD700;
+}
+
+.game-status-panel .resources-section {
+    gap: 8px;
+}
+
+.game-status-panel .resource-item {
+    padding: 6px 10px;
+}
+
+.game-status-panel .resource-icon,
+.game-status-panel .resource-value {
+    font-size: 1.1rem;
+}
+
+/* Buttons */
+.btn {
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    font-weight: bold;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.btn:focus {
+    outline: 3px solid #ffeb3b;
+    outline-offset: 2px;
+}
+
+.btn-primary {
+    background: #4caf50;
+    color: white;
+}
+
+.btn-debug {
+    background: #ff9800;
+    color: white;
+    border: 2px dashed #fff;
+    font-size: 0.9rem;
+}
+
+.btn-primary:hover {
+    background: #45a049;
+}
+
+.btn-secondary {
+    background: #ff9800;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #e68900;
+}
+
+.btn-secondary.active {
+    background: #4CAF50;
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+    border: 2px solid #fff;
+}
+
+/* Button Section */
+.button-section {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.button-section .btn {
+    width: auto;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+}
+
+/* Game Log */
+.log-container {
+    background: rgba(0, 0, 0, 0.4);
+    padding: 15px;
+    border-radius: 10px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.game-log {
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.game-log p {
+    margin-bottom: 5px;
+    padding: 5px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.game-log p:last-child {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+    .game-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+    }
+    
+    .game-board-container {
+        order: 1;
+    }
+    
+    .game-status-panel {
+        order: 2;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .cards-panel {
+        order: 3;
+    }
+    
+    .status-section {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .hand, .market {
+        gap: 15px;
+    }
+    
+    .card {
+        width: 118px;
+    }
+}
+
+@media (max-width: 1200px) {
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    .card {
+        width: 118px;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 8px;
+    }
+}
+
+/* Accessibility improvements */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+:focus-visible {
+    outline: 3px solid #ffeb3b;
+    outline-offset: 2px;
+}

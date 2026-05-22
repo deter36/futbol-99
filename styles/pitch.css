@@ -1,0 +1,461 @@
+/*
+ * pitch.css — The soccer field, hexagon cells, zones, player tokens
+ * Everything that makes up the game board: the green hex grid,
+ * lane dividers, penalty boxes, zone coloring, player dots,
+ * and the ball icon.
+ */
+
+/* Soccer Field Container */
+.game-board-container {
+    grid-column: 1;
+    grid-row: 2;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 5px;
+    border-radius: 10px;
+    overflow-x: auto;
+    width: fit-content;
+}
+
+.game-board-container h2 {
+    margin-bottom: 15px;
+}
+
+.field-rotation-frame {
+    position: relative;
+    width: 768px;
+    height: 985px;
+    background: #2d5016;
+    border: 5px solid #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.pitch-view-label {
+    position: absolute;
+    top: 8px;
+    z-index: 5;
+    transform: translateX(-50%);
+    pointer-events: none;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.88);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.75);
+}
+
+.pitch-view-left { left: 17%; }
+.pitch-view-center { left: 50%; }
+.pitch-view-right { left: 83%; }
+
+.pitch-third-label {
+    position: absolute;
+    left: 12px;
+    z-index: 5;
+    transform: translateY(-50%) rotate(180deg);
+    writing-mode: vertical-rl;
+    pointer-events: none;
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.88);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.75);
+}
+
+.pitch-view-attacking { top: 17%; }
+.pitch-view-midfield { top: 50%; }
+.pitch-view-defensive { top: 83%; }
+
+.pitch-lane-divider {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 3;
+    width: 3px;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.45);
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.35);
+}
+
+.pitch-lane-divider-one { left: 31.75%; }
+.pitch-lane-divider-two { left: 68.25%; }
+
+.pitch-marking {
+    position: absolute;
+    z-index: 4;
+    pointer-events: none;
+    border-color: rgba(255, 255, 255, 0.72);
+}
+
+.pitch-midfield-line {
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.62);
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.35);
+}
+
+.pitch-center-circle {
+    left: 50%;
+    top: 50%;
+    width: 23%;
+    aspect-ratio: 1;
+    border: 3px solid rgba(255, 255, 255, 0.68);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.pitch-kickoff-dot {
+    left: 50%;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.86);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+}
+
+.pitch-penalty-box {
+    left: 31.75%;
+    width: 36.5%;
+    height: 17%;
+    border: 3px solid rgba(255, 255, 255, 0.68);
+}
+
+.pitch-penalty-box.attack {
+    top: -3px;
+}
+
+.pitch-penalty-box.defense {
+    bottom: -3px;
+}
+
+.pitch-penalty-arc {
+    left: 42.5%;
+    width: 15%;
+    height: 8%;
+    border: 3px solid rgba(255, 255, 255, 0.68);
+    border-radius: 50%;
+    clip-path: inset(50% -4px -4px -4px);
+}
+
+.pitch-penalty-arc.attack {
+    top: 13%;
+}
+
+.pitch-penalty-arc.defense {
+    bottom: 13%;
+    clip-path: inset(-4px -4px 50% -4px);
+}
+
+/* Hex Grid */
+.soccer-field {
+    --hex-w: 65px;
+    --hex-h: 56px;
+    --half-h: 28px;
+    --hex-overlap: -10px;
+    --hex-border: 2px;
+    --cell-pad: 3px;
+    --field-pad: 15px;
+    display: flex;
+    flex-direction: row;
+    gap: 0px;
+    background: transparent;
+    padding: var(--field-pad);
+    border-radius: 4px;
+    border: 0;
+    box-shadow: none;
+    max-width: 100%;
+    width: fit-content;
+    justify-content: center;
+    position: relative;
+}
+
+.field-rotation-frame .soccer-field {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    transform-origin: center;
+}
+
+.zone-label {
+    position: absolute;
+    z-index: 4;
+    pointer-events: none;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.82);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.75);
+}
+
+.field-rotation-frame .zone-label {
+    display: none;
+}
+
+.third-label {
+    top: 4px;
+    transform: translateX(-50%);
+}
+
+.lane-label {
+    left: 8px;
+    transform: translateY(-50%);
+    writing-mode: vertical-rl;
+}
+
+.third-defensive { left: 17%; }
+.third-midfield { left: 50%; }
+.third-attacking { left: 83%; }
+.lane-left { top: 16%; }
+.lane-center { top: 50%; }
+.lane-right { top: 84%; }
+
+.hex-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+    margin-left: var(--hex-overlap);
+}
+
+.hex-column:first-child {
+    margin-left: 0;
+}
+
+.hex-column.odd {
+    margin-top: 0;
+}
+
+.half-cell {
+    width: var(--hex-w);
+    height: var(--half-h);
+    background: #3a6b1f;
+    border: var(--hex-border) solid #2d5016;
+    position: relative;
+    clip-path: polygon(0% 0%, 100% 0%, 75% 100%, 25% 100%);
+    --third-tint: rgba(255, 255, 255, 0);
+    --lane-tint: rgba(255, 255, 255, 0);
+    --zone-seam-x: rgba(255, 255, 255, 0);
+}
+
+.half-cell.bottom {
+    clip-path: polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%);
+}
+
+.half-cell::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    clip-path: inherit;
+    pointer-events: none;
+    background:
+        linear-gradient(var(--third-tint), var(--third-tint)),
+        linear-gradient(var(--lane-tint), var(--lane-tint));
+    box-shadow:
+        inset 4px 0 0 var(--zone-seam-x),
+        inset -4px 0 0 var(--zone-seam-x);
+}
+
+.field-cell {
+    background: #3a6b1f;
+    border: var(--hex-border) solid #2d5016;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: var(--hex-w);
+    height: var(--hex-h);
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    position: relative;
+    padding: var(--cell-pad);
+    overflow: visible;
+    --third-tint: rgba(255, 255, 255, 0);
+    --lane-tint: rgba(255, 255, 255, 0);
+    --zone-seam-x: rgba(255, 255, 255, 0);
+}
+
+.field-cell::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    clip-path: inherit;
+    pointer-events: none;
+    background:
+        linear-gradient(var(--third-tint), var(--third-tint)),
+        linear-gradient(var(--lane-tint), var(--lane-tint));
+    box-shadow:
+        inset 4px 0 0 var(--zone-seam-x),
+        inset -4px 0 0 var(--zone-seam-x);
+    z-index: 0;
+}
+
+.field-cell > * {
+    position: relative;
+    z-index: 1;
+    transform: rotate(90deg);
+}
+
+/* Zone coloring */
+.zone-defensive { --third-tint: rgba(40, 140, 45, 0.22); }
+.zone-midfield { --third-tint: rgba(190, 175, 35, 0.24); }
+.zone-attacking { --third-tint: rgba(40, 125, 170, 0.24); }
+.zone-left { --lane-tint: rgba(255, 255, 255, 0.05); }
+.zone-center { --lane-tint: rgba(255, 255, 255, 0.00); }
+.zone-right { --lane-tint: rgba(0, 0, 0, 0.06); }
+
+.field-cell:hover {
+    background: #4a7b2f;
+}
+
+/* Cells near goal zones have visual goal indicators */
+.field-cell.near-goal-left {
+    background: linear-gradient(to right, #1565C0 0%, #1565C0 12%, #3a6b1f 12%, #3a6b1f 100%);
+    border-left: 8px solid #2196F3;
+    box-shadow:
+        inset 8px 0 15px rgba(33, 150, 243, 0.5),
+        -3px 0 10px rgba(33, 150, 243, 0.65);
+}
+
+.field-cell.near-goal-right {
+    background: linear-gradient(to left, #C62828 0%, #C62828 12%, #3a6b1f 8%, #3a6b1f 100%);
+    border-right: 8px solid #EF5350;
+    box-shadow:
+        inset -8px 0 15px rgba(239, 83, 80, 0.5),
+        3px 0 10px rgba(239, 83, 80, 0.65);
+}
+
+.field-cell.selected {
+    background: #43A047;
+    box-shadow: 0 0 18px rgba(67, 160, 71, 0.95);
+}
+
+.field-cell.valid-move {
+    background: #64B5F6;
+    cursor: pointer;
+}
+
+.field-cell.valid-target {
+    background: #FFEB3B;
+    color: #1b1b1b;
+    cursor: pointer;
+    box-shadow: 0 0 14px rgba(255, 235, 59, 0.8);
+}
+
+.field-cell.marked-zone {
+    box-shadow: inset 0 0 0 4px rgba(255, 235, 59, 0.75);
+}
+
+/* Player Tokens */
+.player-token {
+    position: relative;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 900;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+}
+
+.player-token.player-team {
+    background: #1565C0;
+}
+
+.player-token.ai-team {
+    background: #C62828;
+}
+
+.player-token.off-balance {
+    filter: grayscale(0.35);
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.55),
+        0 0 0 3px rgba(255, 193, 7, 0.85);
+}
+
+.player-token.off-balance::after {
+    content: "!";
+    position: absolute;
+    top: -8px;
+    right: -7px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #FFC107;
+    color: #1b1b1b;
+    font-size: 0.65rem;
+    line-height: 14px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+.airborne-ball {
+    transform: rotate(90deg) translateY(-2px);
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
+}
+
+/* Responsive pitch sizes */
+@media (max-width: 1200px) {
+    .field-rotation-frame {
+        width: 567px;
+        height: 727px;
+    }
+
+    .soccer-field {
+        --hex-w: 48px;
+        --hex-h: 42px;
+        --half-h: 21px;
+        --hex-overlap: -7px;
+        --hex-border: 2px;
+        --cell-pad: 2px;
+        --field-pad: 10px;
+    }
+    
+    .hex-column {
+        gap: 0px;
+    }
+    
+    .hex-column.odd {
+        margin-top: 0;
+    }
+    
+    .field-cell {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .field-rotation-frame {
+        width: 413px;
+        height: 530px;
+    }
+
+    .soccer-field {
+        --hex-w: 35px;
+        --hex-h: 30px;
+        --half-h: 15px;
+        --hex-overlap: -5px;
+        --hex-border: 1px;
+        --cell-pad: 1px;
+        --field-pad: 5px;
+    }
+    
+    .hex-column.odd {
+        margin-top: 0;
+    }
+    
+    .field-cell {
+        font-size: 0.7rem;
+    }
+}

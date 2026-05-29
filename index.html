@@ -1957,6 +1957,7 @@ function getSelectedCommandPlayer(cell) {
 }
 
 function getCommandMaxSelections(command) {
+    if (command.supportMove) return command.count + command.supportMove.count;
     if (command.mode === 'lane') return command.count;
     return command.lanes.length * command.perLane;
 }
@@ -1964,6 +1965,12 @@ function getCommandMaxSelections(command) {
 function getCommandSelectionLane(cell, command) {
     const cellLanes = getCommandCellLanes(cell);
     return command.lanes.find(lane => cellLanes.includes(lane)) || null;
+}
+
+function getCommandSupportSelectionLane(cell, command) {
+    if (!command.supportMove) return null;
+    const cellLanes = getCommandCellLanes(cell);
+    return command.supportMove.lanes.find(lane => cellLanes.includes(lane)) || null;
 }
 
 function getCommandSelectedLaneCounts(commandState) {
@@ -1989,7 +1996,16 @@ function canSelectForCommand(cell, card) {
     if (selectedCount >= getCommandMaxSelections(command)) return false;
 
     const lane = getCommandSelectionLane(cell, command);
-    if (!lane) return false;
+    const supportLane = getCommandSupportSelectionLane(cell, command);
+    if (!lane && !supportLane) return false;
+
+    if (command.supportMove && command.mode === 'lane') {
+        const mainSelected = gameState.commandActivation.selectedPlayers.filter(selected => !selected.supportOnly).length;
+        const supportSelected = gameState.commandActivation.selectedPlayers.filter(selected => selected.supportOnly).length;
+        if (lane && mainSelected < command.count) return true;
+        if (supportLane && supportSelected < command.supportMove.count) return true;
+        return false;
+    }
 
     if (command.mode !== 'lane') {
         const laneCounts = getCommandSelectedLaneCounts(gameState.commandActivation);
@@ -2001,19 +2017,24 @@ function canSelectForCommand(cell, card) {
 
 function selectCommandPlayer(cell, card) {
     const command = card.command;
-    const lane = getCommandSelectionLane(cell, command);
+    const mainLane = getCommandSelectionLane(cell, command);
+    const supportLane = getCommandSupportSelectionLane(cell, command);
+    const mainSelected = gameState.commandActivation.selectedPlayers.filter(selected => !selected.supportOnly).length;
+    const supportOnly = !!(command.supportMove && (!mainLane || mainSelected >= command.count));
+    const lane = supportOnly ? supportLane : mainLane;
     const wasOffBalance = isPlayerOffBalance(gameState.currentTurn, cell.player.id);
     clearMarksForActivatedPlayer(gameState.currentTurn, cell.player.id);
     gameState.commandActivation.selectedPlayers.push({
         playerId: cell.player.id,
         lane,
         start: { x: cell.x, y: cell.y },
-        wasOffBalance
+        wasOffBalance,
+        supportOnly
     });
 
     const selected = gameState.commandActivation.selectedPlayers.length;
     const max = getCommandMaxSelections(command);
-    log(`${card.name}: activated ${selected}/${max} player${selected === 1 ? '' : 's'}${wasOffBalance ? ' (off balance: movement only)' : ''}.`);
+    log(`${card.name}: activated ${selected}/${max} player${selected === 1 ? '' : 's'}${supportOnly ? ' (support move only)' : ''}${wasOffBalance ? ' (off balance: movement only)' : ''}.`);
 
     if (selected >= max) {
         startCommandMovement();
@@ -2026,7 +2047,7 @@ function startCommandMovement() {
     if (!gameState.commandActivation || gameState.commandActivation.selectedPlayers.length === 0) return;
     gameState.commandActivation.phase = 'move';
     gameState.selectedPlayer = null;
-    log('Command movement: move activated players up to 5 spaces. Ball carriers move up to 4.');
+    log('Command movement: move activated players up to 4 spaces. Ball carriers move up to 3.');
     render();
 }
 
@@ -2061,6 +2082,7 @@ function getCommandMoveRangeForCell(cell, baseRange) {
 function getCommandActionsForCell(card, cell) {
     const selected = getSelectedCommandPlayer(cell);
     if (!selected) return [];
+    if (selected.supportOnly) return [];
     if (selected.wasOffBalance) return [];
     const zones = getPitchZones(cell, gameState.currentTurn);
     if (!zones.lanes.includes(selected.lane)) return [];
@@ -2547,6 +2569,8 @@ const STARTER_CARDS = [
         midfield: ['pass lane', 'mark 2'],
         attacking: ['cross', 'shoot']
     }, {
+        displayName: 'L2 + C1 (move)',
+        supportMove: { lanes: ['center'], count: 1 },
         actionLabels: { 'attacking.shoot': 'shoot (+1 required roll)' }
     }),
     createLaneCommandCard('c1', 'C1', 'center', 1, {
@@ -2563,6 +2587,9 @@ const STARTER_CARDS = [
         defensive: ['mark 3'],
         midfield: ['pass lane', 'mark 2'],
         attacking: ['shoot', 'pass lane']
+    }, {
+        displayName: 'C2 + L/R1 (move)',
+        supportMove: { lanes: ['left', 'right'], count: 1 }
     }),
     createLaneCommandCard('r1', 'R1', 'right', 1, {
         defensive: ['tackle', 'pass lane', 'clear'],
@@ -2579,6 +2606,8 @@ const STARTER_CARDS = [
         midfield: ['pass lane', 'mark 2'],
         attacking: ['cross', 'shoot']
     }, {
+        displayName: 'R2 + C1 (move)',
+        supportMove: { lanes: ['center'], count: 1 },
         actionLabels: { 'attacking.shoot': 'shoot (+1 required roll)' }
     }),
     createThirdCommandCard('attack_111', 'A 1/1/1', 'attacking', {
@@ -2600,7 +2629,9 @@ function createLaneCommandCard(id, name, lane, count, actions, options = {}) {
     return createCommandCard(id, name, {
         mode: 'lane',
         lanes: [lane],
-        count,
+        count: options.supportMove ? count - options.supportMove.count : count,
+        displayName: options.displayName || null,
+        supportMove: options.supportMove || null,
         actions,
         actionLabels: options.actionLabels || {}
     });
@@ -2635,13 +2666,16 @@ function createCommandCard(id, name, command) {
         type: CARD_TYPES.COMMAND,
         cost: 0,
         description,
-        effect: { type: 'command', moveRange: 5, command },
+        effect: { type: 'command', moveRange: 4, command },
         command
     };
 }
 
 function getCommandDescription(command) {
     if (command.mode === 'lane') {
+        if (command.supportMove) {
+            return `Activate ${command.displayName}. Support activation moves only.`;
+        }
         return `Activate up to ${command.count} in ${command.lanes[0].toUpperCase()}. Move first, then 1 acts.`;
     }
     if (command.mode === 'split-lane') {
@@ -5280,6 +5314,13 @@ function renderCommandCard(cardDiv, card, showCost) {
     }
 
     cardDiv.appendChild(header);
+
+    if (card.command.displayName) {
+        const summary = document.createElement('div');
+        summary.className = 'command-section';
+        summary.textContent = card.command.displayName;
+        cardDiv.appendChild(summary);
+    }
 
     ['attacking', 'midfield', 'defensive'].forEach(third => {
         const actions = card.command.actions[third];

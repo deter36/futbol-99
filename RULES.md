@@ -78,7 +78,9 @@ ________________
 
 
 L3 / R3
-Activate up to 3 players in that flank lane.
+Activate up to 2 players in that flank lane.
+You may also activate up to 1 player in the Center lane for movement only.
+The action must be taken by one of the players activated in the flank lane.
 Attack
 * cross
 * shoot (+1 required roll)
@@ -129,7 +131,9 @@ ________________
 
 
 C3
-Activate up to 3 players in the Center lane.
+Activate up to 2 players in the Center lane.
+You may also activate up to 1 player in either the Left or Right lane for movement only.
+The action must be taken by one of the players activated in the Center lane.
 Attack
 * shoot
 * pass lane
@@ -202,8 +206,8 @@ ________________
 
 
 Movement
-Players normally move up to 5 movement.
-A player carrying the ball moves up to 4 movement.
+Players normally move up to 4 movement.
+A player carrying the ball moves up to 3 movement.
 Players may move through hexes occupied by teammates.
 Players may not end movement in the same hex as another player.
 A player without the ball may move through opposing occupied hexes according to BLOCKED rules.

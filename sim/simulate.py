@@ -28,8 +28,8 @@ HAND_SIZE = 6
 
 @dataclass(frozen=True)
 class Config:
-    movement_per_activation: int = 5
-    ball_carrier_movement: int = 4
+    movement_per_activation: int = 4
+    ball_carrier_movement: int = 3
     mark_duration: int = 2
     defender_pass_penalty: int = -2
     defender_shot_penalty: int = -2
@@ -53,6 +53,8 @@ class Card:
     count: int = 0
     third: str | None = None
     per_lane: int = 0
+    support_lanes: tuple[str, ...] = ()
+    support_count: int = 0
     actions: dict[str, tuple[str, ...]] = field(default_factory=dict)
 
 
@@ -127,10 +129,10 @@ STARTER_CARDS = [
         "midfield": ("mark 2", "pass lane", "pass inside"),
         "attacking": ("cross", "pass inside"),
     }),
-    Card("L3", "lane", ("left",), 3, actions={
-        "defensive": ("mark 2",),
+    Card("L3", "lane", ("left",), 2, support_lanes=("center",), support_count=1, actions={
+        "defensive": ("mark 3",),
         "midfield": ("pass lane", "mark 2"),
-        "attacking": ("cross",),
+        "attacking": ("cross", "shoot"),
     }),
     Card("C1", "lane", ("center",), 1, actions={
         "defensive": ("mark 2", "tackle", "pass lane", "pass outside"),
@@ -142,10 +144,10 @@ STARTER_CARDS = [
         "midfield": ("mark 2", "pass lane", "pass outside"),
         "attacking": ("shoot", "pass outside"),
     }),
-    Card("C3", "lane", ("center",), 3, actions={
-        "defensive": ("mark 2",),
+    Card("C3", "lane", ("center",), 2, support_lanes=("left", "right"), support_count=1, actions={
+        "defensive": ("mark 3",),
         "midfield": ("pass lane", "mark 2"),
-        "attacking": ("shoot",),
+        "attacking": ("shoot", "pass lane"),
     }),
     Card("R1", "lane", ("right",), 1, actions={
         "defensive": ("mark 2", "tackle", "pass lane", "pass inside"),
@@ -157,10 +159,10 @@ STARTER_CARDS = [
         "midfield": ("mark 2", "pass lane", "pass inside"),
         "attacking": ("cross", "pass inside"),
     }),
-    Card("R3", "lane", ("right",), 3, actions={
-        "defensive": ("mark 2",),
+    Card("R3", "lane", ("right",), 2, support_lanes=("center",), support_count=1, actions={
+        "defensive": ("mark 3",),
         "midfield": ("pass lane", "mark 2"),
-        "attacking": ("cross",),
+        "attacking": ("cross", "shoot"),
     }),
     Card("A 1/1/1", "third", ("left", "center", "right"), third="attacking", per_lane=1,
          actions={"attacking": ("pass inside", "shoot", "mark 2")}),
@@ -320,7 +322,16 @@ class Match:
         eligible = self.eligible_players(team_id, card)
         if card.mode == "lane":
             eligible.sort(key=lambda p: (p.has_ball, p.attack_depth(), self.rng.random()), reverse=True)
-            return eligible[:card.count]
+            selected = eligible[:card.count]
+            if card.support_count:
+                selected_ids = {p.pid for p in selected}
+                support = [
+                    p for p in self.team_players(team_id)
+                    if p.pid not in selected_ids and p.lane in card.support_lanes
+                ]
+                support.sort(key=lambda p: (p.has_ball, p.attack_depth(), self.rng.random()), reverse=True)
+                selected.extend(support[:card.support_count])
+            return selected
         selected = []
         for lane in card.lanes:
             lane_players = [p for p in eligible if p.lane == lane]

@@ -12,8 +12,8 @@ import run_matrix
 FOCUSED_CASES = [
     {
         "test_name": "baseline_shot5_mark2",
-        "movement_per_activation": 5,
-        "ball_carrier_movement": 4,
+        "movement_per_activation": 4,
+        "ball_carrier_movement": 3,
         "shot_target_number": 5,
         "shot_target_mode": "flat",
         "goalie_enabled": True,
@@ -26,8 +26,8 @@ FOCUSED_CASES = [
     },
     {
         "test_name": "baseline_shot5_mark1",
-        "movement_per_activation": 5,
-        "ball_carrier_movement": 4,
+        "movement_per_activation": 4,
+        "ball_carrier_movement": 3,
         "shot_target_number": 5,
         "shot_target_mode": "flat",
         "goalie_enabled": True,
@@ -40,8 +40,8 @@ FOCUSED_CASES = [
     },
     {
         "test_name": "center4_wide5_mark2",
-        "movement_per_activation": 5,
-        "ball_carrier_movement": 4,
+        "movement_per_activation": 4,
+        "ball_carrier_movement": 3,
         "shot_target_number": 5,
         "shot_target_mode": "lane",
         "center_shot_target_number": 4,

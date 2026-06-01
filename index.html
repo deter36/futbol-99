@@ -2564,12 +2564,11 @@ const STARTER_CARDS = [
         midfield: ['mark 2', 'pass lane'],
         attacking: ['cross', 'pass inside']
     }),
-    createLaneCommandCard('l3', 'L3', 'left', 3, {
+    createLaneCommandCard('l3', 'L2 + C1 (move)', 'left', 3, {
         defensive: ['mark 3'],
         midfield: ['pass lane', 'mark 2'],
         attacking: ['cross', 'shoot']
     }, {
-        displayName: 'L2 + C1 (move)',
         supportMove: { lanes: ['center'], count: 1 },
         actionLabels: { 'attacking.shoot': 'shoot (+1 required roll)' }
     }),
@@ -2583,12 +2582,11 @@ const STARTER_CARDS = [
         midfield: ['mark 2', 'pass lane'],
         attacking: ['shoot', 'pass lane', 'pass outside', 'header']
     }),
-    createLaneCommandCard('c3', 'C3', 'center', 3, {
+    createLaneCommandCard('c3', 'C2 + L/R1 (move)', 'center', 3, {
         defensive: ['mark 3'],
         midfield: ['pass lane', 'mark 2'],
         attacking: ['shoot', 'pass lane']
     }, {
-        displayName: 'C2 + L/R1 (move)',
         supportMove: { lanes: ['left', 'right'], count: 1 }
     }),
     createLaneCommandCard('r1', 'R1', 'right', 1, {
@@ -2601,12 +2599,11 @@ const STARTER_CARDS = [
         midfield: ['mark 2', 'pass lane'],
         attacking: ['cross', 'pass inside']
     }),
-    createLaneCommandCard('r3', 'R3', 'right', 3, {
+    createLaneCommandCard('r3', 'R2 + C1 (move)', 'right', 3, {
         defensive: ['mark 3'],
         midfield: ['pass lane', 'mark 2'],
         attacking: ['cross', 'shoot']
     }, {
-        displayName: 'R2 + C1 (move)',
         supportMove: { lanes: ['center'], count: 1 },
         actionLabels: { 'attacking.shoot': 'shoot (+1 required roll)' }
     }),
@@ -2631,6 +2628,7 @@ function createLaneCommandCard(id, name, lane, count, actions, options = {}) {
         lanes: [lane],
         count: options.supportMove ? count - options.supportMove.count : count,
         displayName: options.displayName || null,
+        supportLabel: options.supportLabel || (options.supportMove ? name : null),
         supportMove: options.supportMove || null,
         actions,
         actionLabels: options.actionLabels || {}
@@ -2674,7 +2672,7 @@ function createCommandCard(id, name, command) {
 function getCommandDescription(command) {
     if (command.mode === 'lane') {
         if (command.supportMove) {
-            return `Activate ${command.displayName}. Support activation moves only.`;
+            return `Activate ${command.supportLabel}. Support activation moves only.`;
         }
         return `Activate up to ${command.count} in ${command.lanes[0].toUpperCase()}. Move first, then 1 acts.`;
     }

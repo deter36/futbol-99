@@ -1338,6 +1338,8 @@ main {
                     <div class="button-section">
                         <button id="manual-control-btn" class="btn btn-secondary">🤖 Manual Mode: OFF</button>
                         <button id="field-view-btn" class="btn btn-secondary">🔵 View: Blue</button>
+                        <button id="undo-move-btn" class="btn btn-secondary" style="display: none;">↶ Undo Move</button>
+                        <button id="undo-plan-btn" class="btn btn-secondary" style="display: none;">↶ Undo Card</button>
                         <button id="finish-movement-btn" class="btn btn-primary" style="display: none;">Finish Movement</button>
                         <button id="end-turn-btn" class="btn btn-primary">End Turn</button>
                         <button id="end-reposition-btn" class="btn btn-primary" style="display: none;">End Repositioning</button>
@@ -1431,6 +1433,7 @@ let gameState = {
     selectedCard: null,
     selectedPlayer: null,
     selectedMarkCells: [],
+    moveHistory: [],
     multiMove: null,
     commandActivation: null,
     plannedOffense: [],
@@ -1832,6 +1835,7 @@ function completeCardPlay(card, team) {
     gameState.selectedCard = null;
     gameState.selectedPlayer = null;
     gameState.selectedMarkCells = [];
+    clearMoveHistory();
     gameState.multiMove = null;
     gameState.commandActivation = null;
     gameState.plannedOffense = [];
@@ -2616,7 +2620,7 @@ function executePressTackle(card, targetCell) {
     }
 
     if (targetCell !== ballCell) {
-        movePlayer(gameState.selectedPlayer, targetCell);
+        movePlayer(gameState.selectedPlayer, targetCell, { recordUndo: true, context: 'press-tackle' });
         log(`${effect.name}: moved defender to (${targetCell.x}, ${targetCell.y})`);
     }
 
@@ -2973,6 +2977,30 @@ function autoPlanCards(team, plan) {
     }
 }
 
+function undoPlannedCard() {
+    if (gameState.gamePhase === 'planning_defense' && gameState.plannedDefense.length === 0 && gameState.plannedOffense.length > 0) {
+        gameState.gamePhase = 'planning_offense';
+        gameState.currentTurn = gameState.offenseTeam;
+    }
+
+    const isDefensePlanning = gameState.gamePhase === 'planning_defense' && gameState.plannedDefense.length > 0;
+    const team = isDefensePlanning ? gameState.defenseTeam : gameState.offenseTeam;
+    const plan = isDefensePlanning ? gameState.plannedDefense : gameState.plannedOffense;
+
+    if (!['planning_offense', 'planning_defense'].includes(gameState.gamePhase) || plan.length === 0) {
+        log('No planned card to undo.');
+        render();
+        return;
+    }
+
+    const card = plan.pop();
+    const hand = team === 'player' ? gameState.playerHand : gameState.aiHand;
+    hand.push(card);
+    gameState.currentTurn = team;
+    log(`${team === 'player' ? 'Player' : 'AI'} returned ${card.name} to hand.`);
+    render();
+}
+
 function startResolutionRound() {
     gameState.gamePhase = 'resolve_offense';
     gameState.offenseResolveIndex = 0;
@@ -3000,6 +3028,7 @@ function startPlannedCardResolution(card, team, role) {
     gameState.selectedCard = card;
     gameState.selectedPlayer = null;
     gameState.selectedMarkCells = [];
+    clearMoveHistory();
     gameState.commandActivation = {
         phase: 'select',
         selectedPlayers: [],
@@ -3061,6 +3090,7 @@ function resetResolutionState() {
     gameState.selectedCard = null;
     gameState.selectedPlayer = null;
     gameState.selectedMarkCells = [];
+    clearMoveHistory();
     gameState.multiMove = null;
     gameState.commandActivation = null;
     gameState.resolvingRole = null;
@@ -3173,6 +3203,7 @@ function playCard(card, team = 'player') {
     gameState.selectedCard = card;
     gameState.selectedPlayer = null;
     gameState.selectedMarkCells = [];
+    clearMoveHistory();
     gameState.multiMove = effect.type === 'move' ? {
         remaining: 2,
         movedPlayerIds: []
@@ -3262,7 +3293,7 @@ function executeCardEffect(card, targetCell) {
     switch (effect.type) {
         case 'move':
             const movedPlayerId = gameState.selectedPlayer.player.id;
-            movePlayer(gameState.selectedPlayer, targetCell);
+            movePlayer(gameState.selectedPlayer, targetCell, { recordUndo: true, context: 'move-card' });
             log(`Moved player to (${targetCell.x}, ${targetCell.y})`);
             if (gameState.multiMove) {
                 gameState.multiMove.remaining--;
@@ -3302,7 +3333,83 @@ function executeCardEffect(card, targetCell) {
     }
 }
 
-function movePlayer(fromCell, toCell) {
+function getMoveTrackingSnapshot() {
+    return {
+        commandMovedPlayerIds: gameState.commandActivation ? [...gameState.commandActivation.movedPlayerIds] : null,
+        commandPhase: gameState.commandActivation ? gameState.commandActivation.phase : null,
+        commandAction: gameState.commandActivation ? gameState.commandActivation.action : null,
+        commandActingPlayerId: gameState.commandActivation ? gameState.commandActivation.actingPlayerId : null,
+        multiMoveMovedPlayerIds: gameState.multiMove ? [...gameState.multiMove.movedPlayerIds] : null,
+        repositionsRemaining: gameState.repositionsRemaining.map(position => ({ ...position })),
+        loosePossessionTeam: gameState.loosePossessionTeam,
+        currentTurn: gameState.currentTurn
+    };
+}
+
+function restoreMoveTrackingSnapshot(snapshot) {
+    if (!snapshot) return;
+    if (gameState.commandActivation && snapshot.commandMovedPlayerIds) {
+        gameState.commandActivation.movedPlayerIds = [...snapshot.commandMovedPlayerIds];
+        gameState.commandActivation.phase = snapshot.commandPhase || gameState.commandActivation.phase;
+        gameState.commandActivation.action = snapshot.commandAction || null;
+        gameState.commandActivation.actingPlayerId = snapshot.commandActingPlayerId || null;
+    }
+    if (gameState.multiMove && snapshot.multiMoveMovedPlayerIds) {
+        gameState.multiMove.movedPlayerIds = [...snapshot.multiMoveMovedPlayerIds];
+    }
+    if (snapshot.repositionsRemaining) {
+        gameState.repositionsRemaining = snapshot.repositionsRemaining.map(position => ({ ...position }));
+    }
+    gameState.loosePossessionTeam = snapshot.loosePossessionTeam;
+    gameState.currentTurn = snapshot.currentTurn;
+}
+
+function recordMoveHistory(fromCell, toCell, context = 'move') {
+    gameState.moveHistory.push({
+        context,
+        from: {
+            x: fromCell.x,
+            y: fromCell.y,
+            player: fromCell.player ? { ...fromCell.player } : null,
+            ball: fromCell.ball
+        },
+        to: {
+            x: toCell.x,
+            y: toCell.y,
+            player: toCell.player ? { ...toCell.player } : null,
+            ball: toCell.ball
+        },
+        tracking: getMoveTrackingSnapshot()
+    });
+}
+
+function clearMoveHistory() {
+    gameState.moveHistory = [];
+}
+
+function undoLastMove() {
+    const lastMove = gameState.moveHistory.pop();
+    if (!lastMove) return;
+
+    const fromCell = getCell(lastMove.from.x, lastMove.from.y);
+    const toCell = getCell(lastMove.to.x, lastMove.to.y);
+    if (!fromCell || !toCell) return;
+
+    fromCell.player = lastMove.from.player ? { ...lastMove.from.player } : null;
+    fromCell.ball = lastMove.from.ball;
+    toCell.player = lastMove.to.player ? { ...lastMove.to.player } : null;
+    toCell.ball = lastMove.to.ball;
+    restoreMoveTrackingSnapshot(lastMove.tracking);
+
+    gameState.selectedPlayer = fromCell.player ? fromCell : null;
+    log(`Undid move back to (${fromCell.x}, ${fromCell.y}).`);
+    render();
+}
+
+function movePlayer(fromCell, toCell, options = {}) {
+    if (options.recordUndo) {
+        recordMoveHistory(fromCell, toCell, options.context || 'move');
+    }
     toCell.player = fromCell.player;
     if (fromCell.ball) {
         toCell.ball = true;
@@ -3856,7 +3963,7 @@ function completeDefensiveReaction() {
 }
 
 function reactiveDefenseMove(fromCell, toCell) {
-    movePlayer(fromCell, toCell);
+    movePlayer(fromCell, toCell, { recordUndo: true, context: 'reactive-defense' });
     log(`Defender moved to (${toCell.x}, ${toCell.y})`);
     completeDefensiveReaction();
 }
@@ -4010,7 +4117,7 @@ function endTurnAfterShot() {
 }
 
 function repositionPlayer(fromCell, toCell) {
-    movePlayer(fromCell, toCell);
+    movePlayer(fromCell, toCell, { recordUndo: true, context: 'reposition' });
    
     // Mark as moved
     const pos = gameState.repositionsRemaining.find(p => p.x === fromCell.x && p.y === fromCell.y);
@@ -4668,7 +4775,7 @@ function renderCell(cell, container) {
                             cellDiv.classList.add('valid-move');
                             cellDiv.onclick = () => {
                                 const movedPlayerId = gameState.selectedPlayer.player.id;
-                                movePlayer(gameState.selectedPlayer, cell);
+                                movePlayer(gameState.selectedPlayer, cell, { recordUndo: true, context: 'command' });
                                 commandState.movedPlayerIds.push(movedPlayerId);
                                 gameState.selectedPlayer = null;
                                 log(`Moved activated player to (${cell.x}, ${cell.y}) for ${moveCost} movement.`);
@@ -5526,6 +5633,8 @@ function renderUI() {
     // Show/hide repositioning button
     const endTurnBtn = document.getElementById('end-turn-btn');
     const finishMovementBtn = document.getElementById('finish-movement-btn');
+    const undoMoveBtn = document.getElementById('undo-move-btn');
+    const undoPlanBtn = document.getElementById('undo-plan-btn');
     const endRepositionBtn = document.getElementById('end-reposition-btn');
     const nextAIActionBtn = document.getElementById('next-ai-action-btn');
     const canFinishMovement = !!(gameState.selectedCard &&
@@ -5538,11 +5647,19 @@ function renderUI() {
     if (gameState.gamePhase.startsWith('planning') || gameState.gamePhase === 'choose_defense_card') {
         endTurnBtn.style.display = 'none';
         finishMovementBtn.style.display = 'none';
+        undoMoveBtn.style.display = 'none';
+        undoPlanBtn.style.display = (
+            gameState.gamePhase === 'planning_offense' && gameState.plannedOffense.length > 0
+        ) || (
+            gameState.gamePhase === 'planning_defense' && (gameState.plannedDefense.length > 0 || gameState.plannedOffense.length > 0)
+        ) ? 'inline-block' : 'none';
         endRepositionBtn.style.display = 'none';
         nextAIActionBtn.style.display = 'none';
     } else if (gameState.gamePhase.startsWith('reposition') && (gameState.repositionTeam === 'player' || gameState.manualControlMode)) {
         endTurnBtn.style.display = 'none';
         finishMovementBtn.style.display = 'none';
+        undoMoveBtn.style.display = gameState.moveHistory.length > 0 ? 'inline-block' : 'none';
+        undoPlanBtn.style.display = 'none';
         endRepositionBtn.style.display = 'inline-block';
         nextAIActionBtn.style.display = 'none';
     } else {
@@ -5552,6 +5669,8 @@ function renderUI() {
                 ? 'Skip Command'
                 : (gameState.commandActivation.phase === 'select' ? 'Start Movement' : 'Resolve Command'))
             : 'Finish Movement';
+        undoMoveBtn.style.display = gameState.moveHistory.length > 0 ? 'inline-block' : 'none';
+        undoPlanBtn.style.display = 'none';
         endTurnBtn.style.display = (canFinishMovement || canAdvanceCommand) ? 'none' : 'inline-block';
         endRepositionBtn.style.display = 'none';
        
@@ -5669,6 +5788,14 @@ document.getElementById('end-turn-btn').addEventListener('click', () => {
 
 document.getElementById('finish-movement-btn').addEventListener('click', () => {
     finishMovementCard();
+});
+
+document.getElementById('undo-move-btn').addEventListener('click', () => {
+    undoLastMove();
+});
+
+document.getElementById('undo-plan-btn').addEventListener('click', () => {
+    undoPlannedCard();
 });
 
 document.getElementById('end-reposition-btn').addEventListener('click', () => {

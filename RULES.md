@@ -32,9 +32,9 @@ ________________
 
 Starting Tactics Deck
 Each team begins with a 12-card Tactics deck:
-* L1, L2, L3
-* C1, C2, C3
-* R1, R2, R3
+* L1, L2, L2 + C1 (move)
+* C1, C2, C2 + L/R1 (move)
+* R1, R2, R2 + C1 (move)
 * A 1/1/1
 * D 1/1/1
 * L+R 1/1
@@ -42,6 +42,8 @@ Tactics cards activate players in a lane.
 The number on the card determines how many players may be activated.
 Example:
 L2 activates up to 2 players in the Left lane.
+Cards with "(move)" include a support activation in another lane.
+That support player may move but may not take the card action.
 ________________
 
 
@@ -72,7 +74,7 @@ Defense
 ________________
 
 
-L3 / R3
+L2 + C1 (move) / R2 + C1 (move)
 Activate up to 2 players in that flank lane.
 You may also activate up to 1 player in the Center lane for movement only.
 The action must be taken by one of the players activated in the flank lane.
@@ -115,7 +117,7 @@ Defense
 ________________
 
 
-C3
+C2 + L/R1 (move)
 Activate up to 2 players in the Center lane.
 You may also activate up to 1 player in either the Left or Right lane for movement only.
 The action must be taken by one of the players activated in the Center lane.
@@ -188,10 +190,10 @@ ________________
 Movement
 Players normally move up to 4 movement.
 A player carrying the ball moves up to 2 movement.
-Players may move through hexes occupied by teammates.
+Players may not move through occupied hexes.
 Players may not end movement in the same hex as another player.
-A player without the ball may move through opposing occupied hexes according to BLOCKED rules.
-A player carrying the ball may not move through opposing occupied hexes.
+Moving out of a MARKED hex costs 2 movement instead of 1.
+The movement penalty is paid for leaving the MARKED hex, not for entering it.
 ________________
 
 
@@ -222,13 +224,17 @@ Some actions draw a line between:
 * shooter and goal
 * or action origin and target.
 A player BLOCKS a line if their hex intersects a line drawn from the center of the origin hex to the center of the target hex.
-Each BLOCKING defender applies penalties described by the action.
+Each BLOCKED hex applies penalties described by the action.
 ________________
 
 
 Possession
 Controlled Possession
 A team has possession when one of its players controls the ball.
+Loose Ball
+A LOOSE ball is on the pitch but not controlled by either team.
+If a player moves into a hex containing a LOOSE ball, that player immediately gains possession.
+Recovering a LOOSE ball during a card resolution spends that card's optional standard pass.
 Airborne Ball
 An AIRBORNE ball is uncontrolled. Flip the ball token to its other side to show it is airborne.
 While AIRBORNE:
@@ -257,7 +263,7 @@ On success:
 * possession changes
 * the tackling player takes possession of the ball
 On failure:
-* the tackler becomes OFF BALANCE until next activation
+* the tackler becomes OFF BALANCE
 ________________
 
 
@@ -272,7 +278,9 @@ ________________
 
 
 DRIBBLE
-Remove one BLOCKED marker adjacent to the acting player.
+DRIBBLE may only be used by the ball carrier.
+Choose one adjacent empty MARKED hex.
+Remove one BLOCKED marker from that hex.
 DRIBBLE cannot remove:
 * occupied hexes
 * permanent player positioning
@@ -281,6 +289,8 @@ ________________
 
 Passing
 Each command card allows up to one optional standard pass after movement and before the card action.
+This pass is free; it does not use the card's one action.
+If the pass fails, the card's action is forfeited.
 Passes are zone-based, not range-based.
 The target must be a teammate in:
 * the same lane and zone
@@ -288,21 +298,37 @@ The target must be a teammate in:
 * or an adjacent zone in the same lane
 
 Diagonal standard passes are not allowed unless a future card or upgrade says otherwise.
-If no defender BLOCKS the passing line, the pass succeeds automatically.
-If defenders BLOCK the line:
+If no BLOCKED hex intersects the passing line, the pass succeeds automatically.
+If one or more BLOCKED hexes intersect the passing line:
 * roll 1d6
 * passes succeed on 1+
-* each BLOCKING defender increases the required roll by 2
+* each BLOCKED hex increases the required roll by 2
 Examples:
-* 1 BLOCKING defender = 3+
-* 2 BLOCKING defenders = 5+
-* 3 BLOCKING defenders = impossible
+* 1 BLOCKED hex = 3+
+* 2 BLOCKED hexes = 5+
+* 3 BLOCKED hexes = impossible
+
+Failed Passes
+If a pass fails, resolve the failed pass using the BLOCKED hexes on the passing line.
+If any BLOCKED hex is occupied by an opposing player:
+* the closest such opposing player to the passer intercepts the ball
+* that player immediately gains possession
+* the passing team's card action is forfeited
+
+If no opposing player occupies a BLOCKED hex, but one or more MARKED hexes BLOCK the line:
+* the ball deflects to the closest MARKED hex to the passer
+* if that hex is empty, the ball becomes LOOSE there
+* if that hex contains a player, that player immediately gains possession
+* if the passing team keeps possession this way, the card action is still forfeited
+
+If a LOOSE ball is created by a failed pass, the next player to move into that hex gains possession.
+Recovering that LOOSE ball spends the recovering card's optional standard pass.
 ________________
 
 
 CROSS
 CROSS may only be used from a LEFT or RIGHT lane.
-Place the ball AIRBORNE in an unoccupied hex in the Center lane.
+Place the ball AIRBORNE in an unoccupied hex in the Center lane in the same zone.
 CROSS cannot be used if an adjacent opposing player BLOCKS the acting player's line to the target hex.
 ________________
 
@@ -310,6 +336,7 @@ ________________
 HEADER
 HEADER may only be used by a player adjacent to an AIRBORNE ball.
 A player can use HEADER only if they moved 1 or fewer spaces during this card resolution.
+HEADER resolves against the adjacent AIRBORNE ball immediately.
 Offensive Header
 An offensive HEADER counts as a SHOT.
 The shot ignores one BLOCKED hex.
@@ -321,7 +348,7 @@ If no HEADER resolves, the AIRBORNE ball remains in the target hex until the end
 If still unresolved:
 * the ball lands in the target hex
 * the ball is no longer AIRBORNE
-* the ball becomes uncontrolled until possession changes.
+* the ball becomes LOOSE until possession changes.
 ________________
 
 
@@ -350,7 +377,7 @@ The ball may be placed in an empty or occupied hex.
 If the target hex is occupied:
 * that player immediately gains possession.
 If the target hex is empty:
-* the ball remains uncontrolled.
+* the ball becomes LOOSE.
 The current Offense remains Offense until possession changes.
 ________________
 

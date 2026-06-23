@@ -2324,8 +2324,13 @@ function chooseCommandAction(action) {
 function executeCommandFreePass(targetCell) {
     const passerCell = getCommandFreePasser();
     if (!passerCell || !isValidFreePassTarget(targetCell)) return;
-    executeZonePass(passerCell, targetCell);
+    const result = executeZonePass(passerCell, targetCell);
     gameState.commandActivation.freePassUsed = true;
+    if (result?.forfeitAction) {
+        log(`${gameState.selectedCard.name}: failed pass ends the card action.`);
+        completeCardPlay(gameState.selectedCard, gameState.currentTurn);
+        return;
+    }
     gameState.commandActivation.phase = 'act';
     gameState.selectedPlayer = null;
     log(`${gameState.selectedCard.name}: free pass resolved. Choose one activated player to take an action.`);
@@ -2594,6 +2599,70 @@ function getBlockedLineCells(fromCell, toCell, defendingTeam) {
     return [...blocked.values()];
 }
 
+function getPassBlockInfo(fromCell, toCell, defendingTeam) {
+    const lineCells = getHexLine(fromCell.x, fromCell.y, toCell.x, toCell.y);
+    const occupiedDefenders = [];
+    const markedCells = [];
+    const blocked = new Map();
+
+    lineCells.forEach((cell, index) => {
+        if (cell.player && cell.player.team === defendingTeam) {
+            occupiedDefenders.push({ cell, index });
+            blocked.set(`${cell.x},${cell.y}`, cell);
+        }
+        if (isMarkedByTeam(cell, defendingTeam)) {
+            markedCells.push({ cell, index });
+            blocked.set(`${cell.x},${cell.y}`, cell);
+        }
+    });
+
+    return {
+        blockedCells: [...blocked.values()],
+        occupiedDefenders,
+        markedCells
+    };
+}
+
+function clearBallFromAllCells() {
+    const ballCell = getCellWithBall();
+    if (ballCell) {
+        ballCell.ball = false;
+    }
+}
+
+function resolveFailedPass(passerCell, targetCell, defendingTeam, passInfo) {
+    const nearestDefender = passInfo.occupiedDefenders[0]?.cell;
+    if (nearestDefender) {
+        clearAirborneBall();
+        clearBallFromAllCells();
+        nearestDefender.ball = true;
+        setControlledPossession(defendingTeam);
+        log(`Pass intercepted by defender at (${nearestDefender.x}, ${nearestDefender.y}).`);
+        return { success: false, turnover: true, forfeitAction: true };
+    }
+
+    const markedCell = passInfo.markedCells[0]?.cell;
+    if (markedCell) {
+        clearAirborneBall();
+        clearBallFromAllCells();
+        markedCell.ball = true;
+
+        if (markedCell.player) {
+            setControlledPossession(markedCell.player.team);
+            const retained = markedCell.player.team === passerCell.player?.team;
+            log(`Pass deflects to marked hex (${markedCell.x}, ${markedCell.y}); ${markedCell.player.team === 'player' ? 'Blue' : 'Red'} recovers possession.`);
+            return { success: false, turnover: !retained, forfeitAction: true };
+        }
+
+        setLoosePossession(defendingTeam);
+        log(`Pass deflects loose into marked hex (${markedCell.x}, ${markedCell.y}).`);
+        return { success: false, turnover: true, loose: true, forfeitAction: true };
+    }
+
+    log('Pass failed. Ball stays with the passer for now.');
+    return { success: false, forfeitAction: true };
+}
+
 function countMarkersOnCell(cell, markingTeam) {
     return gameState.defensiveMarks.filter(mark =>
         mark.team === markingTeam &&
@@ -2626,17 +2695,18 @@ function executeZonePass(passerCell, targetCell) {
     const defendingTeam = team === 'player' ? 'ai' : 'player';
     if (!isOnsidePassTarget(targetCell, team)) {
         log(`Offside: pass target at (${targetCell.x}, ${targetCell.y}) is beyond the last defender line.`);
-        return;
+        return { success: false, forfeitAction: true };
     }
-    const blockedCells = getBlockedLineCells(passerCell, targetCell, defendingTeam);
-    if (rollD6Required('Pass', 1, blockedCells.length * 2, blockedCells.length === 0)) {
+    const passInfo = getPassBlockInfo(passerCell, targetCell, defendingTeam);
+    if (rollD6Required('Pass', 1, passInfo.blockedCells.length * 2, passInfo.blockedCells.length === 0)) {
         clearAirborneBall();
         getCellWithBall().ball = false;
         targetCell.ball = true;
         setControlledPossession(targetCell.player.team);
         log(`Pass complete to (${targetCell.x}, ${targetCell.y}).`);
+        return { success: true };
     } else {
-        log('Pass failed. Ball stays with the passer for now.');
+        return resolveFailedPass(passerCell, targetCell, defendingTeam, passInfo);
     }
 }
 
@@ -3537,11 +3607,18 @@ function movePlayer(fromCell, toCell, options = {}) {
     if (options.recordUndo) {
         recordMoveHistory(fromCell, toCell, options.context || 'move');
     }
+    const recoveringLooseBall = !!(toCell.ball && !fromCell.ball && gameState.loosePossessionTeam);
     toCell.player = fromCell.player;
     if (fromCell.ball) {
         toCell.ball = true;
         fromCell.ball = false;
         setControlledPossession(toCell.player.team);
+    } else if (recoveringLooseBall && toCell.player) {
+        setControlledPossession(toCell.player.team);
+        if (gameState.commandActivation) {
+            gameState.commandActivation.freePassUsed = true;
+        }
+        log(`${toCell.player.team === 'player' ? 'Blue' : 'Red'} recovers the loose ball at (${toCell.x}, ${toCell.y}); free pass spent.`);
     }
     fromCell.player = null;
 }
@@ -3601,10 +3678,10 @@ function executePass(targetCell, passingTeam, opposingTeam) {
         return;
     }
 
-    const blockedCells = getBlockedLineCells(ballCell, targetCell, opposingTeam);
+    const passInfo = getPassBlockInfo(ballCell, targetCell, opposingTeam);
     const passLabel = `Pass from (${ballCell.x},${ballCell.y}) to (${targetCell.x},${targetCell.y})`;
 
-    if (rollD6Required(passLabel, 1, blockedCells.length * 2, blockedCells.length === 0)) {
+    if (rollD6Required(passLabel, 1, passInfo.blockedCells.length * 2, passInfo.blockedCells.length === 0)) {
         clearAirborneBall();
         ballCell.ball = false;
         targetCell.ball = true;
@@ -3615,7 +3692,7 @@ function executePass(targetCell, passingTeam, opposingTeam) {
         }
         log(`Pass complete to (${targetCell.x}, ${targetCell.y}).`);
     } else {
-        log('Pass failed. Ball stays with the passer for now.');
+        resolveFailedPass(ballCell, targetCell, opposingTeam, passInfo);
     }
 }
 

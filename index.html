@@ -3119,14 +3119,14 @@ function log(message) {
 
 const STARTER_CARDS = [
     createLaneCommandCard('l1', 'L1', 'left', 1, {
-        defensive: ['tackle', 'clear'],
+        defensive: ['tackle', 'mark 2', 'clear'],
         midfield: ['mark 2', 'dribble'],
-        attacking: ['cross', 'dribble']
+        attacking: ['cross', 'shoot', 'dribble']
     }),
     createLaneCommandCard('l2', 'L2', 'left', 2, {
         defensive: ['mark 2'],
         midfield: ['mark 2'],
-        attacking: ['cross', 'shoot']
+        attacking: ['cross']
     }),
     createLaneCommandCard('l3', 'L2 + C1 (move)', 'left', 3, {
         defensive: ['mark 3'],
@@ -3153,14 +3153,14 @@ const STARTER_CARDS = [
         supportMove: { lanes: ['left', 'right'], count: 1 }
     }),
     createLaneCommandCard('r1', 'R1', 'right', 1, {
-        defensive: ['tackle', 'clear'],
+        defensive: ['tackle', 'mark 2', 'clear'],
         midfield: ['mark 2', 'dribble'],
-        attacking: ['cross', 'dribble']
+        attacking: ['cross', 'shoot', 'dribble']
     }),
     createLaneCommandCard('r2', 'R2', 'right', 2, {
         defensive: ['mark 2'],
         midfield: ['mark 2'],
-        attacking: ['cross', 'shoot']
+        attacking: ['cross']
     }),
     createLaneCommandCard('r3', 'R2 + C1 (move)', 'right', 3, {
         defensive: ['mark 3'],

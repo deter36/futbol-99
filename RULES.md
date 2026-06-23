@@ -52,12 +52,14 @@ L1 / R1
 Activate up to 1 player in that flank lane.
 Attack
 * cross
+* shoot
 * dribble
 Midfield
 * mark 2
 * dribble
 Defense
 * tackle
+* mark 2
 * clear
 ________________
 
@@ -66,7 +68,6 @@ L2 / R2
 Activate up to 2 players in that flank lane.
 Attack
 * cross
-* shoot
 Midfield
 * mark 2
 Defense

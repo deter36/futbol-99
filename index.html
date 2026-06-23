@@ -2276,8 +2276,6 @@ function getCommandActionsForCell(card, cell) {
     if (!selected) return [];
     if (selected.supportOnly) return [];
     if (selected.wasOffBalance) return [];
-    const zones = getPitchZones(cell, gameState.currentTurn);
-    if (!zones.lanes.includes(selected.lane)) return [];
     const third = getPitchZones(cell, gameState.currentTurn).third;
     let actions = card.command.actions[third] || [];
     if (!canUseStillnessAction(cell)) {
@@ -2367,10 +2365,9 @@ function getSameOrAdjacentThirds(third) {
 }
 
 function getShotRequiredRollModifier(card, shooterCell) {
-    if (!card || !shooterCell) return 0;
-    const third = getPitchZones(shooterCell, gameState.currentTurn).third;
-    const label = getCommandActionLabel(card, third, 'shoot');
-    return label.includes('+1 required roll') ? 1 : 0;
+    if (!shooterCell) return 0;
+    const zones = getPitchZones(shooterCell, gameState.currentTurn);
+    return zones.lanes.includes('center') ? 0 : 1;
 }
 
 function getClearPressureCells(cell, team) {
@@ -2461,7 +2458,7 @@ function isValidCommandActionTarget(action, actorCell, targetCell) {
         if (!actorCell.ball || isAirborneBallCell(actorCell)) return false;
         if (targetCell.player || targetCell.ball) return false;
         const actorZones = getPitchZones(actorCell, team);
-        if (actorZones.lanes.includes('center')) return false;
+        if (!actorZones.lanes.some(lane => lane === 'left' || lane === 'right')) return false;
         const targetZones = getPitchZones(targetCell, team);
         if (!targetZones.lanes.includes('center')) return false;
         if (targetZones.third !== actorZones.third) return false;
@@ -2891,7 +2888,7 @@ function executeZoneShot(shooterCell, goalCell, options = {}) {
     const markers = countMarkersOnCell(shooterCell, defendingTeam);
     const cardPenalty = getShotRequiredRollModifier(gameState.selectedCard, shooterCell);
     const modifier = effectiveBlocks + markers + cardPenalty;
-    const shotRoll = rollD6Result(options.label || 'Shot', 5, modifier);
+    const shotRoll = rollD6Result(options.label || 'Shot', 4, modifier);
     if (shotRoll.success) {
         if (team === 'player') gameState.playerScore++;
         else gameState.aiScore++;
@@ -3127,17 +3124,16 @@ const STARTER_CARDS = [
         attacking: ['cross', 'dribble']
     }),
     createLaneCommandCard('l2', 'L2', 'left', 2, {
-        defensive: ['mark 2', 'clear'],
+        defensive: ['mark 2'],
         midfield: ['mark 2'],
-        attacking: ['cross']
+        attacking: ['cross', 'shoot']
     }),
     createLaneCommandCard('l3', 'L2 + C1 (move)', 'left', 3, {
         defensive: ['mark 3'],
         midfield: ['mark 2'],
-        attacking: ['cross', 'shoot']
+        attacking: ['cross']
     }, {
-        supportMove: { lanes: ['center'], count: 1 },
-        actionLabels: { 'attacking.shoot': 'shoot (+1 required roll)' }
+        supportMove: { lanes: ['center'], count: 1 }
     }),
     createLaneCommandCard('c1', 'C1', 'center', 1, {
         defensive: ['tackle', 'clear', 'header'],
@@ -3162,23 +3158,22 @@ const STARTER_CARDS = [
         attacking: ['cross', 'dribble']
     }),
     createLaneCommandCard('r2', 'R2', 'right', 2, {
-        defensive: ['mark 2', 'clear'],
+        defensive: ['mark 2'],
         midfield: ['mark 2'],
-        attacking: ['cross']
+        attacking: ['cross', 'shoot']
     }),
     createLaneCommandCard('r3', 'R2 + C1 (move)', 'right', 3, {
         defensive: ['mark 3'],
         midfield: ['mark 2'],
-        attacking: ['cross', 'shoot']
+        attacking: ['cross']
     }, {
-        supportMove: { lanes: ['center'], count: 1 },
-        actionLabels: { 'attacking.shoot': 'shoot (+1 required roll)' }
+        supportMove: { lanes: ['center'], count: 1 }
     }),
     createThirdCommandCard('attack_111', 'A 1/1/1', 'attacking', {
-        attacking: ['shoot', 'dribble', 'header']
+        attacking: ['shoot', 'dribble']
     }),
     createThirdCommandCard('defend_111', 'D 1/1/1', 'defensive', {
-        defensive: ['mark 2', 'clear']
+        defensive: ['mark 2', 'clear', 'header']
     }),
     createSplitLaneCommandCard('lr_11', 'L+R 1/1', ['left', 'right'], {
         defensive: ['mark 2', 'clear'],

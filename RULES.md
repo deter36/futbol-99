@@ -66,21 +66,20 @@ L2 / R2
 Activate up to 2 players in that flank lane.
 Attack
 * cross
+* shoot
 Midfield
 * mark 2
 Defense
 * mark 2
-* clear
 ________________
 
 
 L2 + C1 (move) / R2 + C1 (move)
 Activate up to 2 players in that flank lane.
 You may also activate up to 1 player in the Center lane for movement only.
-The action must be taken by one of the players activated in the flank lane.
+The action must be taken by one of the 2 primary activated players.
 Attack
 * cross
-* shoot (+1 required roll)
 Midfield
 * mark 2
 Defense
@@ -120,7 +119,7 @@ ________________
 C2 + L/R1 (move)
 Activate up to 2 players in the Center lane.
 You may also activate up to 1 player in either the Left or Right lane for movement only.
-The action must be taken by one of the players activated in the Center lane.
+The action must be taken by one of the 2 primary activated players.
 Attack
 * shoot
 Midfield
@@ -135,7 +134,6 @@ Activate 1 player in each lane, but only in the attack third.
 Attack
 * shoot
 * dribble
-* header
 ________________
 
 
@@ -144,6 +142,7 @@ Activate 1 player in each lane, but only in the defense third.
 Defense
 * mark 2
 * clear
+* header
 ________________
 
 
@@ -182,7 +181,9 @@ When a command card resolves:
 4. Choose one activated player to perform one action from the card.
 5. Resolve the action completely.
 Activated players may move freely regardless of lane.
-However, the player performing the action must still occupy the lane and zone for the chosen action.
+The player performing the action uses the action list for the zone they occupy after movement.
+The player does not need to end in the same lane as the card.
+Support-only activations may move but may not perform the card action.
 Only one activated player performs an action, even if multiple players were activated.
 ________________
 
@@ -327,8 +328,9 @@ ________________
 
 
 CROSS
-CROSS may only be used from a LEFT or RIGHT lane.
+CROSS may only be used from a hex that counts as a LEFT or RIGHT lane.
 Place the ball AIRBORNE in an unoccupied hex in the Center lane in the same zone.
+Split hexes that count as both Center and a wing lane may be used to CROSS.
 CROSS cannot be used if an adjacent opposing player BLOCKS the acting player's line to the target hex.
 ________________
 
@@ -385,10 +387,13 @@ ________________
 SHOOT
 Choose one goal hex.
 Roll 1d6.
-Shots succeed on 5+.
+Shots succeed on 4+.
+If the shooter is in a hex that does not count as Center, increase the required roll by 1.
 Each BLOCKED hex intersecting the shot line increases the required roll by 1.
+Each opposing MARK on the shooter increases the required roll by 1.
 If the required roll exceeds 6, the shot automatically fails.
 A player can SHOOT only if they moved 1 or fewer spaces during this card resolution.
+Split hexes that count as Center use the Center shot difficulty.
 
 Shot Rebounds
 If a SHOT or offensive HEADER fails by exactly 1, it creates a rebound instead of an immediate goal kick.

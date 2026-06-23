@@ -8,7 +8,7 @@ import csv
 import random
 from pathlib import Path
 
-from simulate import Config, Match, aggregate, print_summary, write_csv
+from simulate import Config, Match, aggregate, print_summary, write_csv, write_shot_events_csv
 
 
 MATRIX_CASES = [
@@ -61,10 +61,16 @@ SUMMARY_COLUMNS = [
     "mark_duration",
     "bot_style",
     "offside_enabled",
+    "shooter_movement_allowance",
+    "flank_service_enabled",
     "shots_per_match",
     "goals_per_match",
     "passes_attempted_per_match",
     "pass_completion_rate",
+    "free_passes_attempted_per_match",
+    "free_pass_completion_rate",
+    "action_passes_attempted_per_match",
+    "action_pass_completion_rate",
     "tackles_attempted_per_match",
     "tackles_success_rate",
     "marks_placed_per_match",
@@ -75,13 +81,23 @@ SUMMARY_COLUMNS = [
     "average_movement_budget_used",
     "average_ball_depth",
     "turnovers_per_match",
+    "crosses_attempted_per_match",
+    "headers_attempted_per_match",
+    "headers_scored_per_match",
+    "clears_attempted_per_match",
+    "clear_recovery_rate",
+    "dribbles_per_match",
+    "off_balance_events_per_match",
+    "service_attempts_per_match",
+    "service_shots_per_match",
+    "service_goals_per_match",
 ]
 
 
 def run_case(case: dict[str, int | str], matches: int, output_dir: Path) -> dict[str, float]:
     cfg = Config(
         movement_per_activation=int(case["movement_per_activation"]),
-        ball_carrier_movement=int(case.get("ball_carrier_movement", 4)),
+        ball_carrier_movement=int(case.get("ball_carrier_movement", 2)),
         shot_target_number=int(case["shot_target_number"]),
         shot_target_mode=str(case.get("shot_target_mode", "flat")),
         center_shot_target_number=int(case.get("center_shot_target_number", 4)),
@@ -92,13 +108,16 @@ def run_case(case: dict[str, int | str], matches: int, output_dir: Path) -> dict
         mark_duration=int(case.get("mark_duration", 2)),
         bot_style=str(case.get("bot_style", "balanced")),
         offside_enabled=bool(case.get("offside_enabled", True)),
+        shooter_movement_allowance=int(case.get("shooter_movement_allowance", 0)),
+        flank_service_enabled=bool(case.get("flank_service_enabled", False)),
     )
     seed = int(case["seed"])
     rng = random.Random(seed)
-    results = [Match(cfg, rng).run() for _ in range(matches)]
+    results = [Match(cfg, rng, match_id=i + 1).run() for i in range(matches)]
     summary = aggregate(results, cfg, seed)
     summary["test_name"] = str(case["test_name"])
     write_csv(output_dir / f"{case['test_name']}.csv", summary)
+    write_shot_events_csv(output_dir / f"{case['test_name']}_shot_events.csv", summary["_shot_events"])
     return summary
 
 

@@ -26,7 +26,7 @@ The pitch is also divided horizontally into three zones:
 * Midfield
 * Defense
 Most cards contain separate actions for each zone.
-To take an action, a player must start and end their movement in the same zone.
+To take an action, a player uses the action list for the zone they currently occupy after movement and the optional pass.
 ________________
 
 
@@ -50,15 +50,12 @@ L1 / R1
 Activate up to 1 player in that flank lane.
 Attack
 * cross
-* pass lane
 * dribble
 Midfield
-* pass lane
-* pass inside
+* mark 2
 * dribble
 Defense
 * tackle
-* pass lane
 * clear
 ________________
 
@@ -67,10 +64,8 @@ L2 / R2
 Activate up to 2 players in that flank lane.
 Attack
 * cross
-* pass inside
 Midfield
 * mark 2
-* pass lane
 Defense
 * mark 2
 * clear
@@ -85,7 +80,6 @@ Attack
 * cross
 * shoot (+1 required roll)
 Midfield
-* pass lane
 * mark 2
 Defense
 * mark 3
@@ -96,17 +90,12 @@ C1
 Activate up to 1 player in the Center lane.
 Attack
 * shoot
-* pass lane
-* pass outside
 * dribble
 * header
 Midfield
-* pass lane
-* pass outside
 * dribble
 Defense
 * tackle
-* pass outside
 * clear
 * header
 ________________
@@ -116,15 +105,11 @@ C2
 Activate up to 2 players in the Center lane.
 Attack
 * shoot
-* pass lane
-* pass outside
 * header
 Midfield
 * mark 2
-* pass lane
 Defense
 * mark 2
-* pass lane
 * clear
 * header
 ________________
@@ -136,9 +121,7 @@ You may also activate up to 1 player in either the Left or Right lane for moveme
 The action must be taken by one of the players activated in the Center lane.
 Attack
 * shoot
-* pass lane
 Midfield
-* pass lane
 * mark 2
 Defense
 * mark 3
@@ -148,7 +131,6 @@ ________________
 A 1/1/1
 Activate 1 player in each lane, but only in the attack third.
 Attack
-* pass inside
 * shoot
 * dribble
 * header
@@ -160,7 +142,6 @@ Activate 1 player in each lane, but only in the defense third.
 Defense
 * mark 2
 * clear
-* pass lane
 ________________
 
 
@@ -168,9 +149,7 @@ L+R 1/1
 Activate 1 player in Left and 1 player in Right.
 Attack
 * cross
-* pass inside
 Midfield
-* pass lane
 * dribble
 Defense
 * mark 2
@@ -197,8 +176,9 @@ Resolving A Card
 When a command card resolves:
 1. Activate eligible players.
 2. Move activated players.
-3. Choose one activated player to perform one action from the card.
-4. Resolve the action completely.
+3. Make up to one optional standard pass.
+4. Choose one activated player to perform one action from the card.
+5. Resolve the action completely.
 Activated players may move freely regardless of lane.
 However, the player performing the action must still occupy the lane and zone for the chosen action.
 Only one activated player performs an action, even if multiple players were activated.
@@ -207,7 +187,7 @@ ________________
 
 Movement
 Players normally move up to 4 movement.
-A player carrying the ball moves up to 3 movement.
+A player carrying the ball moves up to 2 movement.
 Players may move through hexes occupied by teammates.
 Players may not end movement in the same hex as another player.
 A player without the ball may move through opposing occupied hexes according to BLOCKED rules.
@@ -299,27 +279,15 @@ DRIBBLE cannot remove:
 ________________
 
 
-PASS LANE
-Pass to a teammate in the same lane.
-PASS LANE may cross up to 1 zone boundary.
-________________
-
-
-PASS INSIDE
-Pass from Left or Right toward Center.
-PASS INSIDE may cross up to 1 zone boundary.
-________________
-
-
-PASS OUTSIDE
-Pass from Center toward Left or Right.
-PASS OUTSIDE may cross up to 1 zone boundary.
-________________
-
-
 Passing
+Each command card allows up to one optional standard pass after movement and before the card action.
 Passes are zone-based, not range-based.
-The target must be a legal teammate for the action.
+The target must be a teammate in:
+* the same lane and zone
+* an adjacent lane in the same zone
+* or an adjacent zone in the same lane
+
+Diagonal standard passes are not allowed unless a future card or upgrade says otherwise.
 If no defender BLOCKS the passing line, the pass succeeds automatically.
 If defenders BLOCK the line:
 * roll 1d6
@@ -341,7 +309,7 @@ ________________
 
 HEADER
 HEADER may only be used by a player adjacent to an AIRBORNE ball.
-A player cannot use HEADER if they moved this activation.
+A player can use HEADER only if they moved 1 or fewer spaces during this card resolution.
 Offensive Header
 An offensive HEADER counts as a SHOT.
 The shot ignores one BLOCKED hex.
@@ -393,6 +361,7 @@ Roll 1d6.
 Shots succeed on 5+.
 Each BLOCKED hex intersecting the shot line increases the required roll by 1.
 If the required roll exceeds 6, the shot automatically fails.
+A player can SHOOT only if they moved 1 or fewer spaces during this card resolution.
 ________________
 
 

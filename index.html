@@ -1543,6 +1543,17 @@ function getPitchZones(cell, perspectiveTeam = 'player') {
         lanes = ['center', 'right'];
     }
 
+    if (perspectiveTeam === 'ai') {
+        const flipLane = laneName => {
+            if (laneName === 'left') return 'right';
+            if (laneName === 'right') return 'left';
+            return laneName;
+        };
+        lane = flipLane(lane);
+        lanes = lanes.map(flipLane);
+        laneLabel = lanes.join('/');
+    }
+
     return {
         third,
         lane,
@@ -2043,8 +2054,8 @@ function applyDefensiveMark(card, defenderCell, zones) {
     completeCardPlay(card, team);
 }
 
-function getCommandCellLanes(cell) {
-    return getPitchZones(cell).lanes;
+function getCommandCellLanes(cell, perspectiveTeam = gameState.currentTurn) {
+    return getPitchZones(cell, perspectiveTeam).lanes;
 }
 
 function getSelectedCommandPlayer(cell) {
@@ -2144,7 +2155,7 @@ function startCommandMovement() {
     if (!gameState.commandActivation || gameState.commandActivation.selectedPlayers.length === 0) return;
     gameState.commandActivation.phase = 'move';
     gameState.selectedPlayer = null;
-    log('Command movement: move activated players up to 4 spaces. Ball carriers move up to 3.');
+    log('Command movement: move activated players up to 4 spaces. Ball carriers move up to 2.');
     render();
 }
 
@@ -2153,6 +2164,20 @@ function completeCommandCard() {
     if (!card || !gameState.commandActivation) return;
 
     if (gameState.commandActivation.phase !== 'act') {
+        if (gameState.commandActivation.phase === 'move') {
+            gameState.commandActivation.phase = 'free_pass';
+            gameState.selectedPlayer = getCommandFreePasser();
+            log(`${card.name}: movement complete. Make one optional standard pass, or skip to actions.`);
+            render();
+            return;
+        }
+        if (gameState.commandActivation.phase === 'free_pass') {
+            gameState.commandActivation.phase = 'act';
+            gameState.selectedPlayer = null;
+            log(`${card.name}: choose one activated player to take an action.`);
+            render();
+            return;
+        }
         gameState.commandActivation.phase = 'act';
         gameState.selectedPlayer = null;
         log(`${card.name}: movement complete. Choose one activated player to take an action.`);
@@ -2173,7 +2198,53 @@ function canMoveCommandPlayer(cell) {
 }
 
 function getCommandMoveRangeForCell(cell, baseRange) {
-    return cell && cell.ball ? Math.max(0, baseRange - 1) : baseRange;
+    return cell && cell.ball ? Math.min(2, baseRange) : baseRange;
+}
+
+function getCommandMovedDistance(playerId) {
+    return gameState.commandActivation?.movedPlayerDistances?.[playerId] || 0;
+}
+
+function canUseStillnessAction(cell) {
+    if (!cell?.player) return false;
+    return getCommandMovedDistance(cell.player.id) <= 1;
+}
+
+function getCommandFreePasser() {
+    if (!gameState.commandActivation || gameState.commandActivation.freePassUsed) return null;
+    const ballCell = getCellWithBall();
+    if (!ballCell || isAirborneBallCell(ballCell) || !ballCell.player || ballCell.player.team !== gameState.currentTurn) return null;
+    return ballCell;
+}
+
+function getLaneIndex(lane) {
+    return ['left', 'center', 'right'].indexOf(lane);
+}
+
+function getThirdIndex(third) {
+    return ['defensive', 'midfield', 'attacking'].indexOf(third);
+}
+
+function isStandardPassTarget(passerCell, targetCell, team = gameState.currentTurn) {
+    if (!passerCell?.player || !passerCell.ball) return false;
+    if (!targetCell?.player || targetCell.player.team !== team || targetCell === passerCell) return false;
+    if (isAirborneBallCell(passerCell)) return false;
+    const passerZones = getPitchZones(passerCell, team);
+    const targetZones = getPitchZones(targetCell, team);
+    return passerZones.lanes.some(passerLane =>
+        targetZones.lanes.some(targetLane => {
+            const laneDistance = Math.abs(getLaneIndex(passerLane) - getLaneIndex(targetLane));
+            const thirdDistance = Math.abs(getThirdIndex(passerZones.third) - getThirdIndex(targetZones.third));
+            return laneDistance + thirdDistance <= 1;
+        })
+    );
+}
+
+function isValidFreePassTarget(targetCell) {
+    const passerCell = getCommandFreePasser();
+    if (!passerCell) return false;
+    return isStandardPassTarget(passerCell, targetCell, gameState.currentTurn) &&
+        isOnsidePassTarget(targetCell, gameState.currentTurn);
 }
 
 function getCommandActionsForCell(card, cell) {
@@ -2184,7 +2255,11 @@ function getCommandActionsForCell(card, cell) {
     const zones = getPitchZones(cell, gameState.currentTurn);
     if (!zones.lanes.includes(selected.lane)) return [];
     const third = getPitchZones(cell, gameState.currentTurn).third;
-    return card.command.actions[third] || [];
+    let actions = card.command.actions[third] || [];
+    if (!canUseStillnessAction(cell)) {
+        actions = actions.filter(action => !['shoot', 'header'].includes(action));
+    }
+    return actions;
 }
 
 function chooseCommandActionPlayer(cell) {
@@ -2208,6 +2283,17 @@ function chooseCommandAction(action) {
     gameState.commandActivation.action = action;
     gameState.selectedMarkCells = [];
     log(`${gameState.selectedCard.name}: ${action} selected. Choose a target.`);
+    render();
+}
+
+function executeCommandFreePass(targetCell) {
+    const passerCell = getCommandFreePasser();
+    if (!passerCell || !isValidFreePassTarget(targetCell)) return;
+    executeZonePass(passerCell, targetCell);
+    gameState.commandActivation.freePassUsed = true;
+    gameState.commandActivation.phase = 'act';
+    gameState.selectedPlayer = null;
+    log(`${gameState.selectedCard.name}: free pass resolved. Choose one activated player to take an action.`);
     render();
 }
 
@@ -2347,12 +2433,14 @@ function isValidCommandActionTarget(action, actorCell, targetCell) {
         return isInClearFan(actorCell, targetCell, team);
     }
     if (action === 'header') {
+        if (!canUseStillnessAction(actorCell)) return false;
         return isAirborneBallCell(targetCell) &&
             distance(actorCell.x, actorCell.y, targetCell.x, targetCell.y) <= 1 &&
-            !hasActingPlayerMoved(actorCell);
+            canUseStillnessAction(actorCell);
     }
     if (action === 'shoot') {
         if (!actorCell.ball) return false;
+        if (!canUseStillnessAction(actorCell)) return false;
         if (isAirborneBallCell(actorCell)) return false;
         const goalX = team === 'player' ? 16 : 0;
         return targetCell.x === goalX && targetCell.y >= 5 && targetCell.y <= 7;
@@ -2652,68 +2740,68 @@ function log(message) {
 
 const STARTER_CARDS = [
     createLaneCommandCard('l1', 'L1', 'left', 1, {
-        defensive: ['tackle', 'pass lane', 'clear'],
-        midfield: ['pass lane', 'pass inside', 'dribble'],
-        attacking: ['cross', 'pass lane', 'dribble']
+        defensive: ['tackle', 'clear'],
+        midfield: ['mark 2', 'dribble'],
+        attacking: ['cross', 'dribble']
     }),
     createLaneCommandCard('l2', 'L2', 'left', 2, {
         defensive: ['mark 2', 'clear'],
-        midfield: ['mark 2', 'pass lane'],
-        attacking: ['cross', 'pass inside']
+        midfield: ['mark 2'],
+        attacking: ['cross']
     }),
     createLaneCommandCard('l3', 'L2 + C1 (move)', 'left', 3, {
         defensive: ['mark 3'],
-        midfield: ['pass lane', 'mark 2'],
+        midfield: ['mark 2'],
         attacking: ['cross', 'shoot']
     }, {
         supportMove: { lanes: ['center'], count: 1 },
         actionLabels: { 'attacking.shoot': 'shoot (+1 required roll)' }
     }),
     createLaneCommandCard('c1', 'C1', 'center', 1, {
-        defensive: ['tackle', 'pass outside', 'clear', 'header'],
-        midfield: ['pass lane', 'pass outside', 'dribble'],
-        attacking: ['shoot', 'pass lane', 'pass outside', 'dribble', 'header']
+        defensive: ['tackle', 'clear', 'header'],
+        midfield: ['dribble'],
+        attacking: ['shoot', 'dribble', 'header']
     }),
     createLaneCommandCard('c2', 'C2', 'center', 2, {
-        defensive: ['mark 2', 'pass lane', 'clear', 'header'],
-        midfield: ['mark 2', 'pass lane'],
-        attacking: ['shoot', 'pass lane', 'pass outside', 'header']
+        defensive: ['mark 2', 'clear', 'header'],
+        midfield: ['mark 2'],
+        attacking: ['shoot', 'header']
     }),
     createLaneCommandCard('c3', 'C2 + L/R1 (move)', 'center', 3, {
         defensive: ['mark 3'],
-        midfield: ['pass lane', 'mark 2'],
-        attacking: ['shoot', 'pass lane']
+        midfield: ['mark 2'],
+        attacking: ['shoot']
     }, {
         supportMove: { lanes: ['left', 'right'], count: 1 }
     }),
     createLaneCommandCard('r1', 'R1', 'right', 1, {
-        defensive: ['tackle', 'pass lane', 'clear'],
-        midfield: ['pass lane', 'pass inside', 'dribble'],
-        attacking: ['cross', 'pass lane', 'dribble']
+        defensive: ['tackle', 'clear'],
+        midfield: ['mark 2', 'dribble'],
+        attacking: ['cross', 'dribble']
     }),
     createLaneCommandCard('r2', 'R2', 'right', 2, {
         defensive: ['mark 2', 'clear'],
-        midfield: ['mark 2', 'pass lane'],
-        attacking: ['cross', 'pass inside']
+        midfield: ['mark 2'],
+        attacking: ['cross']
     }),
     createLaneCommandCard('r3', 'R2 + C1 (move)', 'right', 3, {
         defensive: ['mark 3'],
-        midfield: ['pass lane', 'mark 2'],
+        midfield: ['mark 2'],
         attacking: ['cross', 'shoot']
     }, {
         supportMove: { lanes: ['center'], count: 1 },
         actionLabels: { 'attacking.shoot': 'shoot (+1 required roll)' }
     }),
     createThirdCommandCard('attack_111', 'A 1/1/1', 'attacking', {
-        attacking: ['pass inside', 'shoot', 'dribble', 'header']
+        attacking: ['shoot', 'dribble', 'header']
     }),
     createThirdCommandCard('defend_111', 'D 1/1/1', 'defensive', {
-        defensive: ['mark 2', 'clear', 'pass lane']
+        defensive: ['mark 2', 'clear']
     }),
     createSplitLaneCommandCard('lr_11', 'L+R 1/1', ['left', 'right'], {
         defensive: ['mark 2', 'clear'],
-        midfield: ['pass lane', 'dribble'],
-        attacking: ['cross', 'pass inside']
+        midfield: ['dribble'],
+        attacking: ['cross']
     })
 ];
 
@@ -3033,10 +3121,12 @@ function startPlannedCardResolution(card, team, role) {
         phase: 'select',
         selectedPlayers: [],
         movedPlayerIds: [],
+        movedPlayerDistances: {},
+        freePassUsed: false,
         actingPlayerId: null,
         action: null
     };
-    log(`${team === 'player' ? 'Player' : 'AI'} reveals ${card.name}. Activate players, move, then choose one action.`);
+    log(`${team === 'player' ? 'Player' : 'AI'} reveals ${card.name}. Activate players, move, make one optional pass, then choose one action.`);
     render();
 }
 
@@ -3212,7 +3302,10 @@ function playCard(card, team = 'player') {
         phase: 'select',
         selectedPlayers: [],
         movedPlayerIds: [],
-        actingPlayerId: null
+        movedPlayerDistances: {},
+        freePassUsed: false,
+        actingPlayerId: null,
+        action: null
     } : null;
     gameState.pendingMoveMark = null;
     if (effect.type === 'command') {
@@ -3336,6 +3429,7 @@ function executeCardEffect(card, targetCell) {
 function getMoveTrackingSnapshot() {
     return {
         commandMovedPlayerIds: gameState.commandActivation ? [...gameState.commandActivation.movedPlayerIds] : null,
+        commandMovedPlayerDistances: gameState.commandActivation ? { ...gameState.commandActivation.movedPlayerDistances } : null,
         commandPhase: gameState.commandActivation ? gameState.commandActivation.phase : null,
         commandAction: gameState.commandActivation ? gameState.commandActivation.action : null,
         commandActingPlayerId: gameState.commandActivation ? gameState.commandActivation.actingPlayerId : null,
@@ -3350,6 +3444,7 @@ function restoreMoveTrackingSnapshot(snapshot) {
     if (!snapshot) return;
     if (gameState.commandActivation && snapshot.commandMovedPlayerIds) {
         gameState.commandActivation.movedPlayerIds = [...snapshot.commandMovedPlayerIds];
+        gameState.commandActivation.movedPlayerDistances = { ...(snapshot.commandMovedPlayerDistances || {}) };
         gameState.commandActivation.phase = snapshot.commandPhase || gameState.commandActivation.phase;
         gameState.commandActivation.action = snapshot.commandAction || null;
         gameState.commandActivation.actingPlayerId = snapshot.commandActingPlayerId || null;
@@ -4777,6 +4872,7 @@ function renderCell(cell, container) {
                                 const movedPlayerId = gameState.selectedPlayer.player.id;
                                 movePlayer(gameState.selectedPlayer, cell, { recordUndo: true, context: 'command' });
                                 commandState.movedPlayerIds.push(movedPlayerId);
+                                commandState.movedPlayerDistances[movedPlayerId] = moveCost;
                                 gameState.selectedPlayer = null;
                                 log(`Moved activated player to (${cell.x}, ${cell.y}) for ${moveCost} movement.`);
                                 render();
@@ -4788,6 +4884,14 @@ function renderCell(cell, container) {
                             gameState.selectedPlayer = cell;
                             render();
                         };
+                    }
+                } else if (commandState?.phase === 'free_pass') {
+                    const passerCell = getCommandFreePasser();
+                    if (passerCell && cell === passerCell) {
+                        cellDiv.classList.add('selected');
+                    } else if (isValidFreePassTarget(cell)) {
+                        cellDiv.classList.add('valid-target');
+                        cellDiv.onclick = () => executeCommandFreePass(cell);
                     }
                 } else if (commandState?.phase === 'act') {
                     if (gameState.selectedPlayer && commandState.action) {
@@ -5199,7 +5303,13 @@ function renderCommandActionPanel(container) {
             : `${selected} player${selected === 1 ? '' : 's'} activated. Select more or start movement.`;
         panel.appendChild(title);
     } else if (gameState.commandActivation.phase === 'move') {
-        title.textContent = 'Move activated players on the pitch, then resolve command.';
+        title.textContent = 'Move activated players on the pitch, then continue to the free pass.';
+        panel.appendChild(title);
+    } else if (gameState.commandActivation.phase === 'free_pass') {
+        const passerCell = getCommandFreePasser();
+        title.textContent = passerCell
+            ? 'Optional free pass: choose a legal teammate, or skip to actions.'
+            : 'No free pass available. Skip to actions.';
         panel.appendChild(title);
     } else if (gameState.commandActivation.phase === 'act') {
         if (!gameState.selectedPlayer) {
@@ -5667,7 +5777,11 @@ function renderUI() {
         finishMovementBtn.textContent = canAdvanceCommand
             ? (gameState.commandActivation.selectedPlayers.length === 0
                 ? 'Skip Command'
-                : (gameState.commandActivation.phase === 'select' ? 'Start Movement' : 'Resolve Command'))
+                : (gameState.commandActivation.phase === 'select'
+                    ? 'Start Movement'
+                    : (gameState.commandActivation.phase === 'move'
+                        ? 'Continue to Pass'
+                        : (gameState.commandActivation.phase === 'free_pass' ? 'Skip Pass' : 'Resolve Command'))))
             : 'Finish Movement';
         undoMoveBtn.style.display = gameState.moveHistory.length > 0 ? 'inline-block' : 'none';
         undoPlanBtn.style.display = 'none';

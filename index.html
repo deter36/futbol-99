@@ -1344,7 +1344,7 @@ main {
                     <div class="button-section">
                         <button id="manual-control-btn" class="btn btn-secondary">🤖 Manual Mode: OFF</button>
                         <button id="field-view-btn" class="btn btn-secondary">🔵 View: Blue</button>
-                        <button id="undo-move-btn" class="btn btn-secondary" style="display: none;">↶ Undo Move</button>
+                        <button id="undo-move-btn" class="btn btn-secondary" style="display: none;">↶ Undo</button>
                         <button id="undo-plan-btn" class="btn btn-secondary" style="display: none;">↶ Undo Card</button>
                         <button id="finish-movement-btn" class="btn btn-primary" style="display: none;">Finish Movement</button>
                         <button id="end-turn-btn" class="btn btn-primary">End Turn</button>
@@ -1371,7 +1371,7 @@ main {
             </div>
 
             <div class="log-container">
-                <h3>Game Log</h3>
+                <h3>Game Log <button id="download-log-btn" class="btn btn-secondary" type="button">Download Log</button></h3>
                 <div id="game-log" class="game-log" role="log" aria-live="polite">
                     <p>Game started! Draw your cards and make your move!</p>
                 </div>
@@ -1440,6 +1440,8 @@ let gameState = {
     selectedPlayer: null,
     selectedMarkCells: [],
     moveHistory: [],
+    undoHistory: [],
+    gameLog: ['Game started! Draw your cards and make your move!'],
     multiMove: null,
     commandActivation: null,
     plannedOffense: [],
@@ -2145,6 +2147,7 @@ function canSelectForCommand(cell, card) {
 }
 
 function selectCommandPlayer(cell, card) {
+    recordUndoSnapshot(`activating player at (${cell.x}, ${cell.y})`);
     const command = card.command;
     const mainLane = getCommandSelectionLane(cell, command);
     const supportLane = getCommandSupportSelectionLane(cell, command);
@@ -2287,6 +2290,7 @@ function getCommandActionsForCell(card, cell) {
 }
 
 function chooseCommandActionPlayer(cell) {
+    recordUndoSnapshot(`choosing action player at (${cell.x}, ${cell.y})`);
     const card = gameState.selectedCard;
     const actions = getCommandActionsForCell(card, cell);
     if (actions.length === 0) {
@@ -2304,6 +2308,7 @@ function chooseCommandActionPlayer(cell) {
 
 function chooseCommandAction(action) {
     if (!gameState.selectedCard || !gameState.commandActivation || !gameState.selectedPlayer) return;
+    recordUndoSnapshot(`choosing ${action}`);
     if (action === 'header') {
         const airborneCell = getAirborneBallCell();
         if (!airborneCell || !canHeaderFromCell(gameState.selectedPlayer)) {
@@ -2326,6 +2331,7 @@ function chooseCommandAction(action) {
 function executeCommandFreePass(targetCell) {
     const passerCell = getCommandFreePasser();
     if (!passerCell || !isValidFreePassTarget(targetCell)) return;
+    recordUndoSnapshot(`free pass to (${targetCell.x}, ${targetCell.y})`);
     const result = executeZonePass(passerCell, targetCell);
     gameState.commandActivation.freePassUsed = true;
     if (result?.forfeitAction) {
@@ -2492,6 +2498,7 @@ function resolveCommandActionTarget(targetCell) {
     const actorCell = gameState.selectedPlayer;
     const action = gameState.commandActivation.action;
     const team = gameState.currentTurn;
+    recordUndoSnapshot(`${action} target at (${targetCell.x}, ${targetCell.y})`, team);
 
     if (action.startsWith('mark')) {
         const count = parseInt(action.split(' ')[1], 10) || 2;
@@ -2866,6 +2873,7 @@ function chooseReboundCell(cell) {
     const pending = gameState.pendingRebound;
     const legal = pending.candidates.some(candidate => candidate.x === cell.x && candidate.y === cell.y);
     if (!legal) return;
+    recordUndoSnapshot(`choosing rebound at (${cell.x}, ${cell.y})`, pending.resolvingTeam);
 
     gameState.pendingRebound = null;
     resolveReboundAtCell(cell, pending.shootingTeam, pending.defendingTeam);
@@ -2990,15 +2998,119 @@ function executePressTackle(card, targetCell) {
     }
 }
 
-function log(message) {
-    const logElement = document.getElementById('game-log');
-    const p = document.createElement('p');
-    p.textContent = message;
-    logElement.insertBefore(p, logElement.firstChild);
-   
-    while (logElement.children.length > 20) {
-        logElement.removeChild(logElement.lastChild);
+function shouldRecordUndoForTeam(team = gameState.currentTurn) {
+    return gameState.manualControlMode || team === 'player';
+}
+
+function cloneForUndo(value) {
+    return JSON.parse(JSON.stringify(value));
+}
+
+function findCardByUid(uid) {
+    if (!uid) return null;
+    const piles = [
+        gameState.playerHand,
+        gameState.aiHand,
+        gameState.playerDeck,
+        gameState.aiDeck,
+        gameState.playerDiscard,
+        gameState.aiDiscard,
+        gameState.plannedOffense,
+        gameState.plannedDefense,
+        gameState.market,
+        [gameState.playerCoach, gameState.aiCoach, gameState.selectedCard].filter(Boolean)
+    ];
+    return piles.flat().find(card => card && card.uid === uid) || null;
+}
+
+function relinkStateReferences() {
+    if (gameState.selectedPlayer?.x !== undefined && gameState.selectedPlayer?.y !== undefined) {
+        gameState.selectedPlayer = getCell(gameState.selectedPlayer.x, gameState.selectedPlayer.y);
     }
+    if (gameState.selectedCard?.uid) {
+        gameState.selectedCard = findCardByUid(gameState.selectedCard.uid) || gameState.selectedCard;
+    }
+    gameState.selectedMarkCells = (gameState.selectedMarkCells || [])
+        .map(cell => getCell(cell.x, cell.y))
+        .filter(Boolean);
+}
+
+function makeUndoSnapshot(label) {
+    const { undoHistory, ...state } = gameState;
+    return {
+        label,
+        state: cloneForUndo(state)
+    };
+}
+
+function recordUndoSnapshot(label, team = gameState.currentTurn) {
+    if (!shouldRecordUndoForTeam(team)) return;
+    gameState.undoHistory.push(makeUndoSnapshot(label));
+    if (gameState.undoHistory.length > 100) {
+        gameState.undoHistory.shift();
+    }
+}
+
+function restoreUndoSnapshot(snapshot) {
+    Object.keys(gameState).forEach(key => {
+        if (key !== 'undoHistory') delete gameState[key];
+    });
+    Object.assign(gameState, cloneForUndo(snapshot.state));
+    gameState.undoHistory = gameState.undoHistory || [];
+    gameState.gameLog = gameState.gameLog || [];
+    relinkStateReferences();
+}
+
+function renderLog() {
+    const logElement = document.getElementById('game-log');
+    if (!logElement) return;
+    logElement.innerHTML = '';
+    (gameState.gameLog || []).slice(0, 20).forEach(entry => {
+        const p = document.createElement('p');
+        p.textContent = entry;
+        logElement.appendChild(p);
+    });
+}
+
+function downloadGameLog() {
+    const lines = (gameState.gameLog || []).slice().reverse();
+    const text = [
+        `Futbol '99 playtest log`,
+        `Exported: ${new Date().toLocaleString()}`,
+        `Score: Blue ${gameState.playerScore} - Red ${gameState.aiScore}`,
+        `Phase: ${gameState.gamePhase}`,
+        '',
+        ...lines
+    ].join('\n');
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `futbol-99-log-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+}
+
+function undoLastChange() {
+    const snapshot = gameState.undoHistory.pop();
+    if (!snapshot) {
+        undoLastMove();
+        return;
+    }
+    restoreUndoSnapshot(snapshot);
+    log(`Undid ${snapshot.label}.`);
+    render();
+}
+
+function log(message) {
+    if (!gameState.gameLog) gameState.gameLog = [];
+    gameState.gameLog.unshift(message);
+    while (gameState.gameLog.length > 200) {
+        gameState.gameLog.pop();
+    }
+    renderLog();
 }
 
     </script>
@@ -3403,6 +3515,7 @@ function startPlannedCardResolution(card, team, role) {
 
 function chooseDefenseResponse(card) {
     if (gameState.gamePhase !== 'choose_defense_card') return;
+    recordUndoSnapshot(`choosing defense response ${card.name}`, gameState.defenseTeam);
     startPlannedCardResolution(card, gameState.defenseTeam, 'defense');
 }
 
@@ -3488,6 +3601,7 @@ function playCard(card, team = 'player') {
         planCard(card, team);
         return;
     }
+    recordUndoSnapshot(`playing ${card.name}`, team);
 
     if (gameState.kickoffPending || gameState.goalKickPending) {
         log(gameState.kickoffPending
@@ -3602,6 +3716,7 @@ function useCoachAbility(team = 'player') {
     }
    
     const ability = coach.effect.ability;
+    recordUndoSnapshot(`using ${coach.name}`, team);
    
     if (ability === 'free_lightning_sprint') {
         // Give a free movement card (doesn't cost an action)
@@ -3774,6 +3889,7 @@ function undoLastMove() {
 
 function movePlayer(fromCell, toCell, options = {}) {
     if (options.recordUndo) {
+        recordUndoSnapshot(`moving to (${toCell.x}, ${toCell.y})`, fromCell.player?.team || gameState.currentTurn);
         recordMoveHistory(fromCell, toCell, options.context || 'move');
     }
     const recoveringLooseBall = !!(toCell.ball && !fromCell.ball && gameState.loosePossessionTeam);
@@ -5993,6 +6109,7 @@ function getComboGradient(types) {
 }
 
 function renderUI() {
+    renderLog();
     document.getElementById('player-score').textContent = gameState.playerScore;
     document.getElementById('ai-score').textContent = gameState.aiScore;
 
@@ -6063,7 +6180,7 @@ function renderUI() {
     } else if (gameState.gamePhase.startsWith('reposition') && (gameState.repositionTeam === 'player' || gameState.manualControlMode)) {
         endTurnBtn.style.display = 'none';
         finishMovementBtn.style.display = 'none';
-        undoMoveBtn.style.display = gameState.moveHistory.length > 0 ? 'inline-block' : 'none';
+        undoMoveBtn.style.display = (gameState.undoHistory.length > 0 || gameState.moveHistory.length > 0) ? 'inline-block' : 'none';
         undoPlanBtn.style.display = 'none';
         endRepositionBtn.style.display = 'inline-block';
         nextAIActionBtn.style.display = 'none';
@@ -6078,7 +6195,7 @@ function renderUI() {
                         ? 'Continue to Pass'
                         : (gameState.commandActivation.phase === 'free_pass' ? 'Skip Pass' : 'Resolve Command'))))
             : 'Finish Movement';
-        undoMoveBtn.style.display = gameState.moveHistory.length > 0 ? 'inline-block' : 'none';
+        undoMoveBtn.style.display = (gameState.undoHistory.length > 0 || gameState.moveHistory.length > 0) ? 'inline-block' : 'none';
         undoPlanBtn.style.display = 'none';
         endTurnBtn.style.display = (canFinishMovement || canAdvanceCommand) ? 'none' : 'inline-block';
         endRepositionBtn.style.display = 'none';
@@ -6109,6 +6226,9 @@ function renderUI() {
 // ========================================
 
 function initGame() {
+    gameState.undoHistory = [];
+    gameState.gameLog = ['Game started! Draw your cards and make your move!'];
+
     // Initialize field with rectangular shape (12-11-12-11 pattern for height)
     gameState.field = [];
     for (let x = 0; x < FIELD_WIDTH; x++) {
@@ -6144,6 +6264,7 @@ function initGame() {
     gameState.selectedCard = null;
     gameState.selectedPlayer = null;
     gameState.selectedMarkCells = [];
+    gameState.moveHistory = [];
     gameState.multiMove = null;
     gameState.commandActivation = null;
     gameState.pendingMoveMark = null;
@@ -6192,30 +6313,38 @@ function initGame() {
 document.getElementById('end-turn-btn').addEventListener('click', () => {
     // In manual mode, allow ending either team's turn
     if (gameState.manualControlMode || gameState.currentTurn === 'player') {
+        recordUndoSnapshot('ending turn');
         endTurn();
     }
 });
 
 document.getElementById('finish-movement-btn').addEventListener('click', () => {
+    recordUndoSnapshot('advancing action step');
     finishMovementCard();
 });
 
 document.getElementById('undo-move-btn').addEventListener('click', () => {
-    undoLastMove();
+    undoLastChange();
 });
 
 document.getElementById('undo-plan-btn').addEventListener('click', () => {
     undoPlannedCard();
 });
 
+document.getElementById('download-log-btn').addEventListener('click', () => {
+    downloadGameLog();
+});
+
 document.getElementById('end-reposition-btn').addEventListener('click', () => {
     // In manual mode, allow repositioning for both teams
     if (gameState.manualControlMode || gameState.repositionTeam === 'player') {
         if (gameState.gamePhase === 'reposition_shooter') {
+            recordUndoSnapshot('ending shooter reposition');
             // Move to defender repositioning
             const defendingTeam = gameState.repositionTeam === 'player' ? 'ai' : 'player';
             startDefenderRepositioning(defendingTeam);
         } else if (gameState.gamePhase === 'reposition_defender') {
+            recordUndoSnapshot('ending defender reposition');
             endRepositioning();
         }
     }
@@ -6232,6 +6361,7 @@ document.getElementById('next-ai-action-btn').addEventListener('click', () => {
 });
 
 document.getElementById('manual-control-btn').addEventListener('click', () => {
+    recordUndoSnapshot('toggling manual mode');
     gameState.manualControlMode = !gameState.manualControlMode;
     const btn = document.getElementById('manual-control-btn');
     btn.textContent = gameState.manualControlMode ? '🎮 Manual Mode: ON' : '🤖 Manual Mode: OFF';
@@ -6241,6 +6371,7 @@ document.getElementById('manual-control-btn').addEventListener('click', () => {
 });
 
 document.getElementById('field-view-btn').addEventListener('click', () => {
+    recordUndoSnapshot('flipping field view');
     gameState.fieldViewTeam = gameState.fieldViewTeam === 'player' ? 'ai' : 'player';
     render();
     log(gameState.fieldViewTeam === 'player' ? 'Field view set for Blue.' : 'Field view set for Red.');

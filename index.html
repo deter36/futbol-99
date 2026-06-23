@@ -1456,6 +1456,7 @@ let gameState = {
     offBalancePlayers: [],
     airborneBall: null,
     loosePossessionTeam: null,
+    pendingRebound: null,
     kickoffPending: false,
     goalKickPending: false,
     gamePhase: 'action', // 'action', 'reposition_shooter', 'reposition_defender', 'defensive_reaction', 'goal_kick_selection'
@@ -1517,6 +1518,7 @@ function clearAirborneBall() {
 
 function setControlledPossession(team) {
     gameState.loosePossessionTeam = null;
+    gameState.pendingRebound = null;
     if (team) {
         gameState.currentTurn = team;
     }
@@ -2310,8 +2312,8 @@ function chooseCommandAction(action) {
             return;
         }
         gameState.commandActivation.action = action;
-        const scored = executeHeader(gameState.selectedPlayer, airborneCell);
-        if (scored || gameState.goalKickPending || gameState.kickoffPending) return;
+        const headerResult = executeHeader(gameState.selectedPlayer, airborneCell);
+        if (headerResult === true || headerResult === 'pending' || gameState.goalKickPending || gameState.kickoffPending) return;
         completeCardPlay(gameState.selectedCard, gameState.currentTurn);
         return;
     }
@@ -2539,15 +2541,15 @@ function resolveCommandActionTarget(targetCell) {
     }
 
     if (action === 'header') {
-        const scored = executeHeader(actorCell, targetCell);
-        if (scored || gameState.goalKickPending || gameState.kickoffPending) return;
+        const headerResult = executeHeader(actorCell, targetCell);
+        if (headerResult === true || headerResult === 'pending' || gameState.goalKickPending || gameState.kickoffPending) return;
         completeCardPlay(card, team);
         return;
     }
 
     if (action === 'shoot') {
-        const scored = executeZoneShot(actorCell, targetCell);
-        if (scored || gameState.goalKickPending || gameState.kickoffPending) return;
+        const shotResult = executeZoneShot(actorCell, targetCell);
+        if (shotResult === true || shotResult === 'pending' || gameState.goalKickPending || gameState.kickoffPending) return;
         completeCardPlay(card, team);
     }
 }
@@ -2671,19 +2673,23 @@ function countMarkersOnCell(cell, markingTeam) {
 }
 
 function rollD6Required(label, requiredRoll, modifier = 0, autoIfUnmodified = false) {
+    return rollD6Result(label, requiredRoll, modifier, autoIfUnmodified).success;
+}
+
+function rollD6Result(label, requiredRoll, modifier = 0, autoIfUnmodified = false) {
     const finalRequired = requiredRoll + modifier;
     if (autoIfUnmodified && modifier === 0) {
         log(`${label}: unimpeded, automatic success.`);
-        return true;
+        return { success: true, automatic: true, required: finalRequired, roll: null, margin: null };
     }
     if (finalRequired > 6) {
         log(`${label}: needs ${finalRequired}+ on d6. Automatic fail.`);
-        return false;
+        return { success: false, automatic: true, required: finalRequired, roll: null, margin: null };
     }
     const roll = Math.floor(Math.random() * 6) + 1;
     const success = roll >= finalRequired;
     log(`${label}: d6 ${roll}, needs ${finalRequired}+. ${success ? 'Success' : 'Fail'}.`);
-    return success;
+    return { success, automatic: false, required: finalRequired, roll, margin: roll - finalRequired };
 }
 
 function rollD6Check(label, penalty) {
@@ -2710,6 +2716,165 @@ function executeZonePass(passerCell, targetCell) {
     }
 }
 
+function getReboundCandidates(shooterCell, goalCell, team) {
+    const fieldDirection = team === 'player' ? -1 : 1;
+    const candidates = getAdjacentCells(goalCell.x, goalCell.y)
+        .filter(cell => cell.x === goalCell.x + fieldDirection);
+    if (candidates.length <= 1) return candidates;
+
+    const bestDistance = Math.min(...candidates.map(cell => distance(shooterCell.x, shooterCell.y, cell.x, cell.y)));
+    return candidates.filter(cell => distance(shooterCell.x, shooterCell.y, cell.x, cell.y) === bestDistance);
+}
+
+function clearBallFromPitch() {
+    gameState.field.forEach(cell => {
+        cell.ball = false;
+    });
+    clearAirborneBall();
+}
+
+function getTeamPlannedCards(team) {
+    if (team === gameState.offenseTeam) return gameState.plannedOffense;
+    if (team === gameState.defenseTeam) return gameState.plannedDefense;
+    return [];
+}
+
+function removePlannedCardForTeam(card, team) {
+    if (team === gameState.offenseTeam) {
+        gameState.plannedOffense = gameState.plannedOffense.filter(plannedCard => plannedCard.uid !== card.uid);
+    }
+    if (team === gameState.defenseTeam) {
+        gameState.plannedDefense = gameState.plannedDefense.filter(plannedCard => plannedCard.uid !== card.uid);
+    }
+}
+
+function canCardActivatePlayerForAction(card, cell, team, action) {
+    if (!card?.command || !cell?.player || cell.player.team !== team) return false;
+    const command = card.command;
+    const zones = getPitchZones(cell, team);
+    if (command.mode === 'third' && zones.third !== command.third) return false;
+    const mainLane = command.lanes.find(lane => zones.lanes.includes(lane));
+    if (!mainLane) return false;
+    const actions = command.actions[zones.third] || [];
+    return actions.includes(action);
+}
+
+function findEmergencyClearOption(defenderCells, defendingTeam) {
+    const plannedCards = getTeamPlannedCards(defendingTeam)
+        .filter(card => !gameState.selectedCard || card.uid !== gameState.selectedCard.uid);
+    for (const defenderCell of defenderCells) {
+        const card = plannedCards.find(plannedCard =>
+            canCardActivatePlayerForAction(plannedCard, defenderCell, defendingTeam, 'clear')
+        );
+        if (card) {
+            return { card, defenderCell };
+        }
+    }
+    return null;
+}
+
+function movePlayerForRebound(fromCell, toCell) {
+    if (!fromCell || !toCell || !fromCell.player || toCell.player) return null;
+    const player = fromCell.player;
+    fromCell.player = null;
+    fromCell.ball = false;
+    toCell.player = player;
+    toCell.ball = true;
+    setControlledPossession(player.team);
+    return toCell;
+}
+
+function resolveReboundAtCell(reboundCell, shootingTeam, defendingTeam) {
+    clearBallFromPitch();
+    reboundCell.ball = true;
+
+    if (reboundCell.player) {
+        setControlledPossession(reboundCell.player.team);
+        log(`Rebound drops to occupied hex (${reboundCell.x}, ${reboundCell.y}); ${reboundCell.player.team === 'player' ? 'Blue' : 'Red'} gains possession.`);
+        return;
+    }
+
+    setLoosePossession(shootingTeam);
+    const playersByDistance = gameState.field
+        .filter(cell => cell.player)
+        .map(cell => ({ cell, distance: distance(cell.x, cell.y, reboundCell.x, reboundCell.y) }))
+        .sort((a, b) => a.distance - b.distance);
+
+    if (playersByDistance.length === 0) {
+        log(`Rebound loose at (${reboundCell.x}, ${reboundCell.y}).`);
+        return;
+    }
+
+    const bestDistance = playersByDistance[0].distance;
+    const tied = playersByDistance.filter(entry => entry.distance === bestDistance).map(entry => entry.cell);
+    const attackingTies = tied.filter(cell => cell.player.team === shootingTeam);
+    const defendingTies = tied.filter(cell => cell.player.team === defendingTeam);
+
+    if (attackingTies.length > 0 && defendingTies.length > 0) {
+        const clearOption = findEmergencyClearOption(defendingTies, defendingTeam);
+        if (clearOption) {
+            removePlannedCardForTeam(clearOption.card, defendingTeam);
+            discardCardOnce(clearOption.card, defendingTeam);
+            const defenderAtRebound = movePlayerForRebound(clearOption.defenderCell, reboundCell);
+            log(`Tied rebound: defense spends ${clearOption.card.name} for emergency CLEAR.`);
+            executeClear(defenderAtRebound || reboundCell, getDefaultClearTarget(defenderAtRebound || reboundCell, defendingTeam));
+            return;
+        }
+
+        const attackerAtRebound = movePlayerForRebound(attackingTies[0], reboundCell);
+        log(`Tied rebound: no legal CLEAR spent. ${shootingTeam === 'player' ? 'Blue' : 'Red'} recovers at (${reboundCell.x}, ${reboundCell.y}).`);
+        if (!attackerAtRebound) setControlledPossession(shootingTeam);
+        return;
+    }
+
+    const winner = tied[0];
+    const winnerTeam = winner.player.team;
+    const winnerAtRebound = movePlayerForRebound(winner, reboundCell);
+    if (winnerAtRebound) {
+        log(`Rebound recovered by ${winnerTeam === 'player' ? 'Blue' : 'Red'} at (${reboundCell.x}, ${reboundCell.y}).`);
+    }
+}
+
+function resolveShotRebound(shooterCell, goalCell, shootingTeam, defendingTeam) {
+    const candidates = getReboundCandidates(shooterCell, goalCell, shootingTeam);
+    if (candidates.length === 0) {
+        log('Near miss, but no legal rebound hex found. Goal kick CLEAR restart.');
+        startGoalKickClear(defendingTeam, goalCell);
+        return false;
+    }
+
+    if (candidates.length > 1) {
+        gameState.pendingRebound = {
+            shootingTeam,
+            defendingTeam,
+            candidates: candidates.map(cell => ({ x: cell.x, y: cell.y })),
+            card: gameState.selectedCard,
+            resolvingTeam: gameState.currentTurn
+        };
+        log('Near miss: choose the rebound hex.');
+        render();
+        return true;
+    }
+
+    log('Near miss: rebound chance.');
+    resolveReboundAtCell(candidates[0], shootingTeam, defendingTeam);
+    return false;
+}
+
+function chooseReboundCell(cell) {
+    if (!gameState.pendingRebound) return;
+    const pending = gameState.pendingRebound;
+    const legal = pending.candidates.some(candidate => candidate.x === cell.x && candidate.y === cell.y);
+    if (!legal) return;
+
+    gameState.pendingRebound = null;
+    resolveReboundAtCell(cell, pending.shootingTeam, pending.defendingTeam);
+    if (pending.card && gameState.selectedCard && pending.card.uid === gameState.selectedCard.uid) {
+        completeCardPlay(gameState.selectedCard, pending.resolvingTeam);
+    }
+    render();
+}
+
 function executeZoneShot(shooterCell, goalCell, options = {}) {
     const team = gameState.currentTurn;
     const defendingTeam = team === 'player' ? 'ai' : 'player';
@@ -2718,12 +2883,15 @@ function executeZoneShot(shooterCell, goalCell, options = {}) {
     const markers = countMarkersOnCell(shooterCell, defendingTeam);
     const cardPenalty = getShotRequiredRollModifier(gameState.selectedCard, shooterCell);
     const modifier = effectiveBlocks + markers + cardPenalty;
-    if (rollD6Required(options.label || 'Shot', 5, modifier)) {
+    const shotRoll = rollD6Result(options.label || 'Shot', 5, modifier);
+    if (shotRoll.success) {
         if (team === 'player') gameState.playerScore++;
         else gameState.aiScore++;
         log(`${team === 'player' ? 'Player' : 'AI'} scores!`);
         restartAfterGoal(team);
         return true;
+    } else if (!shotRoll.automatic && shotRoll.margin === -1) {
+        return resolveShotRebound(shooterCell, goalCell, team, defendingTeam) ? 'pending' : false;
     } else {
         log('Shot saved/blocked. Goal kick CLEAR restart.');
         startGoalKickClear(defendingTeam, goalCell);
@@ -3103,6 +3271,7 @@ function startPlanningRound() {
     gameState.selectedCard = null;
     gameState.selectedPlayer = null;
     gameState.commandActivation = null;
+    gameState.pendingRebound = null;
     log(`${offense === 'player' ? 'Player' : 'AI'} has possession. Offense: choose 3 cards face down.`);
     render();
     autoPlanIfNeeded();
@@ -4957,6 +5126,16 @@ function renderCell(cell, container) {
                 };
             }
         }
+        // REBOUND CHOICE MODE
+        else if (gameState.pendingRebound) {
+            const isCandidate = gameState.pendingRebound.candidates.some(candidate =>
+                candidate.x === cell.x && candidate.y === cell.y
+            );
+            if (isCandidate) {
+                cellDiv.classList.add('valid-target');
+                cellDiv.onclick = () => chooseReboundCell(cell);
+            }
+        }
         // NORMAL CARD PLAY MODE
         else if (gameState.selectedCard) {
             const effect = getActiveCardEffect(gameState.selectedCard, gameState.currentTurn);
@@ -5972,6 +6151,7 @@ function initGame() {
     gameState.offBalancePlayers = [];
     gameState.airborneBall = null;
     gameState.loosePossessionTeam = null;
+    gameState.pendingRebound = null;
     gameState.kickoffPending = false;
     gameState.goalKickPending = false;
     gameState.playerHand = [];

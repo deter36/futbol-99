@@ -389,6 +389,25 @@ Shots succeed on 5+.
 Each BLOCKED hex intersecting the shot line increases the required roll by 1.
 If the required roll exceeds 6, the shot automatically fails.
 A player can SHOOT only if they moved 1 or fewer spaces during this card resolution.
+
+Shot Rebounds
+If a SHOT or offensive HEADER fails by exactly 1, it creates a rebound instead of an immediate goal kick.
+Place the rebound in the field hex adjacent to the targeted goal hex that is most directly back toward the shooter.
+If two rebound hexes are equally valid, the shooting coach chooses one of them.
+
+If the rebound hex is occupied:
+* that player immediately gains possession.
+
+If the rebound hex is empty:
+* count distance from the rebound hex to all players
+* the closest player moves to the rebound hex and gains possession
+
+If the closest attacker and closest defender are tied:
+* the defending coach may reveal and discard one unrevealed planned card with CLEAR available to one of the tied defenders in that defender's current lane and zone
+* if they do, that defender moves to the rebound hex and immediately resolves CLEAR
+* if they do not, the closest attacking player moves to the rebound hex and gains possession
+
+The emergency CLEAR card is spent and does not resolve later in the round.
 ________________
 
 

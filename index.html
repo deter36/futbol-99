@@ -1492,6 +1492,19 @@ function isAirborneBallCell(cell) {
         gameState.airborneBall.y === cell.y);
 }
 
+function getAirborneBallCell() {
+    if (!gameState.airborneBall) return null;
+    return getCell(gameState.airborneBall.x, gameState.airborneBall.y);
+}
+
+function canHeaderFromCell(actorCell) {
+    const airborneCell = getAirborneBallCell();
+    return !!(actorCell?.player &&
+        airborneCell &&
+        canUseStillnessAction(actorCell) &&
+        distance(actorCell.x, actorCell.y, airborneCell.x, airborneCell.y) <= 1);
+}
+
 function clearAirborneBall() {
     gameState.airborneBall = null;
 }
@@ -2259,6 +2272,9 @@ function getCommandActionsForCell(card, cell) {
     if (!canUseStillnessAction(cell)) {
         actions = actions.filter(action => !['shoot', 'header'].includes(action));
     }
+    if (!canHeaderFromCell(cell)) {
+        actions = actions.filter(action => action !== 'header');
+    }
     return actions;
 }
 
@@ -2280,6 +2296,19 @@ function chooseCommandActionPlayer(cell) {
 
 function chooseCommandAction(action) {
     if (!gameState.selectedCard || !gameState.commandActivation || !gameState.selectedPlayer) return;
+    if (action === 'header') {
+        const airborneCell = getAirborneBallCell();
+        if (!airborneCell || !canHeaderFromCell(gameState.selectedPlayer)) {
+            log(`${gameState.selectedCard.name}: no adjacent airborne ball for that header.`);
+            render();
+            return;
+        }
+        gameState.commandActivation.action = action;
+        const scored = executeHeader(gameState.selectedPlayer, airborneCell);
+        if (scored || gameState.goalKickPending || gameState.kickoffPending) return;
+        completeCardPlay(gameState.selectedCard, gameState.currentTurn);
+        return;
+    }
     gameState.commandActivation.action = action;
     gameState.selectedMarkCells = [];
     log(`${gameState.selectedCard.name}: ${action} selected. Choose a target.`);
@@ -2433,10 +2462,7 @@ function isValidCommandActionTarget(action, actorCell, targetCell) {
         return isInClearFan(actorCell, targetCell, team);
     }
     if (action === 'header') {
-        if (!canUseStillnessAction(actorCell)) return false;
-        return isAirborneBallCell(targetCell) &&
-            distance(actorCell.x, actorCell.y, targetCell.x, targetCell.y) <= 1 &&
-            canUseStillnessAction(actorCell);
+        return canHeaderFromCell(actorCell) && isAirborneBallCell(targetCell);
     }
     if (action === 'shoot') {
         if (!actorCell.ball) return false;

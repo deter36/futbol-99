@@ -204,6 +204,11 @@ main {
     width: fit-content;
 }
 
+.pitch-action-panel {
+    width: min(100%, 620px);
+    margin: 8px auto 0;
+}
+
 .game-board-container h2 {
     margin-bottom: 15px;
 }
@@ -1298,6 +1303,7 @@ main {
                             </div>
                         </div>
                     </div>
+                    <div id="pitch-action-panel" class="pitch-action-panel" aria-live="polite"></div>
                 </div>
                
                 <aside class="game-status-panel">
@@ -4688,6 +4694,7 @@ function getValidMoveTargets(fromCell, range) {
 
 function render() {
     renderField();
+    renderPitchActionPanel();
     renderHand();
     renderMarket();
     renderUI();
@@ -5253,7 +5260,6 @@ function renderPlanningStatus(container) {
     status.appendChild(label);
 
     status.appendChild(renderPlannedArea());
-    renderCommandActionPanel(status);
     container.appendChild(status);
 }
 
@@ -5311,6 +5317,13 @@ function renderPlannedRow(title, cards, options = {}) {
 
     row.appendChild(cardWrap);
     return row;
+}
+
+function renderPitchActionPanel() {
+    const container = document.getElementById('pitch-action-panel');
+    if (!container) return;
+    container.innerHTML = '';
+    renderCommandActionPanel(container);
 }
 
 function renderCommandActionPanel(container) {

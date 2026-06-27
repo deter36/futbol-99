@@ -559,6 +559,48 @@ main {
     box-shadow: inset 0 0 0 4px rgba(255, 235, 59, 0.75);
 }
 
+.field-cell.marked-blue {
+    box-shadow: inset 0 0 0 4px rgba(33, 150, 243, 0.9), 0 0 12px rgba(33, 150, 243, 0.45);
+}
+
+.field-cell.marked-red {
+    box-shadow: inset 0 0 0 4px rgba(229, 57, 53, 0.9), 0 0 12px rgba(229, 57, 53, 0.45);
+}
+
+.field-cell.marked-blue.marked-red {
+    box-shadow: inset 0 0 0 4px rgba(156, 39, 176, 0.95), 0 0 14px rgba(156, 39, 176, 0.55);
+}
+
+.mark-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.58rem;
+    font-weight: 900;
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.45);
+    z-index: 2;
+}
+
+.mark-badge.mark-blue {
+    background: #1565C0;
+}
+
+.mark-badge.mark-red {
+    background: #C62828;
+}
+
+.mark-badge.mark-both {
+    background: #6A1B9A;
+}
+
 .card.defense-side {
     background: linear-gradient(135deg, #607D8B, #90A4AE);
 }
@@ -1075,6 +1117,76 @@ main {
     background: rgba(255, 255, 255, 0.1);
 }
 
+.coach-container {
+    background: rgba(0, 0, 0, 0.35);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+.coach-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.coach-header h3 {
+    margin: 0;
+    color: #64B5F6;
+}
+
+.coach-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.coach-controls .btn {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+}
+
+.coach-panel-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+}
+
+.coach-box {
+    min-height: 150px;
+    width: 100%;
+    resize: vertical;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    padding: 8px;
+    background: rgba(10, 24, 45, 0.9);
+    color: #fff;
+    font-family: Consolas, monospace;
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.coach-option-list {
+    max-height: 180px;
+    overflow-y: auto;
+    margin: 8px 0 0;
+    padding-left: 18px;
+    font-size: 0.82rem;
+}
+
+.coach-option-list li {
+    margin-bottom: 4px;
+}
+
+@media (max-width: 900px) {
+    .coach-panel-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Responsive */
 @media (max-width: 1400px) {
     .game-layout {
@@ -1343,6 +1455,9 @@ main {
                    
                     <div class="button-section">
                         <button id="manual-control-btn" class="btn btn-secondary">🤖 Manual Mode: OFF</button>
+                        <button id="hidden-solo-btn" class="btn btn-secondary">🕶️ Hidden Solo: OFF</button>
+                        <button id="coach-assist-btn" class="btn btn-secondary">🧠 Coach Assist: OFF</button>
+                        <button id="auto-coach-btn" class="btn btn-secondary">🤖 LLM Auto: OFF</button>
                         <button id="field-view-btn" class="btn btn-secondary">🔵 View: Blue</button>
                         <button id="undo-move-btn" class="btn btn-secondary" style="display: none;">↶ Undo</button>
                         <button id="undo-plan-btn" class="btn btn-secondary" style="display: none;">↶ Undo Card</button>
@@ -1368,6 +1483,24 @@ main {
                         </div>
                     </div>
                 </aside>
+            </div>
+
+            <div class="coach-container">
+                <div class="coach-header">
+                    <h3>LLM Coach</h3>
+                </div>
+                <div class="coach-controls">
+                    <button id="coach-generate-btn" class="btn btn-secondary" type="button">Generate Coach Prompt</button>
+                    <button id="coach-copy-btn" class="btn btn-secondary" type="button">Copy Prompt</button>
+                    <button id="coach-apply-btn" class="btn btn-primary" type="button">Apply Coach Choice</button>
+                </div>
+                <div class="coach-panel-grid">
+                    <div>
+                        <textarea id="coach-prompt" class="coach-box" readonly aria-label="Coach prompt"></textarea>
+                        <ol id="coach-options" class="coach-option-list"></ol>
+                    </div>
+                    <textarea id="coach-response" class="coach-box" aria-label="Coach response" placeholder='Paste coach JSON here, for example: {"choice": 1}'></textarea>
+                </div>
             </div>
 
             <div class="log-container">
@@ -1464,6 +1597,14 @@ let gameState = {
     gamePhase: 'action', // 'action', 'reposition_shooter', 'reposition_defender', 'defensive_reaction', 'goal_kick_selection'
     aiDebugMode: true, // DEBUG: Set to false to make AI auto-play
     manualControlMode: false, // When true, player controls both teams
+    hiddenSoloMode: false, // When true, Red hand/plans stay hidden and the local coach drives Red steps
+    coachAssistMode: false, // When true, Red waits for pasted LLM coach choices instead of auto-playing
+    coachAssistPromptKey: null,
+    autoCoachMode: false, // When true, Coach Assist asks a local LLM coach server for Red choices
+    autoCoachBusy: false,
+    autoCoachEndpoint: 'http://127.0.0.1:8790/coach-choice',
+    autoCoachHistory: [],
+    hiddenCoachBusy: false,
     fieldViewTeam: 'player', // Visual-only field orientation: 'player' or 'ai'
     aiActionQueue: [], // Queue of AI actions to execute step-by-step
     aiPhase: 'idle', // 'idle', 'playing_economy', 'playing_actions', 'buying', 'done'
@@ -1474,7 +1615,8 @@ let gameState = {
     goalKickDefenders: null, // Defenders tied for closest during goal kick
     goalKickCell: null,
     goalKickShootingTeam: null,
-    goalKickDefendingTeam: null
+    goalKickDefendingTeam: null,
+    coachOptions: []
 };
 
 // ========================================
@@ -1776,6 +1918,16 @@ function isMarkedByTeam(cell, markingTeam) {
     return !!getMarkedThreat(cell, markingTeam);
 }
 
+function getMarkTeamsForCell(cell) {
+    const teams = new Set();
+    gameState.defensiveMarks.forEach(mark => {
+        if (mark.zones.some(zone => zone.x === cell.x && zone.y === cell.y)) {
+            teams.add(mark.team);
+        }
+    });
+    return [...teams];
+}
+
 function getPlayerStateKey(team, playerId) {
     return `${team}:${playerId}`;
 }
@@ -1960,6 +2112,13 @@ function startKickoffPass(team) {
     gameState.commandActivation = null;
     gameState.pendingMoveMark = null;
     log(`${team === 'player' ? 'Your' : 'AI'} kickoff: make a free medium pass.`);
+    if (team === 'ai' && gameState.autoCoachMode) {
+        setTimeout(() => {
+            if (gameState.kickoffPending && gameState.currentTurn === 'ai') {
+                aiTakeKickoffPass();
+            }
+        }, 250);
+    }
 }
 
 function startGoalKickPass(team) {
@@ -1973,6 +2132,13 @@ function startGoalKickPass(team) {
     gameState.commandActivation = null;
     gameState.pendingMoveMark = null;
     log(`${team === 'player' ? 'Your' : 'AI'} goal kick: make a free long pass to a teammate.`);
+    if (team === 'ai' && gameState.autoCoachMode) {
+        setTimeout(() => {
+            if (gameState.goalKickPending && gameState.currentTurn === 'ai') {
+                aiTakeGoalKickPass();
+            }
+        }, 250);
+    }
 }
 
 function startGoalKickClear(team, shotGoalCell = null) {
@@ -2011,6 +2177,18 @@ function startGoalKickClear(team, shotGoalCell = null) {
 
     log(`${team === 'player' ? 'Blue' : 'Red'} goal kick: choose a CLEAR target from (${clearCell?.x}, ${clearCell?.y}).`);
     render();
+    if (team === 'ai' && gameState.autoCoachMode && clearCell) {
+        setTimeout(() => {
+            if (!gameState.goalKickPending || gameState.currentTurn !== 'ai') return;
+            const target = getDefaultClearTarget(clearCell, team);
+            executeClear(clearCell, target);
+            gameState.goalKickPending = false;
+            gameState.selectedCard = null;
+            gameState.selectedPlayer = null;
+            log('LLM Auto completed Red goal kick CLEAR restart.');
+            startPlanningRound();
+        }, 250);
+    }
 }
 
 function aiTakeKickoffPass() {
@@ -2186,6 +2364,12 @@ function startCommandMovement() {
 function completeCommandCard() {
     const card = gameState.selectedCard;
     if (!card || !gameState.commandActivation) return;
+
+    if (gameState.commandActivation.actionSpent) {
+        log(`${card.name}: ${gameState.commandActivation.actionSpentReason || 'action already spent'}.`);
+        completeCardPlay(card, gameState.currentTurn);
+        return;
+    }
 
     if (gameState.commandActivation.phase !== 'act') {
         if (gameState.commandActivation.phase === 'move') {
@@ -2488,6 +2672,18 @@ function isValidCommandActionTarget(action, actorCell, targetCell) {
         return targetCell.x === goalX && targetCell.y >= 5 && targetCell.y <= 7;
     }
     return false;
+}
+
+function isSelectedMarkCell(cell) {
+    return gameState.selectedMarkCells.some(markCell => markCell.x === cell.x && markCell.y === cell.y);
+}
+
+function isValidCoachActionTarget(action, actorCell, targetCell) {
+    if (!isValidCommandActionTarget(action, actorCell, targetCell)) return false;
+    if (action.startsWith('mark')) {
+        return !isSelectedMarkCell(targetCell);
+    }
+    return true;
 }
 
 function resolveCommandActionTarget(targetCell) {
@@ -3033,7 +3229,7 @@ function relinkStateReferences() {
 }
 
 function makeUndoSnapshot(label) {
-    const { undoHistory, ...state } = gameState;
+    const { undoHistory, coachOptions, ...state } = gameState;
     return {
         label,
         state: cloneForUndo(state)
@@ -3055,6 +3251,7 @@ function restoreUndoSnapshot(snapshot) {
     Object.assign(gameState, cloneForUndo(snapshot.state));
     gameState.undoHistory = gameState.undoHistory || [];
     gameState.gameLog = gameState.gameLog || [];
+    gameState.coachOptions = [];
     relinkStateReferences();
 }
 
@@ -3413,6 +3610,14 @@ function planCard(card, team) {
 
 function autoPlanIfNeeded() {
     if (gameState.manualControlMode) return;
+    if (gameState.hiddenSoloMode) {
+        scheduleHiddenCoachStep();
+        return;
+    }
+    if (gameState.coachAssistMode) {
+        refreshCoachAssistPrompt('Coach Assist: Red planning is waiting for a pasted coach choice.');
+        return;
+    }
 
     if (gameState.gamePhase === 'planning_offense' && gameState.offenseTeam === 'ai') {
         autoPlanCards('ai', gameState.plannedOffense);
@@ -3501,6 +3706,8 @@ function startPlannedCardResolution(card, team, role) {
         movedPlayerIds: [],
         movedPlayerDistances: {},
         freePassUsed: false,
+        actionSpent: false,
+        actionSpentReason: null,
         actingPlayerId: null,
         action: null
     };
@@ -3527,9 +3734,11 @@ function advanceResolutionAfterCard(card, team) {
             gameState.currentTurn = gameState.defenseTeam;
             gameState.resolvingRole = null;
             log('Defense: choose one planned card to reveal and resolve.');
-            if (!gameState.manualControlMode && gameState.defenseTeam === 'ai') {
+            if (!gameState.manualControlMode && !gameState.coachAssistMode && gameState.defenseTeam === 'ai') {
                 const card = gameState.plannedDefense[0];
                 setTimeout(() => chooseDefenseResponse(card), 300);
+            } else if (gameState.coachAssistMode && gameState.defenseTeam === 'ai') {
+                refreshCoachAssistPrompt('Coach Assist: Red defense response is waiting for a pasted coach choice.');
             }
         } else {
             gameState.offenseResolveIndex++;
@@ -3578,6 +3787,7 @@ function restartAfterGoal(scoringTeam) {
     setupRestartFormation(concedingTeam);
     startKickoffPass(concedingTeam);
     log('Goal restart: all planned cards discarded and both teams draw back to 6.');
+    render();
 }
 
 function discardUnresolvedPlannedCards() {
@@ -3887,12 +4097,23 @@ function movePlayer(fromCell, toCell, options = {}) {
         recordUndoSnapshot(`moving to (${toCell.x}, ${toCell.y})`, fromCell.player?.team || gameState.currentTurn);
         recordMoveHistory(fromCell, toCell, options.context || 'move');
     }
-    const recoveringLooseBall = !!(toCell.ball && !fromCell.ball && gameState.loosePossessionTeam);
+    const recoveringAirborneBall = !!(toCell.ball && !fromCell.ball && isAirborneBallCell(toCell));
+    const recoveringLooseBall = !!(toCell.ball && !fromCell.ball && gameState.loosePossessionTeam && !recoveringAirborneBall);
     toCell.player = fromCell.player;
     if (fromCell.ball) {
         toCell.ball = true;
         fromCell.ball = false;
         setControlledPossession(toCell.player.team);
+    } else if (recoveringAirborneBall && toCell.player) {
+        clearAirborneBall();
+        setControlledPossession(toCell.player.team);
+        if (gameState.commandActivation) {
+            gameState.commandActivation.freePassUsed = true;
+            gameState.commandActivation.actionSpent = true;
+            gameState.commandActivation.actionSpentReason = 'controlled the airborne ball; card action spent';
+            gameState.commandActivation.actingPlayerId = toCell.player.id;
+        }
+        log(`${toCell.player.team === 'player' ? 'Blue' : 'Red'} controls the airborne ball at (${toCell.x}, ${toCell.y}); card action spent.`);
     } else if (recoveringLooseBall && toCell.player) {
         setControlledPossession(toCell.player.team);
         if (gameState.commandActivation) {
@@ -4007,7 +4228,7 @@ function handleOutOfBounds(teamThatLostBall) {
    
     log(`${opposingTeam === 'player' ? 'Your' : 'AI'} throw-in! Turn starts with possession.`);
    
-    if (opposingTeam === 'ai') {
+    if (opposingTeam === 'ai' && !gameState.coachAssistMode && !gameState.hiddenSoloMode) {
         render();
         setTimeout(aiTakeTurn, 1000);
     } else {
@@ -4592,7 +4813,7 @@ function endTurnAfterShot() {
         render();
         if (gameState.goalKickPending) {
             aiTakeGoalKickPass();
-        } else {
+        } else if (!gameState.coachAssistMode && !gameState.hiddenSoloMode) {
             setTimeout(aiTakeTurn, 1000);
         }
     } else {
@@ -4644,8 +4865,8 @@ function endTurn() {
             log(gameState.manualControlMode ? '🔴 Red turn (Manual Control)' : 'Red turn started');
             render();
            
-            // Only auto-play AI if not in manual control mode
-            if (!gameState.manualControlMode) {
+            // Only auto-play AI when neither manual testing nor external coach assist is active.
+            if (!gameState.manualControlMode && !gameState.coachAssistMode && !gameState.hiddenSoloMode) {
                 setTimeout(aiTakeTurn, 1000);
             }
         } else {
@@ -4687,7 +4908,9 @@ function handleTurnover(newPossessionTeam, reason) {
     if (newPossessionTeam === 'ai') {
         log('AI turn started');
         render();
-        setTimeout(aiTakeTurn, 1000);
+        if (!gameState.coachAssistMode && !gameState.hiddenSoloMode) {
+            setTimeout(aiTakeTurn, 1000);
+        }
     } else {
         log('Your turn!');
         render();
@@ -4701,6 +4924,11 @@ function handleTurnover(newPossessionTeam, reason) {
 // ========================================
 
 function aiTakeTurn() {
+    if (gameState.coachAssistMode) {
+        refreshCoachAssistPrompt('Coach Assist is enabled. Generate/copy the prompt instead of auto-playing Red.');
+        return;
+    }
+
     log('🤖 AI is thinking...');
 
     if (gameState.kickoffPending && gameState.currentTurn === 'ai') {
@@ -5042,6 +5270,537 @@ function getValidMoveTargets(fromCell, range) {
     return targets;
 }
 
+function getTeamLabel(team) {
+    return team === 'player' ? 'Blue' : 'Red';
+}
+
+function getTeamHand(team) {
+    return team === 'player' ? gameState.playerHand : gameState.aiHand;
+}
+
+function getTeamDiscard(team) {
+    return team === 'player' ? gameState.playerDiscard : gameState.aiDiscard;
+}
+
+function getTeamDeck(team) {
+    return team === 'player' ? gameState.playerDeck : gameState.aiDeck;
+}
+
+function getCellId(cell) {
+    return cell ? `(${cell.x},${cell.y})` : '';
+}
+
+function getCoachOptionTeam() {
+    return gameState.currentTurn || getTeamWithPossession();
+}
+
+function addCoachOption(options, label, apply) {
+    options.push({ id: options.length + 1, label, apply });
+}
+
+function isHiddenCoachActive() {
+    if (!gameState.hiddenSoloMode || gameState.manualControlMode || gameState.hiddenCoachBusy) return false;
+    if (gameState.kickoffPending || gameState.goalKickPending || gameState.pendingRebound) return false;
+    if (gameState.gamePhase === 'planning_offense') return gameState.offenseTeam === 'ai';
+    if (gameState.gamePhase === 'planning_defense') return gameState.defenseTeam === 'ai';
+    if (gameState.gamePhase === 'choose_defense_card') return gameState.defenseTeam === 'ai';
+    if (gameState.gamePhase === 'resolving_card') return gameState.currentTurn === 'ai';
+    return false;
+}
+
+function scheduleHiddenCoachStep() {
+    if (!isHiddenCoachActive()) return;
+    gameState.hiddenCoachBusy = true;
+    setTimeout(() => {
+        gameState.hiddenCoachBusy = false;
+        if (!isHiddenCoachActive()) return;
+        const options = getCoachLegalOptions();
+        const option = chooseHiddenCoachOption(options);
+        if (!option) {
+            log('Hidden Solo coach has no legal option.');
+            return;
+        }
+        log(`Hidden Solo coach chooses: ${option.label}`);
+        option.apply();
+    }, 350);
+}
+
+function chooseHiddenCoachOption(options) {
+    if (!options.length) return null;
+    const phase = gameState.commandActivation?.phase || gameState.gamePhase;
+    const scored = options.map(option => ({
+        option,
+        score: scoreHiddenCoachOption(option, phase) + Math.random() * 0.01
+    }));
+    scored.sort((a, b) => b.score - a.score);
+    return scored[0].option;
+}
+
+function scoreHiddenCoachOption(option, phase) {
+    const label = option.label.toLowerCase();
+    let score = 0;
+
+    if (phase === 'planning_offense' || phase === 'planning_defense') {
+        if (label.includes('c2')) score += 8;
+        if (label.includes('c1')) score += 7;
+        if (label.includes('l1') || label.includes('r1')) score += 6;
+        if (label.includes('l+r')) score += 5;
+        if (label.includes('d 1/1/1')) score += phase === 'planning_defense' ? 8 : 2;
+        if (label.includes('a 1/1/1')) score += phase === 'planning_offense' ? 7 : 2;
+        return score;
+    }
+
+    if (phase === 'choose_defense_card') {
+        if (label.includes('tackle')) score += 8;
+        if (label.includes('c2') || label.includes('d 1/1/1')) score += 6;
+        if (label.includes('l1') || label.includes('r1')) score += 4;
+        return score;
+    }
+
+    if (phase === 'select') {
+        if (label.includes('ball')) score += 20;
+        if (label.includes('center')) score += 5;
+        if (label.includes('attacking')) score += 4;
+        if (label.includes('midfield')) score += 2;
+        return score;
+    }
+
+    if (phase === 'move') {
+        if (label.includes('finish movement')) return 1;
+        if (label.includes('choose')) {
+            if (label.includes('ball')) score += 10;
+            return score + 3;
+        }
+        const coords = [...label.matchAll(/\((\d+),(\d+)\)/g)];
+        if (coords.length) {
+            const last = coords[coords.length - 1];
+            const x = Number(last[1]);
+            score += 12 - x; // Red attacks toward x=0.
+            if (x <= 5) score += 4;
+        }
+        return score;
+    }
+
+    if (phase === 'free_pass') {
+        if (label.includes('skip')) return 1;
+        if (label.includes('free pass')) {
+            const coords = [...label.matchAll(/\((\d+),(\d+)\)/g)];
+            if (coords.length) {
+                const last = coords[coords.length - 1];
+                score += 14 - Number(last[1]); // lower x is better for Red.
+            }
+            return score + 8;
+        }
+    }
+
+    if (phase === 'act') {
+        if (label.includes('shoot')) score += 20;
+        if (label.includes('header')) score += 16;
+        if (label.includes('tackle')) score += 14;
+        if (label.includes('cross')) score += 11;
+        if (label.includes('mark 3')) score += 10;
+        if (label.includes('mark 2')) score += 8;
+        if (label.includes('dribble')) score += 6;
+        if (label.includes('clear')) score += 5;
+        if (label.includes('resolve card without action')) score -= 10;
+        if (label.includes('different')) score -= 2;
+        return score;
+    }
+
+    return score;
+}
+
+function getCoachLegalOptions() {
+    const options = [];
+    const team = getCoachOptionTeam();
+
+    if (gameState.gamePhase === 'planning_offense' || gameState.gamePhase === 'planning_defense') {
+        const hand = getTeamHand(team);
+        hand.filter(card => card.type === CARD_TYPES.COMMAND).forEach(card => {
+            addCoachOption(options, `Commit ${card.name} from ${getTeamLabel(team)} hand`, () => planCard(card, team));
+        });
+        return options;
+    }
+
+    if (gameState.gamePhase === 'choose_defense_card') {
+        gameState.plannedDefense.forEach(card => {
+            addCoachOption(options, `Reveal ${card.name} as the defensive response`, () => chooseDefenseResponse(card));
+        });
+        return options;
+    }
+
+    if (gameState.gamePhase !== 'resolving_card' || !gameState.commandActivation || !gameState.selectedCard) {
+        return options;
+    }
+
+    const commandState = gameState.commandActivation;
+    const card = gameState.selectedCard;
+    const effect = getActiveCardEffect(card, gameState.currentTurn);
+
+    if (commandState.phase === 'select') {
+        gameState.field.forEach(cell => {
+            if (canSelectForCommand(cell, card)) {
+                const zones = getPitchZones(cell, gameState.currentTurn);
+                addCoachOption(options, `Activate ${getTeamLabel(gameState.currentTurn)} ${cell.player.id}${cell.ball ? ' with BALL' : ''} at ${getCellId(cell)} (${zones.third} ${zones.laneLabel})`, () => selectCommandPlayer(cell, card));
+            }
+        });
+        if (commandState.selectedPlayers.length > 0) {
+            addCoachOption(options, 'Start movement with current activations', () => startCommandMovement());
+        }
+        return options;
+    }
+
+    if (commandState.phase === 'move') {
+        if (!gameState.selectedPlayer) {
+            gameState.field.forEach(cell => {
+                if (canMoveCommandPlayer(cell)) {
+                    addCoachOption(options, `Choose ${getTeamLabel(gameState.currentTurn)} ${cell.player.id} at ${getCellId(cell)} to move`, () => {
+                        gameState.selectedPlayer = cell;
+                        render();
+                    });
+                }
+            });
+            addCoachOption(options, 'Finish movement and go to free pass', () => completeCommandCard());
+            return options;
+        }
+
+        const fromCell = gameState.selectedPlayer;
+        const moveRange = getCommandMoveRangeForCell(fromCell, effect.moveRange);
+        const targets = gameState.field
+            .filter(cell => !cell.player)
+            .map(cell => ({ cell, cost: getMovementCostDistance(fromCell, cell, gameState.currentTurn) }))
+            .filter(entry => entry.cost > 0 && entry.cost <= moveRange)
+            .sort((a, b) => a.cost - b.cost || a.cell.x - b.cell.x || a.cell.y - b.cell.y);
+
+        targets.slice(0, 24).forEach(({ cell, cost }) => {
+            addCoachOption(options, `Move ${getTeamLabel(gameState.currentTurn)} ${fromCell.player.id} from ${getCellId(fromCell)} to ${getCellId(cell)} (${cost} movement)`, () => {
+                const movedPlayerId = fromCell.player.id;
+                movePlayer(fromCell, cell, { recordUndo: true, context: 'coach-command' });
+                commandState.movedPlayerIds.push(movedPlayerId);
+                commandState.movedPlayerDistances[movedPlayerId] = cost;
+                gameState.selectedPlayer = null;
+                log(`LLM Coach moved activated player to (${cell.x}, ${cell.y}) for ${cost} movement.`);
+                render();
+            });
+        });
+        addCoachOption(options, 'Cancel selected mover', () => {
+            gameState.selectedPlayer = null;
+            render();
+        });
+        addCoachOption(options, 'Finish movement and go to free pass', () => completeCommandCard());
+        return options;
+    }
+
+    if (commandState.phase === 'free_pass') {
+        const passerCell = getCommandFreePasser();
+        if (passerCell) {
+            gameState.field.forEach(cell => {
+                if (isValidFreePassTarget(cell)) {
+                    addCoachOption(options, `Free pass from ${getCellId(passerCell)} to ${getTeamLabel(gameState.currentTurn)} ${cell.player.id} at ${getCellId(cell)}`, () => executeCommandFreePass(cell));
+                }
+            });
+        }
+        addCoachOption(options, 'Skip free pass and choose action', () => completeCommandCard());
+        return options;
+    }
+
+    if (commandState.phase === 'act') {
+        if (!gameState.selectedPlayer) {
+            gameState.field.forEach(cell => {
+                if (cell.player && cell.player.team === gameState.currentTurn && getSelectedCommandPlayer(cell)) {
+                    const actions = getCommandActionsForCell(card, cell);
+                    if (actions.length > 0) {
+                        addCoachOption(options, `Choose ${getTeamLabel(gameState.currentTurn)} ${cell.player.id} at ${getCellId(cell)} to act (${actions.join(', ')})`, () => chooseCommandActionPlayer(cell));
+                    }
+                }
+            });
+            addCoachOption(options, 'Resolve card without action', () => completeCommandCard());
+            return options;
+        }
+
+        if (!commandState.action) {
+            getCommandActionsForCell(card, gameState.selectedPlayer).forEach(action => {
+                addCoachOption(options, `Use ${action} with ${getTeamLabel(gameState.currentTurn)} ${gameState.selectedPlayer.player.id} at ${getCellId(gameState.selectedPlayer)}`, () => chooseCommandAction(action));
+            });
+            addCoachOption(options, 'Choose a different acting player', () => {
+                gameState.selectedPlayer = null;
+                commandState.actingPlayerId = null;
+                render();
+            });
+            return options;
+        }
+
+        gameState.field.forEach(cell => {
+            if (isValidCoachActionTarget(commandState.action, gameState.selectedPlayer, cell)) {
+                const markProgress = commandState.action.startsWith('mark')
+                    ? ` (${gameState.selectedMarkCells.length} already selected)`
+                    : '';
+                addCoachOption(options, `Target ${getCellId(cell)} for ${commandState.action}${markProgress}`, () => resolveCommandActionTarget(cell));
+            }
+        });
+        addCoachOption(options, 'Choose a different action', () => {
+            commandState.action = null;
+            gameState.selectedMarkCells = [];
+            render();
+        });
+    }
+
+    return options;
+}
+
+function getCoachBoardSummary() {
+    const occupied = gameState.field
+        .filter(cell => cell.player || cell.ball || isAirborneBallCell(cell))
+        .map(cell => {
+            const parts = [`hex ${getCellId(cell)}`];
+            if (cell.player) {
+                const zones = getPitchZones(cell, cell.player.team);
+                parts.push(`${getTeamLabel(cell.player.team)}${cell.player.id}`);
+                parts.push(`${zones.third}/${zones.laneLabel}`);
+            }
+            if (cell.ball) parts.push(isAirborneBallCell(cell) ? 'AIRBORNE BALL' : 'BALL');
+            return parts.join(' ');
+        });
+    const marks = [];
+    gameState.defensiveMarks.forEach(mark => {
+        mark.zones.forEach(zone => {
+            marks.push(`${getTeamLabel(mark.team)} MARK at (${zone.x},${zone.y}) from ${getTeamLabel(mark.team)}${mark.defender.id}`);
+        });
+    });
+    return occupied.concat(marks);
+}
+
+function buildCoachPrompt() {
+    const options = getCoachLegalOptions();
+    gameState.coachOptions = options;
+    const team = getCoachOptionTeam();
+    const hand = getTeamHand(team).map(card => card.name);
+    const prompt = {
+        instruction: "Choose exactly one legal option by number. Return only JSON like {\"choice\": 1, \"reason\": \"short reason\"}.",
+        response_format: { choice: "number", reason: "short explanation" },
+        state: {
+            phase: gameState.gamePhase,
+            current_team: getTeamLabel(team),
+            offense: getTeamLabel(gameState.offenseTeam),
+            defense: getTeamLabel(gameState.defenseTeam),
+            resolving_role: gameState.resolvingRole,
+            selected_card: gameState.selectedCard?.name || null,
+            command_phase: gameState.commandActivation?.phase || null,
+            selected_player: gameState.selectedPlayer?.player ? `${getTeamLabel(gameState.selectedPlayer.player.team)}${gameState.selectedPlayer.player.id} ${getCellId(gameState.selectedPlayer)}` : null,
+            selected_mark_hexes: gameState.selectedMarkCells.map(cell => getCellId(cell)),
+            hand,
+            planned_offense_count: gameState.plannedOffense.length,
+            planned_defense_count: gameState.plannedDefense.length,
+            deck_count: getTeamDeck(team).length,
+            discard_count: getTeamDiscard(team).length,
+            board: getCoachBoardSummary(),
+            recent_log: (gameState.gameLog || []).slice(-8)
+        },
+        legal_options: options.map(option => ({ choice: option.id, option: option.label }))
+    };
+    return JSON.stringify(prompt, null, 2);
+}
+
+function renderCoachPanel() {
+    const promptBox = document.getElementById('coach-prompt');
+    const optionsList = document.getElementById('coach-options');
+    if (!promptBox || !optionsList) return;
+    const team = getCoachOptionTeam();
+    if (shouldHideTeamInfo(team)) {
+        optionsList.innerHTML = '';
+        const li = document.createElement('li');
+        li.textContent = 'Hidden Solo coach is choosing privately for Red.';
+        optionsList.appendChild(li);
+        return;
+    }
+    if (!promptBox.value) {
+        gameState.coachOptions = getCoachLegalOptions();
+    }
+    optionsList.innerHTML = '';
+    gameState.coachOptions.forEach(option => {
+        const li = document.createElement('li');
+        li.textContent = option.label;
+        optionsList.appendChild(li);
+    });
+}
+
+function getCoachAssistPromptKey() {
+    return [
+        gameState.gamePhase,
+        gameState.currentTurn,
+        gameState.offenseTeam,
+        gameState.defenseTeam,
+        gameState.resolvingRole,
+        gameState.selectedCard?.uid || '',
+        gameState.commandActivation?.phase || '',
+        gameState.selectedPlayer?.player?.id || '',
+        gameState.plannedOffense.length,
+        gameState.plannedDefense.length,
+        gameState.resolutionStep
+    ].join('|');
+}
+
+function isCoachAssistDecisionActive() {
+    if (!gameState.coachAssistMode || gameState.manualControlMode || shouldHideTeamInfo(getCoachOptionTeam())) return false;
+    if (gameState.kickoffPending || gameState.goalKickPending || gameState.pendingRebound) return false;
+    if (gameState.gamePhase === 'planning_offense') return gameState.offenseTeam === 'ai';
+    if (gameState.gamePhase === 'planning_defense') return gameState.defenseTeam === 'ai';
+    if (gameState.gamePhase === 'choose_defense_card') return gameState.defenseTeam === 'ai';
+    if (gameState.gamePhase === 'resolving_card') return gameState.currentTurn === 'ai';
+    return false;
+}
+
+function applyCoachOption(option, sourceLabel = 'LLM Coach') {
+    if (!option) return;
+    const team = getCoachOptionTeam();
+    recordUndoSnapshot(`${sourceLabel.toLowerCase()} choice ${option.id}`, team);
+    option.apply();
+    const responseBox = document.getElementById('coach-response');
+    if (responseBox) responseBox.value = '';
+    const promptBox = document.getElementById('coach-prompt');
+    if (promptBox) promptBox.value = '';
+    gameState.coachAssistPromptKey = null;
+    gameState.coachOptions = getCoachLegalOptions();
+    gameState.autoCoachHistory.push({
+        choice: option.id,
+        label: option.label,
+        source: sourceLabel,
+        phase: gameState.gamePhase,
+        turn: gameState.currentTurn,
+        logIndex: (gameState.gameLog || []).length
+    });
+    gameState.autoCoachHistory = gameState.autoCoachHistory.slice(-24);
+    log(`${sourceLabel} applied choice ${option.id}: ${option.label}`);
+    render();
+}
+
+function maybeAutoAdvanceForcedCoachChoice(options) {
+    if (!isCoachAssistDecisionActive() || gameState.autoCoachBusy || options.length !== 1) return false;
+    const option = options[0];
+    gameState.autoCoachBusy = true;
+    log(`Coach Assist auto-advances forced Red choice: ${option.label}`);
+    setTimeout(() => {
+        gameState.autoCoachBusy = false;
+        if (!isCoachAssistDecisionActive()) return;
+        const freshOptions = getCoachLegalOptions();
+        if (freshOptions.length === 1 && freshOptions[0].label === option.label) {
+            applyCoachOption(freshOptions[0], 'Forced Coach');
+            refreshCoachAssistPrompt('Coach Assist: Red is waiting for the next choice.');
+        } else {
+            refreshCoachAssistPrompt('Coach Assist: Red options changed before forced choice resolved.');
+        }
+    }, 180);
+    return true;
+}
+
+function getAutomatedCoachPayload() {
+    const prompt = JSON.parse(buildCoachPrompt());
+    prompt.coach_memory = gameState.autoCoachHistory.slice(-12);
+    prompt.mode = 'automated_local_coach';
+    return prompt;
+}
+
+async function requestAutomatedCoachChoice() {
+    if (!gameState.autoCoachMode || gameState.autoCoachBusy || !isCoachAssistDecisionActive()) return;
+    const options = gameState.coachOptions.length ? gameState.coachOptions : getCoachLegalOptions();
+    if (!options.length || maybeAutoAdvanceForcedCoachChoice(options)) return;
+
+    gameState.autoCoachBusy = true;
+    log('🤖 LLM Auto Coach: asking local coach server...');
+    try {
+        const response = await fetch(gameState.autoCoachEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(getAutomatedCoachPayload())
+        });
+        if (!response.ok) {
+            throw new Error(`coach server returned ${response.status}`);
+        }
+        const parsed = await response.json();
+        const choice = Number(parsed.choice);
+        const option = options.find(candidate => candidate.id === choice);
+        if (!option) {
+            throw new Error(`coach chose unavailable option ${choice}`);
+        }
+        applyCoachOption(option, 'LLM Auto Coach');
+        refreshCoachAssistPrompt('Coach Assist: Red is waiting for the next choice.');
+    } catch (error) {
+        log(`LLM Auto Coach paused: ${error.message}. Use the visible prompt/options or start coach-server.js.`);
+    } finally {
+        gameState.autoCoachBusy = false;
+    }
+}
+
+function refreshCoachAssistPrompt(message) {
+    if (!gameState.coachAssistMode || shouldHideTeamInfo(getCoachOptionTeam())) return;
+    const promptKey = getCoachAssistPromptKey();
+    if (gameState.coachAssistPromptKey === promptKey) return;
+    gameState.coachAssistPromptKey = promptKey;
+    const promptBox = document.getElementById('coach-prompt');
+    if (promptBox) {
+        promptBox.value = buildCoachPrompt();
+    } else {
+        gameState.coachOptions = getCoachLegalOptions();
+    }
+    renderCoachPanel();
+    if (maybeAutoAdvanceForcedCoachChoice(gameState.coachOptions)) return;
+    log(message || 'Coach Assist is waiting for a pasted coach choice.');
+    if (gameState.autoCoachMode && isCoachAssistDecisionActive()) {
+        setTimeout(() => requestAutomatedCoachChoice(), 120);
+    }
+}
+
+function generateCoachPrompt() {
+    if (shouldHideTeamInfo(getCoachOptionTeam())) {
+        log('Hidden Solo is keeping Red coach choices private. Prompt generation is disabled during hidden Red decisions.');
+        return;
+    }
+    const promptBox = document.getElementById('coach-prompt');
+    if (!promptBox) return;
+    promptBox.value = buildCoachPrompt();
+    renderCoachPanel();
+    log('LLM Coach prompt generated. Paste it into ChatGPT/Codex, then paste back {"choice": number}.');
+}
+
+async function copyCoachPrompt() {
+    const promptBox = document.getElementById('coach-prompt');
+    if (!promptBox) return;
+    if (!promptBox.value) generateCoachPrompt();
+    try {
+        await navigator.clipboard.writeText(promptBox.value);
+        log('LLM Coach prompt copied.');
+    } catch (error) {
+        promptBox.select();
+        log('Clipboard blocked. Prompt selected for manual copy.');
+    }
+}
+
+function applyCoachChoice() {
+    if (shouldHideTeamInfo(getCoachOptionTeam())) {
+        log('Hidden Solo is handling Red privately. Coach choices cannot be pasted for hidden Red decisions.');
+        return;
+    }
+    const responseBox = document.getElementById('coach-response');
+    if (!responseBox) return;
+    if (!gameState.coachOptions.length) {
+        gameState.coachOptions = getCoachLegalOptions();
+    }
+    let parsed;
+    try {
+        parsed = JSON.parse(responseBox.value);
+    } catch (error) {
+        log('Coach response must be valid JSON, like {"choice": 1}.');
+        return;
+    }
+    const choice = Number(parsed.choice);
+    const option = gameState.coachOptions.find(candidate => candidate.id === choice);
+    if (!option) {
+        log(`Coach choice ${choice} is not available in the current option list.`);
+        return;
+    }
+    applyCoachOption(option, 'LLM Coach');
+}
+
     </script>
 
     <script>
@@ -5055,6 +5814,8 @@ function render() {
     renderHand();
     renderMarket();
     renderUI();
+    renderCoachPanel();
+    scheduleHiddenCoachStep();
 }
 
 function renderField() {
@@ -5135,11 +5896,20 @@ function renderCell(cell, container) {
             cellDiv.classList.add('near-goal-right');
         }
 
-        const isMarkedZone = gameState.defensiveMarks.some(mark =>
-            mark.zones.some(zone => zone.x === cell.x && zone.y === cell.y)
-        );
-        if (isMarkedZone) {
+        const markTeams = getMarkTeamsForCell(cell);
+        if (markTeams.length > 0) {
             cellDiv.classList.add('marked-zone');
+            if (markTeams.includes('player')) cellDiv.classList.add('marked-blue');
+            if (markTeams.includes('ai')) cellDiv.classList.add('marked-red');
+
+            const markBadge = document.createElement('div');
+            const markedByBoth = markTeams.includes('player') && markTeams.includes('ai');
+            markBadge.className = `mark-badge ${markedByBoth ? 'mark-both' : (markTeams[0] === 'player' ? 'mark-blue' : 'mark-red')}`;
+            markBadge.textContent = markedByBoth ? 'B/R' : (markTeams[0] === 'player' ? 'B' : 'R');
+            markBadge.title = markedByBoth
+                ? 'Marked by Blue and Red'
+                : `Marked by ${markTeams[0] === 'player' ? 'Blue' : 'Red'}`;
+            cellDiv.appendChild(markBadge);
         }
        
         if (cell.player) {
@@ -5634,10 +6404,12 @@ function renderPlannedArea() {
     const area = document.createElement('div');
     area.className = 'planned-area';
     area.appendChild(renderPlannedRow('Offense Planned', gameState.plannedOffense, {
+        team: gameState.offenseTeam,
         currentIndex: gameState.resolvingRole === 'offense' ? gameState.offenseResolveIndex : -1,
         resolvedBefore: gameState.offenseResolveIndex
     }));
     area.appendChild(renderPlannedRow('Defense Planned', gameState.plannedDefense, {
+        team: gameState.defenseTeam,
         clickable: gameState.gamePhase === 'choose_defense_card',
         currentCard: gameState.resolvingRole === 'defense' ? gameState.selectedCard : null
     }));
@@ -5666,14 +6438,26 @@ function renderPlannedRow(title, cards, options = {}) {
             continue;
         }
 
+        const isCurrent = options.currentIndex === i || options.currentCard?.uid === card.uid;
+        const isResolved = !!(options.resolvedBefore && i < options.resolvedBefore);
+        const hideCard = shouldHidePlannedCard(options.team, card, isCurrent, isResolved);
+        if (hideCard) {
+            const hidden = document.createElement('div');
+            hidden.className = 'planned-placeholder';
+            hidden.textContent = 'Face down';
+            hidden.title = 'Hidden committed card';
+            cardWrap.appendChild(hidden);
+            continue;
+        }
+
         const cardDiv = createCardElement(card, false, card === gameState.selectedCard ? gameState.currentTurn : null);
-        if (options.currentIndex === i || options.currentCard?.uid === card.uid) {
+        if (isCurrent) {
             cardDiv.classList.add('current-card');
         }
-        if (options.resolvedBefore && i < options.resolvedBefore) {
+        if (isResolved) {
             cardDiv.classList.add('resolved-card');
         }
-        if (options.clickable) {
+        if (options.clickable && !shouldHideTeamInfo(options.team)) {
             cardDiv.classList.add('clickable');
             cardDiv.onclick = () => chooseDefenseResponse(card);
         } else {
@@ -5684,6 +6468,15 @@ function renderPlannedRow(title, cards, options = {}) {
 
     row.appendChild(cardWrap);
     return row;
+}
+
+function shouldHideTeamInfo(team) {
+    return gameState.hiddenSoloMode && !gameState.manualControlMode && team === 'ai';
+}
+
+function shouldHidePlannedCard(team, card, isCurrent, isResolved) {
+    if (!shouldHideTeamInfo(team)) return false;
+    return !isCurrent && !isResolved;
 }
 
 function renderPitchActionPanel() {
@@ -6110,11 +6903,26 @@ function renderUI() {
 
     const fieldFrame = document.querySelector('.field-rotation-frame');
     const fieldViewBtn = document.getElementById('field-view-btn');
+    const hiddenSoloBtn = document.getElementById('hidden-solo-btn');
+    const coachAssistBtn = document.getElementById('coach-assist-btn');
+    const autoCoachBtn = document.getElementById('auto-coach-btn');
     if (fieldFrame && fieldViewBtn) {
         const viewingRed = gameState.fieldViewTeam === 'ai';
         fieldFrame.classList.toggle('view-red', viewingRed);
         fieldViewBtn.textContent = viewingRed ? '🔴 View: Red' : '🔵 View: Blue';
         fieldViewBtn.classList.toggle('active', viewingRed);
+    }
+    if (hiddenSoloBtn) {
+        hiddenSoloBtn.textContent = gameState.hiddenSoloMode ? '🕶️ Hidden Solo: ON' : '🕶️ Hidden Solo: OFF';
+        hiddenSoloBtn.classList.toggle('active', gameState.hiddenSoloMode);
+    }
+    if (coachAssistBtn) {
+        coachAssistBtn.textContent = gameState.coachAssistMode ? '🧠 Coach Assist: ON' : '🧠 Coach Assist: OFF';
+        coachAssistBtn.classList.toggle('active', gameState.coachAssistMode);
+    }
+    if (autoCoachBtn) {
+        autoCoachBtn.textContent = gameState.autoCoachMode ? '🤖 LLM Auto: ON' : '🤖 LLM Auto: OFF';
+        autoCoachBtn.classList.toggle('active', gameState.autoCoachMode);
     }
    
     // Update turn/phase display
@@ -6184,11 +6992,13 @@ function renderUI() {
         finishMovementBtn.textContent = canAdvanceCommand
             ? (gameState.commandActivation.selectedPlayers.length === 0
                 ? 'Skip Command'
-                : (gameState.commandActivation.phase === 'select'
+                : (gameState.commandActivation.actionSpent
+                    ? 'Resolve Command'
+                    : (gameState.commandActivation.phase === 'select'
                     ? 'Start Movement'
                     : (gameState.commandActivation.phase === 'move'
                         ? 'Continue to Pass'
-                        : (gameState.commandActivation.phase === 'free_pass' ? 'Skip Pass' : 'Resolve Command'))))
+                        : (gameState.commandActivation.phase === 'free_pass' ? 'Skip Pass' : 'Resolve Command')))))
             : 'Finish Movement';
         undoMoveBtn.style.display = (gameState.undoHistory.length > 0 || gameState.moveHistory.length > 0) ? 'inline-block' : 'none';
         undoPlanBtn.style.display = 'none';
@@ -6289,6 +7099,11 @@ function initGame() {
     gameState.goalKickCell = null;
     gameState.goalKickShootingTeam = null;
     gameState.goalKickDefendingTeam = null;
+    gameState.coachOptions = [];
+    const coachPrompt = document.getElementById('coach-prompt');
+    const coachResponse = document.getElementById('coach-response');
+    if (coachPrompt) coachPrompt.value = '';
+    if (coachResponse) coachResponse.value = '';
     // Note: manualControlMode persists across game resets (testing feature)
    
     // Draw initial hands
@@ -6330,6 +7145,18 @@ document.getElementById('download-log-btn').addEventListener('click', () => {
     downloadGameLog();
 });
 
+document.getElementById('coach-generate-btn').addEventListener('click', () => {
+    generateCoachPrompt();
+});
+
+document.getElementById('coach-copy-btn').addEventListener('click', () => {
+    copyCoachPrompt();
+});
+
+document.getElementById('coach-apply-btn').addEventListener('click', () => {
+    applyCoachChoice();
+});
+
 document.getElementById('end-reposition-btn').addEventListener('click', () => {
     // In manual mode, allow repositioning for both teams
     if (gameState.manualControlMode || gameState.repositionTeam === 'player') {
@@ -6358,11 +7185,76 @@ document.getElementById('next-ai-action-btn').addEventListener('click', () => {
 document.getElementById('manual-control-btn').addEventListener('click', () => {
     recordUndoSnapshot('toggling manual mode');
     gameState.manualControlMode = !gameState.manualControlMode;
+    if (gameState.manualControlMode) {
+        gameState.hiddenSoloMode = false;
+        gameState.coachAssistMode = false;
+        gameState.autoCoachMode = false;
+        gameState.autoCoachBusy = false;
+        gameState.coachAssistPromptKey = null;
+        gameState.hiddenCoachBusy = false;
+    }
     const btn = document.getElementById('manual-control-btn');
     btn.textContent = gameState.manualControlMode ? '🎮 Manual Mode: ON' : '🤖 Manual Mode: OFF';
     btn.classList.toggle('active', gameState.manualControlMode);
     render();
     log(gameState.manualControlMode ? '🎮 Manual control enabled - you control both teams!' : '🤖 AI control restored');
+});
+
+document.getElementById('hidden-solo-btn').addEventListener('click', () => {
+    recordUndoSnapshot('toggling hidden solo mode');
+    gameState.hiddenSoloMode = !gameState.hiddenSoloMode;
+    if (gameState.hiddenSoloMode) {
+        gameState.manualControlMode = false;
+        gameState.coachAssistMode = false;
+        gameState.autoCoachMode = false;
+        gameState.autoCoachBusy = false;
+        gameState.coachAssistPromptKey = null;
+        gameState.aiDebugMode = false;
+        gameState.hiddenCoachBusy = false;
+        log('🕶️ Hidden Solo enabled: Red hand and unrevealed committed cards are private.');
+    } else {
+        gameState.hiddenCoachBusy = false;
+        log('Hidden Solo disabled.');
+    }
+    render();
+});
+
+document.getElementById('coach-assist-btn').addEventListener('click', () => {
+    recordUndoSnapshot('toggling coach assist mode');
+    gameState.coachAssistMode = !gameState.coachAssistMode;
+    if (gameState.coachAssistMode) {
+        gameState.manualControlMode = false;
+        gameState.hiddenSoloMode = false;
+        gameState.hiddenCoachBusy = false;
+        gameState.coachAssistPromptKey = null;
+        log('🧠 Coach Assist enabled: Red waits for pasted LLM coach choices.');
+        refreshCoachAssistPrompt('Coach Assist ready. Generate/copy the prompt when Red needs a choice.');
+    } else {
+        gameState.autoCoachMode = false;
+        gameState.autoCoachBusy = false;
+        gameState.coachAssistPromptKey = null;
+        log('Coach Assist disabled. Red can auto-play when Manual Mode and Hidden Solo are off.');
+        autoPlanIfNeeded();
+    }
+    render();
+});
+
+document.getElementById('auto-coach-btn').addEventListener('click', () => {
+    recordUndoSnapshot('toggling automated LLM coach mode');
+    gameState.autoCoachMode = !gameState.autoCoachMode;
+    gameState.autoCoachBusy = false;
+    gameState.coachAssistPromptKey = null;
+    if (gameState.autoCoachMode) {
+        gameState.coachAssistMode = true;
+        gameState.manualControlMode = false;
+        gameState.hiddenSoloMode = false;
+        gameState.hiddenCoachBusy = false;
+        log('🤖 LLM Auto enabled: Red will ask the local coach server for choices.');
+        refreshCoachAssistPrompt('LLM Auto ready. Red will ask the local coach server at the next decision.');
+    } else {
+        log('LLM Auto disabled. Coach Assist copy/paste remains available if enabled.');
+    }
+    render();
 });
 
 document.getElementById('field-view-btn').addEventListener('click', () => {

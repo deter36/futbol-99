@@ -1,5 +1,5 @@
 ﻿Futbol ‘99 — Rules Draft v1
-Slay the Pitch is a two-player tactical soccer card game focused on spatial pressure, planned sequencing, and coordinated attacks.
+Futbol '99 is a two-player tactical soccer card game focused on spatial pressure, planned sequencing, and coordinated attacks.
 Players command teams through:
 * lane control
 * positional movement
@@ -161,16 +161,52 @@ ________________
 
 Round Structure
 1. The team with possession is the Offense.
-2. Offense secretly plans 3 cards.
-3. Defense secretly plans 3 cards.
-4. Offense reveals and resolves its first card.
-5. Defense chooses one planned card, reveals it, and resolves it.
-6. Repeat until all planned cards have resolved.
-7. Both players discard all played cards (and unrevealed planned cards, if any).
-8. Both players draw back up to 6 cards.
-9. Begin a new round.
-Offense resolves cards in the order planned.
-Defense may resolve planned cards in any order.
+2. Offense chooses 3 cards and commits them face down in a fixed left-to-right order.
+3. Defense chooses 3 cards and commits them face down. Defense does not need to arrange them in a resolution order.
+4. Neither coach may inspect the other coach's face-down cards.
+5. Offense reveals its leftmost remaining card and resolves it completely.
+6. After seeing the revealed Offense card and its resolution, Defense chooses any 1 of its remaining face-down cards, reveals it, and resolves it completely.
+7. Repeat this alternating sequence until all 3 cards from each coach have resolved.
+8. Both players discard all played cards (and unrevealed committed cards, if any).
+9. Both players draw back up to 6 cards.
+10. Begin a new round.
+
+All committed cards remain face down until the moment they are revealed to resolve or are spent by another rule.
+Offense must resolve its cards in the order committed.
+Defense may choose its response from any of its remaining face-down committed cards each time Defense acts.
+Revealing one card does not reveal either coach's other committed cards.
+A coach's turn is the complete resolution of 1 committed card.
+
+Turnovers During A Round
+When controlled possession changes, the Offense and Defense roles change immediately.
+Making the ball LOOSE or AIRBORNE does not change the roles. The current Offense remains Offense until a player from the other team gains controlled possession.
+Finish resolving the current card, including any consequences of the turnover, before beginning another turn.
+
+If the Defense gains controlled possession during the Offense's card before revealing a response card:
+* Defense chooses 1 of their committed face-down cards
+* reveals it
+* discards it face up without resolving it
+* that card represents the defensive reaction that won the ball
+* roles flip immediately after the current offensive card finishes resolving
+
+If the Defense gains controlled possession while resolving a revealed response card:
+* no extra card is discarded
+* the revealed response card is the spent reaction that won the ball
+* roles flip immediately after that response card finishes resolving
+
+The coach who gained possession becomes the new Offense:
+* that coach arranges all of their remaining committed cards face down in a fixed order
+* rearranging those cards does not reveal them
+* that coach takes the next turn by revealing and resolving the first card in the new order
+
+The coach who lost possession becomes the new Defense:
+* their remaining committed cards stay face down
+* they no longer have to follow their previous offensive order
+* after each new offensive turn, they may choose any 1 of their remaining committed cards as the response
+
+Because the coach who gains possession always takes the next turn, a successful defensive TACKLE may give that coach 2 consecutive turns: the defensive turn in which possession was won, followed by the next offensive turn.
+Each coach still resolves no more than their original 3 committed cards during the round.
+If only one coach has committed cards remaining, that coach resolves those cards one at a time under their current role until no committed cards remain.
 ________________
 
 
@@ -243,6 +279,12 @@ While AIRBORNE:
 * no player has possession
 * passes cannot be made
 * tackles cannot target the ball
+If a player moves into the AIRBORNE ball's hex, that player must control the ball.
+Controlling an AIRBORNE ball this way:
+* ends the AIRBORNE state
+* gives that player controlled possession
+* spends that card's one action
+* does not allow a SHOT, HEADER, CROSS, CLEAR, TACKLE, MARK, or DRIBBLE with that same card
 ________________
 
 
@@ -250,9 +292,12 @@ Actions
 MARK X
 Choose X adjacent hexes.
 Those hexes become BLOCKED.
-MARK remains active for 2 turns.
-After the first turn, flip the BLOCKED marker to show it will expire after the next turn.
-If the player who created the MARK activates again while their BLOCKED markers are still active, remove those BLOCKED markers immediately before resolving movement.
+Track MARK duration by coach, not by which team is currently Offense or Defense.
+If Coach A creates a MARK, it remains active through Coach B's next 2 turns.
+After Coach B completes their first turn with that MARK active, flip its BLOCKED markers to show that they will expire after Coach B's next turn.
+Remove the MARK after Coach B completes that second turn.
+If the player who created the MARK activates again before then, remove that player's BLOCKED markers immediately before resolving movement.
+A turnover does not reset, extend, or otherwise change MARK duration.
 ________________
 
 
@@ -348,6 +393,8 @@ A defense HEADER counts as a CLEAR.
 The CLEAR ignores adjacent BLOCKING players.
 After HEADER resolves, the ball is no longer AIRBORNE.
 If no HEADER resolves, the AIRBORNE ball remains in the target hex until the end of the crossing coach's next activation.
+During that activation, a player may move into the AIRBORNE ball's hex to control it instead of using HEADER.
+If they do, controlling the ball is mandatory and spends that card's one action.
 If still unresolved:
 * the ball lands in the target hex
 * the ball is no longer AIRBORNE

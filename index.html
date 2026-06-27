@@ -3713,6 +3713,9 @@ function startPlannedCardResolution(card, team, role) {
     };
     log(`${team === 'player' ? 'Player' : 'AI'} reveals ${card.name}. Activate players, move, make one optional pass, then choose one action.`);
     render();
+    if (gameState.coachAssistMode && team === 'ai') {
+        refreshCoachAssistPrompt('Coach Assist: Red is resolving a committed card.');
+    }
 }
 
 function chooseDefenseResponse(card) {
@@ -3727,6 +3730,16 @@ function advanceResolutionAfterCard(card, team) {
     gameState.selectedPlayer = null;
     gameState.commandActivation = null;
     gameState.resolvingPlannedCard = false;
+
+    if (gameState.resolvingRole === 'defense') {
+        gameState.plannedDefense = gameState.plannedDefense.filter(plannedCard => plannedCard.uid !== card.uid);
+    }
+
+    const possessionTeam = getTeamWithPossession();
+    if (possessionTeam && possessionTeam !== gameState.offenseTeam) {
+        handleResolutionTurnover(possessionTeam);
+        return;
+    }
 
     if (gameState.resolvingRole === 'offense') {
         if (gameState.plannedDefense.length > 0) {
@@ -3746,7 +3759,6 @@ function advanceResolutionAfterCard(card, team) {
             return;
         }
     } else {
-        gameState.plannedDefense = gameState.plannedDefense.filter(plannedCard => plannedCard.uid !== card.uid);
         gameState.offenseResolveIndex++;
         gameState.resolvingRole = null;
         revealNextOffenseCard();
@@ -3754,6 +3766,44 @@ function advanceResolutionAfterCard(card, team) {
     }
 
     render();
+}
+
+function handleResolutionTurnover(newOffenseTeam) {
+    const oldOffenseTeam = gameState.offenseTeam;
+    const oldDefenseTeam = gameState.defenseTeam;
+    const oldOffenseRemaining = gameState.plannedOffense.slice(gameState.offenseResolveIndex + 1);
+    let oldDefenseRemaining = [...gameState.plannedDefense];
+
+    if (gameState.resolvingRole === 'offense' && oldDefenseRemaining.length > 0) {
+        const reactionCard = oldDefenseRemaining.shift();
+        discardCardOnce(reactionCard, oldDefenseTeam);
+        log(`${oldDefenseTeam === 'player' ? 'Player' : 'AI'} spends ${reactionCard.name} face up as the turnover reaction.`);
+    }
+
+    const newDefenseTeam = newOffenseTeam === 'player' ? 'ai' : 'player';
+    gameState.offenseTeam = newOffenseTeam;
+    gameState.defenseTeam = newDefenseTeam;
+    gameState.currentTurn = newOffenseTeam;
+    gameState.plannedOffense = newOffenseTeam === oldDefenseTeam ? oldDefenseRemaining : oldOffenseRemaining;
+    gameState.plannedDefense = newDefenseTeam === oldDefenseTeam ? oldDefenseRemaining : oldOffenseRemaining;
+    gameState.offenseResolveIndex = 0;
+    gameState.resolvingRole = null;
+    gameState.resolvingPlannedCard = false;
+    gameState.selectedCard = null;
+    gameState.selectedPlayer = null;
+    gameState.selectedMarkCells = [];
+    gameState.commandActivation = null;
+    clearMoveHistory();
+
+    log(`Turnover during resolution: ${newOffenseTeam === 'player' ? 'Blue' : 'Red'} becomes Offense and remaining committed cards are reassigned.`);
+
+    if (gameState.plannedOffense.length > 0) {
+        revealNextOffenseCard();
+        return;
+    }
+
+    log('No committed cards remain for the new Offense, so the round ends.');
+    finishResolutionRound();
 }
 
 function finishResolutionRound() {

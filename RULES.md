@@ -230,8 +230,8 @@ Players normally move up to 4 movement.
 A player carrying the ball moves up to 2 movement.
 Players may not move through occupied hexes.
 Players may not end movement in the same hex as another player.
-Moving out of a MARKED hex costs 2 movement instead of 1.
-The movement penalty is paid for leaving the MARKED hex, not for entering it.
+MARK can change movement cost depending on which MARK ruleset is being tested.
+See MARK Test Rules below.
 ________________
 
 
@@ -243,15 +243,16 @@ ________________
 BLOCKED Hexes
 A hex is BLOCKED for line purposes if:
 * it is occupied by a player
-* or it contains a BLOCKED marker created by MARK.
+* or, when testing Hex MARK, it contains a BLOCKED marker created by MARK
 
 Occupied hexes block movement and may block passing, shooting, crossing, and clearing lines.
-MARKED hexes represent projected pressure. They may be removed by certain actions.
+Hex MARK markers represent projected pressure. They may be removed by DRIBBLE.
 ________________
 
 
 Leaving BLOCKED Hexes
-Leaving a MARKED hex costs 2 movement instead of 1.
+When testing Hex MARK, leaving a MARKED hex costs 2 movement instead of 1.
+When testing Player MARK, a MARKED player pays 2 movement per hex while the MARK remains attached.
 Occupied hexes do not make their own player pay extra movement to leave.
 ________________
 
@@ -289,7 +290,18 @@ ________________
 
 
 Actions
-MARK X
+MARK Test Rules
+The current prototype supports two MARK rulesets. Choose one before starting a game.
+
+Hex MARK is the original ruleset.
+Player MARK is the experimental ruleset.
+
+Do not mix the two during the same game.
+________________
+
+
+Hex MARK
+MARK X means:
 Choose X adjacent hexes.
 Those hexes become BLOCKED.
 Track MARK duration by coach, not by which team is currently Offense or Defense.
@@ -298,6 +310,46 @@ After Coach B completes their first turn with that MARK active, flip its BLOCKED
 Remove the MARK after Coach B completes that second turn.
 If the player who created the MARK activates again before then, remove that player's BLOCKED markers immediately before resolving movement.
 A turnover does not reset, extend, or otherwise change MARK duration.
+
+Hex MARK effects:
+* leaving a MARKED hex costs 2 movement instead of 1
+* a MARKED hex on a pass line counts as a BLOCKED hex
+* a MARKED hex on a shot line counts as a BLOCKED hex
+* if a pass fails because of MARKED hexes and no opposing player intercepts, the ball deflects to the closest MARKED hex on the passing line
+________________
+
+
+Player MARK
+Any card action that says MARK X instead means MARK one opposing player.
+Ignore the number for this test ruleset.
+
+To Player MARK:
+* the marking player must be adjacent to the target player
+* the target must be an opposing player
+* a player can only be MARKED by one opposing player at a time
+* one player can only MARK one opposing player at a time
+
+Player MARK duration uses the same timing as Hex MARK:
+* it remains active through the opposing coach's next 2 turns
+* it expires after that second opposing turn
+* if the marking player activates again before then, remove that MARK immediately before resolving movement
+* a turnover does not reset, extend, or otherwise change MARK duration
+
+Player MARK effects:
+* a MARKED player pays 2 movement per hex while the MARK remains attached
+* if the MARKED player makes a PASS, add +1 to the required roll
+* if the MARKED player receives a PASS, add +1 to the required roll
+* if the MARKED player makes a SHOT or offensive HEADER, add +1 to the required roll
+* if the marking player also occupies a hex on the passing or shooting line, that occupied hex applies its normal penalty in addition to the MARK penalty
+
+Player MARK follow:
+* if a MARKED player moves and remains adjacent to the marking player, the MARK stays attached
+* if a MARKED player moves out of adjacency, the marking player may make one free 1-hex follow move if that move ends adjacent to the MARKED player
+* the follow move does not have to move into the vacated hex
+* if the marking player cannot or does not follow into adjacency, the MARK is broken and removed
+
+Digital prototype note:
+The current public prototype chooses the follow hex automatically when a Player MARK follow is available.
 ________________
 
 
@@ -326,11 +378,17 @@ ________________
 
 DRIBBLE
 DRIBBLE may only be used by the ball carrier.
+
+When testing Hex MARK:
 Choose one adjacent empty MARKED hex.
 Remove one BLOCKED marker from that hex.
 DRIBBLE cannot remove:
 * occupied hexes
 * permanent player positioning
+
+When testing Player MARK:
+DRIBBLE removes one Player MARK from the ball carrier.
+In the current public prototype, DRIBBLE does not also move the player.
 ________________
 
 
@@ -345,6 +403,7 @@ The target must be a teammate in:
 * or an adjacent zone in the same lane
 
 Diagonal standard passes are not allowed unless a future card or upgrade says otherwise.
+When testing Hex MARK:
 If no BLOCKED hex intersects the passing line, the pass succeeds automatically.
 If one or more BLOCKED hexes intersect the passing line:
 * roll 1d6
@@ -354,6 +413,19 @@ Examples:
 * 1 BLOCKED hex = 3+
 * 2 BLOCKED hexes = 5+
 * 3 BLOCKED hexes = impossible
+
+When testing Player MARK:
+If no modifier applies, the pass succeeds automatically.
+* roll only if a modifier applies
+* each opposing player occupying a hex on the passing line increases the required roll by 1
+* if the passer is MARKED, increase the required roll by 1
+* if the receiver is MARKED, increase the required roll by 1
+* these modifiers stack
+Examples:
+* marked passer only = 2+
+* one defender on the line = 2+
+* marked passer plus marked receiver = 3+
+* marked passer, marked receiver, and one defender on the line = 4+
 
 Failed Passes
 If a pass fails, resolve the failed pass using the BLOCKED hexes on the passing line.
@@ -367,6 +439,9 @@ If no opposing player occupies a BLOCKED hex, but one or more MARKED hexes BLOCK
 * if that hex is empty, the ball becomes LOOSE there
 * if that hex contains a player, that player immediately gains possession
 * if the passing team keeps possession this way, the card action is still forfeited
+
+When testing Player MARK, failed passes caused only by Player MARK pressure do not deflect to a MARKED hex because no MARKED hex exists.
+Use the occupied defender interception rule if an opposing player is on the passing line.
 
 If a LOOSE ball is created by a failed pass, the next player to move into that hex gains possession.
 Recovering that LOOSE ball spends the recovering card's optional standard pass.
@@ -438,7 +513,7 @@ Roll 1d6.
 Shots succeed on 4+.
 If the shooter is in a hex that does not count as Center, increase the required roll by 1.
 Each BLOCKED hex intersecting the shot line increases the required roll by 1.
-Each opposing MARK on the shooter increases the required roll by 1.
+When testing Player MARK, each opposing MARK on the shooter increases the required roll by 1.
 If the required roll exceeds 6, the shot automatically fails.
 A player can SHOOT only if they moved 1 or fewer spaces during this card resolution.
 Split hexes that count as Center use the Center shot difficulty.
@@ -467,10 +542,13 @@ ________________
 Offside
 A pass cannot target a player more than one hex row beyond the deepest defender.
 This represents defense line pressure and prevents unrestricted long passes.
+Current prototype note:
+the public prototype still uses this simpler one-row-beyond check.
 ________________
 
 
 Kickoffs
+Before starting a game, choose which team has the opening kickoff.
 Before kickoff:
 * players may deploy freely within legal setup restrictions
 * each team must place at least one player in each full lane

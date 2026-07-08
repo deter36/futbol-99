@@ -1289,6 +1289,29 @@ main {
     gap: 8px;
 }
 
+.setup-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.setup-control select {
+    min-height: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 5px;
+    padding: 2px 7px;
+    background: #102a4d;
+    color: #fff;
+    font-weight: 800;
+}
+
 .button-section .btn {
     width: auto;
     padding: 8px 12px;
@@ -1384,6 +1407,20 @@ main {
                     </div>
                    
                     <div class="button-section">
+                        <label class="setup-control" for="kickoff-team-select">
+                            <span>Kickoff</span>
+                            <select id="kickoff-team-select">
+                                <option value="player">Blue</option>
+                                <option value="ai">Red</option>
+                            </select>
+                        </label>
+                        <label class="setup-control" for="mark-rule-select">
+                            <span>MARK</span>
+                            <select id="mark-rule-select">
+                                <option value="hex">Hex</option>
+                                <option value="player">Player</option>
+                            </select>
+                        </label>
                         <button id="manual-control-btn" class="btn btn-secondary">🤖 Manual Mode: OFF</button>
                         <button id="field-view-btn" class="btn btn-secondary">🔵 View: Blue</button>
                         <button id="undo-move-btn" class="btn btn-secondary" style="display: none;">↶ Undo</button>
@@ -1497,6 +1534,8 @@ let gameState = {
     comboPassPending: null, // Stores pending pass info for combo cards like Playmaker
     pendingMoveMark: null,
     defensiveMarks: [],
+    markMode: 'hex',
+    playerMarks: [],
     offBalancePlayers: [],
     airborneBall: null,
     loosePossessionTeam: null,
@@ -1674,10 +1713,16 @@ function expireDefensiveMarks() {
     gameState.defensiveMarks = gameState.defensiveMarks.filter(mark =>
         gameState.resolutionStep <= (mark.createdStep || 0) + 2
     );
+    gameState.playerMarks = gameState.playerMarks.filter(mark =>
+        gameState.resolutionStep <= (mark.createdStep || 0) + 2
+    );
 }
 
 function clearMarksForActivatedPlayer(team, playerId) {
     gameState.defensiveMarks = gameState.defensiveMarks.filter(mark =>
+        !(mark.team === team && mark.defender.id === playerId && gameState.resolutionStep > (mark.createdStep || 0))
+    );
+    gameState.playerMarks = gameState.playerMarks.filter(mark =>
         !(mark.team === team && mark.defender.id === playerId && gameState.resolutionStep > (mark.createdStep || 0))
     );
 }
@@ -1781,6 +1826,19 @@ function getAdjacentCells(x, y) {
 }
 
 function getMarkedThreat(cell, defendingTeam) {
+    if (gameState.markMode === 'player') {
+        if (cell.player && isPlayerMarkedByTeam(cell.player.team, cell.player.id, defendingTeam)) {
+            const mark = getPlayerMarkForTarget(cell.player.team, cell.player.id, defendingTeam);
+            const defenderCell = mark ? getCellWithPlayer(defendingTeam, mark.defender.id) : null;
+            return {
+                defenderCell,
+                threatCell: cell,
+                marked: true
+            };
+        }
+        return null;
+    }
+
     for (const mark of gameState.defensiveMarks) {
         if (mark.team !== defendingTeam) continue;
 
@@ -1825,7 +1883,26 @@ function getMarkTeamsForCell(cell) {
             teams.add(mark.team);
         }
     });
+    if (gameState.markMode === 'player' && cell.player) {
+        gameState.playerMarks.forEach(mark => {
+            if (mark.target.team === cell.player.team && mark.target.id === cell.player.id) {
+                teams.add(mark.team);
+            }
+        });
+    }
     return [...teams];
+}
+
+function getPlayerMarkForTarget(targetTeam, targetId, markingTeam = null) {
+    return gameState.playerMarks.find(mark =>
+        mark.target.team === targetTeam &&
+        mark.target.id === targetId &&
+        (!markingTeam || mark.team === markingTeam)
+    ) || null;
+}
+
+function isPlayerMarkedByTeam(targetTeam, targetId, markingTeam) {
+    return !!getPlayerMarkForTarget(targetTeam, targetId, markingTeam);
 }
 
 function getPlayerStateKey(team, playerId) {
@@ -1868,6 +1945,9 @@ function clearExpiredOffBalanceForTeam(team) {
 
 function getMovementCostDistance(fromCell, toCell, movingTeam) {
     const markingTeam = movingTeam === 'player' ? 'ai' : 'player';
+    const playerMarkedMovement = gameState.markMode === 'player' &&
+        fromCell.player &&
+        isPlayerMarkedByTeam(fromCell.player.team, fromCell.player.id, markingTeam);
     const startKey = `${fromCell.x},${fromCell.y}`;
     const targetKey = `${toCell.x},${toCell.y}`;
     const costs = new Map([[startKey, 0]]);
@@ -1882,7 +1962,7 @@ function getMovementCostDistance(fromCell, toCell, movingTeam) {
 
         getAdjacentCells(current.x, current.y).forEach(next => {
             if (next.player && next !== toCell) return;
-            const stepCost = isMarkedByTeam(current, markingTeam) ? 2 : 1;
+            const stepCost = (playerMarkedMovement || (gameState.markMode === 'hex' && isMarkedByTeam(current, markingTeam))) ? 2 : 1;
             const nextCost = currentCost + stepCost;
             const nextKey = `${next.x},${next.y}`;
             if (!costs.has(nextKey) || nextCost < costs.get(nextKey)) {
@@ -2496,6 +2576,12 @@ function isValidCommandActionTarget(action, actorCell, targetCell) {
     const opposingTeam = team === 'player' ? 'ai' : 'player';
 
     if (action.startsWith('mark')) {
+        if (gameState.markMode === 'player') {
+            return targetCell.player &&
+                targetCell.player.team === opposingTeam &&
+                distance(actorCell.x, actorCell.y, targetCell.x, targetCell.y) <= 1 &&
+                !getPlayerMarkForTarget(targetCell.player.team, targetCell.player.id);
+        }
         return getAdjacentCells(actorCell.x, actorCell.y).some(cell => cell.x === targetCell.x && cell.y === targetCell.y);
     }
     if (action === 'tackle') {
@@ -2525,6 +2611,10 @@ function isValidCommandActionTarget(action, actorCell, targetCell) {
     if (action === 'dribble') {
         if (!actorCell.ball) return false;
         if (isAirborneBallCell(actorCell)) return false;
+        if (gameState.markMode === 'player') {
+            return targetCell === actorCell &&
+                isPlayerMarkedByTeam(actorCell.player.team, actorCell.player.id, opposingTeam);
+        }
         if (targetCell.player) return false;
         if (distance(actorCell.x, actorCell.y, targetCell.x, targetCell.y) > 1) return false;
         return isMarkedByTeam(targetCell, opposingTeam);
@@ -2568,6 +2658,10 @@ function resolveCommandActionTarget(targetCell) {
     recordUndoSnapshot(`${action} target at (${targetCell.x}, ${targetCell.y})`, team);
 
     if (action.startsWith('mark')) {
+        if (gameState.markMode === 'player') {
+            applyPlayerMark(card, actorCell, targetCell);
+            return;
+        }
         const count = parseInt(action.split(' ')[1], 10) || 2;
         const alreadySelected = gameState.selectedMarkCells.some(cell => cell.x === targetCell.x && cell.y === targetCell.y);
         if (alreadySelected) {
@@ -2643,7 +2737,34 @@ function applyCommandMark(card, defenderCell, zones) {
     completeCardPlay(card, gameState.currentTurn);
 }
 
+function applyPlayerMark(card, defenderCell, targetCell) {
+    const team = gameState.currentTurn;
+    if (!targetCell.player || targetCell.player.team === team) return;
+
+    gameState.playerMarks = gameState.playerMarks.filter(mark =>
+        !(mark.team === team && mark.defender.id === defenderCell.player.id) &&
+        !(mark.target.team === targetCell.player.team && mark.target.id === targetCell.player.id)
+    );
+    gameState.playerMarks.push({
+        team,
+        defender: { id: defenderCell.player.id },
+        target: { team: targetCell.player.team, id: targetCell.player.id },
+        source: gameState.commandActivation.action,
+        createdStep: gameState.resolutionStep
+    });
+
+    log(`${card.name}: ${team === 'player' ? 'Blue' : 'Red'} ${defenderCell.player.id} MARKS ${targetCell.player.team === 'player' ? 'Blue' : 'Red'} ${targetCell.player.id}.`);
+    completeCardPlay(card, team);
+}
+
 function removeMarkFromCell(cell, markingTeam) {
+    if (gameState.markMode === 'player' && cell.player) {
+        const before = gameState.playerMarks.length;
+        gameState.playerMarks = gameState.playerMarks.filter(mark =>
+            !(mark.team === markingTeam && mark.target.team === cell.player.team && mark.target.id === cell.player.id)
+        );
+        return before !== gameState.playerMarks.length;
+    }
     gameState.defensiveMarks = gameState.defensiveMarks
         .map(mark => {
             if (mark.team !== markingTeam) return mark;
@@ -2653,6 +2774,7 @@ function removeMarkFromCell(cell, markingTeam) {
             };
         })
         .filter(mark => mark.zones.length > 0);
+    return true;
 }
 
 function countDefendersBetween(fromCell, toCell, defendingTeam) {
@@ -2668,7 +2790,7 @@ function getBlockedLineCells(fromCell, toCell, defendingTeam) {
             blocked.set(`${cell.x},${cell.y}`, cell);
             return;
         }
-        if (isMarkedByTeam(cell, defendingTeam)) {
+        if (gameState.markMode === 'hex' && isMarkedByTeam(cell, defendingTeam)) {
             blocked.set(`${cell.x},${cell.y}`, cell);
         }
     });
@@ -2686,7 +2808,7 @@ function getPassBlockInfo(fromCell, toCell, defendingTeam) {
             occupiedDefenders.push({ cell, index });
             blocked.set(`${cell.x},${cell.y}`, cell);
         }
-        if (isMarkedByTeam(cell, defendingTeam)) {
+        if (gameState.markMode === 'hex' && isMarkedByTeam(cell, defendingTeam)) {
             markedCells.push({ cell, index });
             blocked.set(`${cell.x},${cell.y}`, cell);
         }
@@ -2695,8 +2817,23 @@ function getPassBlockInfo(fromCell, toCell, defendingTeam) {
     return {
         blockedCells: [...blocked.values()],
         occupiedDefenders,
-        markedCells
+        markedCells,
+        modifier: getPassRollModifier(fromCell, toCell, defendingTeam, blocked, occupiedDefenders, markedCells)
     };
+}
+
+function getPassRollModifier(fromCell, toCell, defendingTeam, blocked, occupiedDefenders, markedCells) {
+    if (gameState.markMode !== 'player') {
+        return blocked.size * 2;
+    }
+    let modifier = occupiedDefenders.length;
+    if (fromCell.player && isPlayerMarkedByTeam(fromCell.player.team, fromCell.player.id, defendingTeam)) {
+        modifier += 1;
+    }
+    if (toCell.player && isPlayerMarkedByTeam(toCell.player.team, toCell.player.id, defendingTeam)) {
+        modifier += 1;
+    }
+    return modifier;
 }
 
 function clearBallFromAllCells() {
@@ -2740,6 +2877,9 @@ function resolveFailedPass(passerCell, targetCell, defendingTeam, passInfo) {
 }
 
 function countMarkersOnCell(cell, markingTeam) {
+    if (gameState.markMode === 'player' && cell.player) {
+        return isPlayerMarkedByTeam(cell.player.team, cell.player.id, markingTeam) ? 1 : 0;
+    }
     return gameState.defensiveMarks.filter(mark =>
         mark.team === markingTeam &&
         mark.zones.some(zone => zone.x === cell.x && zone.y === cell.y)
@@ -2778,7 +2918,7 @@ function executeZonePass(passerCell, targetCell) {
         return { success: false, forfeitAction: true };
     }
     const passInfo = getPassBlockInfo(passerCell, targetCell, defendingTeam);
-    if (rollD6Required('Pass', 1, passInfo.blockedCells.length * 2, passInfo.blockedCells.length === 0)) {
+    if (rollD6Required('Pass', 1, passInfo.modifier, passInfo.modifier === 0)) {
         clearAirborneBall();
         getCellWithBall().ball = false;
         targetCell.ball = true;
@@ -3956,6 +4096,37 @@ function undoLastMove() {
     render();
 }
 
+function syncPlayerMarksAfterMove(player, fromCell, toCell) {
+    if (gameState.markMode !== 'player' || !player) return;
+    gameState.playerMarks = gameState.playerMarks.filter(mark => {
+        if (mark.target.team !== player.team || mark.target.id !== player.id) return true;
+
+        const defenderCell = getCellWithPlayer(mark.team, mark.defender.id);
+        if (!defenderCell) return false;
+
+        if (distance(defenderCell.x, defenderCell.y, toCell.x, toCell.y) <= 1) {
+            return true;
+        }
+
+        const followOptions = getAdjacentCells(defenderCell.x, defenderCell.y)
+            .filter(cell => !cell.player && distance(cell.x, cell.y, toCell.x, toCell.y) <= 1);
+        if (followOptions.length === 0) {
+            log(`MARK broken: ${player.team === 'player' ? 'Blue' : 'Red'} ${player.id} escaped pressure.`);
+            return false;
+        }
+
+        followOptions.sort((a, b) =>
+            distance(a.x, a.y, toCell.x, toCell.y) - distance(b.x, b.y, toCell.x, toCell.y) ||
+            distance(a.x, a.y, fromCell.x, fromCell.y) - distance(b.x, b.y, fromCell.x, fromCell.y)
+        );
+        const followCell = followOptions[0];
+        followCell.player = defenderCell.player;
+        defenderCell.player = null;
+        log(`MARK follows: ${mark.team === 'player' ? 'Blue' : 'Red'} ${mark.defender.id} tracks to (${followCell.x}, ${followCell.y}).`);
+        return true;
+    });
+}
+
 function movePlayer(fromCell, toCell, options = {}) {
     if (options.recordUndo) {
         recordUndoSnapshot(`moving to (${toCell.x}, ${toCell.y})`, fromCell.player?.team || gameState.currentTurn);
@@ -3963,7 +4134,8 @@ function movePlayer(fromCell, toCell, options = {}) {
     }
     const recoveringAirborneBall = !!(toCell.ball && !fromCell.ball && isAirborneBallCell(toCell));
     const recoveringLooseBall = !!(toCell.ball && !fromCell.ball && gameState.loosePossessionTeam && !recoveringAirborneBall);
-    toCell.player = fromCell.player;
+    const movingPlayer = fromCell.player;
+    toCell.player = movingPlayer;
     if (fromCell.ball) {
         toCell.ball = true;
         fromCell.ball = false;
@@ -3986,6 +4158,7 @@ function movePlayer(fromCell, toCell, options = {}) {
         log(`${toCell.player.team === 'player' ? 'Blue' : 'Red'} recovers the loose ball at (${toCell.x}, ${toCell.y}); free pass spent.`);
     }
     fromCell.player = null;
+    syncPlayerMarksAfterMove(movingPlayer, fromCell, toCell);
 }
 
 function executeComboAction(card, targetCell) {
@@ -4046,7 +4219,7 @@ function executePass(targetCell, passingTeam, opposingTeam) {
     const passInfo = getPassBlockInfo(ballCell, targetCell, opposingTeam);
     const passLabel = `Pass from (${ballCell.x},${ballCell.y}) to (${targetCell.x},${targetCell.y})`;
 
-    if (rollD6Required(passLabel, 1, passInfo.blockedCells.length * 2, passInfo.blockedCells.length === 0)) {
+    if (rollD6Required(passLabel, 1, passInfo.modifier, passInfo.modifier === 0)) {
         clearAirborneBall();
         ballCell.ball = false;
         targetCell.ball = true;
@@ -4393,6 +4566,7 @@ function setupRestartFormation(teamWithBall = 'player') {
         cell.ball = false;
     });
     gameState.defensiveMarks = [];
+    gameState.playerMarks = [];
     gameState.offBalancePlayers = [];
     gameState.airborneBall = null;
     gameState.loosePossessionTeam = null;
@@ -4423,6 +4597,7 @@ function resetField(teamWithBall = 'player') {
     setupRestartFormation(teamWithBall);
     startKickoffPass(teamWithBall);
     gameState.defensiveMarks = [];
+    gameState.playerMarks = [];
     gameState.offBalancePlayers = [];
     gameState.airborneBall = null;
     gameState.loosePossessionTeam = null;
@@ -6319,6 +6494,9 @@ function renderUI() {
 // ========================================
 
 function initGame() {
+    const kickoffTeam = document.getElementById('kickoff-team-select')?.value || 'player';
+    const markMode = document.getElementById('mark-rule-select')?.value || 'hex';
+    gameState.markMode = markMode;
     gameState.undoHistory = [];
     gameState.gameLog = ['Game started! Draw your cards and make your move!'];
 
@@ -6335,7 +6513,7 @@ function initGame() {
         }
     }
    
-    setupRestartFormation('player');
+    setupRestartFormation(kickoffTeam);
    
     // Initialize decks
     gameState.playerDeck = createStarterDeck();
@@ -6351,7 +6529,7 @@ function initGame() {
     // Reset game state
     gameState.playerScore = 0;
     gameState.aiScore = 0;
-    gameState.currentTurn = 'player';
+    gameState.currentTurn = kickoffTeam;
     gameState.actionsRemaining = ACTIONS_PER_TURN;
     gameState.coins = 0;
     gameState.selectedCard = null;
@@ -6362,6 +6540,7 @@ function initGame() {
     gameState.commandActivation = null;
     gameState.pendingMoveMark = null;
     gameState.defensiveMarks = [];
+    gameState.playerMarks = [];
     gameState.offBalancePlayers = [];
     gameState.airborneBall = null;
     gameState.loosePossessionTeam = null;
@@ -6393,10 +6572,13 @@ function initGame() {
     drawCards('player', HAND_SIZE);
     drawCards('ai', HAND_SIZE);
 
-    startKickoffPass('player');
+    startKickoffPass(kickoffTeam);
    
     render();
-    log('Game started! You control the 🔵 blue team on the left. Get the ⚽ ball to the red goal!');
+    log(`Game started with ${kickoffTeam === 'player' ? 'Blue' : 'Red'} kickoff. MARK rule: ${markMode === 'player' ? 'Player MARK' : 'Hex MARK'}.`);
+    if (kickoffTeam === 'ai' && !gameState.manualControlMode) {
+        setTimeout(() => aiTakeKickoffPass(), 300);
+    }
 }
 
 // ========================================

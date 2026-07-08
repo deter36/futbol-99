@@ -63,6 +63,8 @@ SUMMARY_COLUMNS = [
     "offside_enabled",
     "shooter_movement_allowance",
     "flank_service_enabled",
+    "mark_mode",
+    "player_mark_movement_tax",
     "shots_per_match",
     "goals_per_match",
     "passes_attempted_per_match",
@@ -110,6 +112,8 @@ def run_case(case: dict[str, int | str], matches: int, output_dir: Path) -> dict
         offside_enabled=bool(case.get("offside_enabled", True)),
         shooter_movement_allowance=int(case.get("shooter_movement_allowance", 0)),
         flank_service_enabled=bool(case.get("flank_service_enabled", False)),
+        mark_mode=str(case.get("mark_mode", "hex")),
+        player_mark_movement_tax=bool(case.get("player_mark_movement_tax", True)),
     )
     seed = int(case["seed"])
     rng = random.Random(seed)

@@ -46,6 +46,8 @@ class Config:
     bot_style: str = "balanced"
     shooter_movement_allowance: int = 0
     flank_service_enabled: bool = False
+    mark_mode: str = "hex"
+    player_mark_movement_tax: bool = True
 
 
 @dataclass(frozen=True)
@@ -89,6 +91,8 @@ class Mark:
     depth: int
     created_step: int
     defender_id: int
+    target_team: int | None = None
+    target_id: int | None = None
 
 
 @dataclass
@@ -552,6 +556,7 @@ class Match:
                 player.lane = self.airborne.lane
                 desired = max(DEPTH_MIN, min(DEPTH_MAX, self.airborne.depth + self.rng.choice((-1, 0, 1))))
             spaces, budget = self.move_toward_depth(player, desired, max_move)
+        self.sync_player_marks(player, spaces)
         self.stats.movement_used.append(max(0, spaces))
         self.stats.movement_budget_used.append(max(0, budget))
         return max(0, spaces)
@@ -570,15 +575,41 @@ class Match:
 
     def exit_cost(self, player: Player) -> int:
         if self.markers_on(player, 1 - player.team):
+            if self.cfg.mark_mode == "player" and not self.cfg.player_mark_movement_tax:
+                return 1
             return self.cfg.marked_hex_exit_cost
         return 1
 
     def place_marks(self, team_id: int, actor: Player, count: int) -> None:
+        if self.cfg.mark_mode == "player":
+            self.place_player_mark(team_id, actor)
+            return
         candidates = self.adjacent_cells(actor)
         self.rng.shuffle(candidates)
         for lane, depth in candidates[:count]:
             self.marks.append(Mark(team_id, lane, depth, self.step, actor.pid))
             self.stats.marks_placed += 1
+
+    def place_player_mark(self, team_id: int, actor: Player) -> None:
+        if any(m.team == team_id and m.defender_id == actor.pid for m in self.marks):
+            return
+        candidates = [
+            p for p in self.team_players(1 - team_id)
+            if self.adjacent(actor, p)
+            and not any(m.target_team == p.team and m.target_id == p.pid for m in self.marks)
+        ]
+        if not candidates:
+            return
+        carrier = self.ball_carrier()
+        candidates.sort(key=lambda p: (
+            0 if carrier and p.team == carrier.team and p.pid == carrier.pid else 1,
+            -p.attack_depth(),
+            0 if p.lane == "center" else 1,
+            self.rng.random(),
+        ))
+        target = candidates[0]
+        self.marks.append(Mark(team_id, target.lane, target.depth, self.step, actor.pid, target.team, target.pid))
+        self.stats.marks_placed += 1
 
     def adjacent_cells(self, player: Player) -> list[tuple[str, int]]:
         cells = []
@@ -731,8 +762,8 @@ class Match:
         if self.cfg.offside_enabled and not self.onside(team_id, target):
             self.stats.offside_violations += 1
             return False
-        defenders = self.defenders_between(team_id, actor, target)
-        if self.roll_check(required_roll=1, modifier=defenders * abs(self.cfg.defender_pass_penalty)):
+        modifier = self.pass_modifier(team_id, actor, target)
+        if self.roll_check(required_roll=1, modifier=modifier):
             actor.has_ball = False
             target.has_ball = True
             self.stats.passes_completed += 1
@@ -742,6 +773,16 @@ class Match:
                 self.stats.action_passes_completed += 1
             return True
         return False
+
+    def pass_modifier(self, team_id: int, actor: Player, target: Player) -> int:
+        defenders = self.defenders_between(team_id, actor, target)
+        if self.cfg.mark_mode == "player":
+            return (
+                defenders
+                + self.markers_on(actor, 1 - team_id)
+                + self.markers_on(target, 1 - team_id)
+            )
+        return defenders * abs(self.cfg.defender_pass_penalty)
 
     def shoot(self, team_id: int, actor: Player) -> bool:
         if not actor.has_ball:
@@ -913,9 +954,16 @@ class Match:
         return self.cfg.goalie_shot_penalty
 
     def markers_on(self, player: Player, marking_team: int) -> int:
+        if self.cfg.mark_mode == "player":
+            return sum(
+                1 for m in self.marks
+                if m.team == marking_team and m.target_team == player.team and m.target_id == player.pid
+            )
         return sum(1 for m in self.marks if m.team == marking_team and m.lane == player.lane and abs(m.depth - player.depth) <= 0)
 
     def has_adjacent_mark(self, player: Player, marking_team: int) -> bool:
+        if self.cfg.mark_mode == "player":
+            return self.markers_on(player, marking_team) > 0
         return any(
             m.team == marking_team
             and (m.lane == player.lane or "center" in {m.lane, player.lane})
@@ -924,6 +972,12 @@ class Match:
         )
 
     def remove_adjacent_mark(self, player: Player, marking_team: int) -> bool:
+        if self.cfg.mark_mode == "player":
+            for idx, mark in enumerate(self.marks):
+                if mark.team == marking_team and mark.target_team == player.team and mark.target_id == player.pid:
+                    del self.marks[idx]
+                    return True
+            return False
         for idx, mark in enumerate(self.marks):
             if mark.team != marking_team:
                 continue
@@ -999,6 +1053,21 @@ class Match:
     def clear_player_marks_if_needed(self, player: Player) -> None:
         self.marks = [m for m in self.marks if not (m.team == player.team and m.defender_id == player.pid and self.step > m.created_step)]
 
+    def sync_player_marks(self, player: Player, spaces_moved: int) -> None:
+        if self.cfg.mark_mode != "player":
+            return
+        synced: list[Mark] = []
+        for mark in self.marks:
+            if mark.target_team != player.team or mark.target_id != player.pid:
+                synced.append(mark)
+                continue
+            marker = next((p for p in self.players if p.team == mark.team and p.pid == mark.defender_id), None)
+            if marker and spaces_moved <= 1 and self.adjacent(marker, player):
+                mark.lane = player.lane
+                mark.depth = player.depth
+                synced.append(mark)
+        self.marks = synced
+
     def reset_after_goal(self, kickoff_team: int) -> None:
         for p in self.players:
             p.has_ball = False
@@ -1039,6 +1108,8 @@ def config_rows(cfg: Config) -> dict[str, int | str | bool]:
         "bot_style": cfg.bot_style,
         "shooter_movement_allowance": cfg.shooter_movement_allowance,
         "flank_service_enabled": cfg.flank_service_enabled,
+        "mark_mode": cfg.mark_mode,
+        "player_mark_movement_tax": cfg.player_mark_movement_tax,
     }
 
 

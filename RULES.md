@@ -280,7 +280,9 @@ While AIRBORNE:
 * no player has possession
 * passes cannot be made
 * tackles cannot target the ball
-If a player moves into the AIRBORNE ball's hex, that player must control the ball.
+Only the crossing coach may control an AIRBORNE ball by moving into its hex, and only during that coach's next activation after the CROSS.
+The defending coach may only interact with an AIRBORNE ball by using HEADER.
+If the crossing coach moves a player into the AIRBORNE ball's hex, that player must control the ball.
 Controlling an AIRBORNE ball this way:
 * ends the AIRBORNE state
 * gives that player controlled possession
@@ -540,10 +542,13 @@ ________________
 
 
 Offside
+Offside only applies when the receiving player is in the opposing half.
 A pass cannot target a player more than one hex row beyond the deepest defender.
 This represents defense line pressure and prevents unrestricted long passes.
-Current prototype note:
-the public prototype still uses this simpler one-row-beyond check.
+
+If the passer is already beyond the deepest defender:
+* ignore the deepest-defender check
+* the receiver may not be in a row closer to goal than the passer
 ________________
 
 

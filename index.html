@@ -1587,6 +1587,12 @@ function getAirborneBallCell() {
     return getCell(gameState.airborneBall.x, gameState.airborneBall.y);
 }
 
+function canControlAirborneBallWithMove(cell, team) {
+    return !!(isAirborneBallCell(cell) &&
+        gameState.airborneBall.crossingTeam === team &&
+        gameState.airborneBall.createdStep < gameState.resolutionStep);
+}
+
 function canHeaderFromCell(actorCell) {
     const airborneCell = getAirborneBallCell();
     return !!(actorCell?.player &&
@@ -1962,6 +1968,7 @@ function getMovementCostDistance(fromCell, toCell, movingTeam) {
 
         getAdjacentCells(current.x, current.y).forEach(next => {
             if (next.player && next !== toCell) return;
+            if (isAirborneBallCell(next) && !canControlAirborneBallWithMove(next, movingTeam)) return;
             const stepCost = (playerMarkedMovement || (gameState.markMode === 'hex' && isMarkedByTeam(current, markingTeam))) ? 2 : 1;
             const nextCost = currentCost + stepCost;
             const nextKey = `${next.x},${next.y}`;
@@ -1981,6 +1988,7 @@ function finishCommandActivationState(team) {
         gameState.airborneBall.crossingTeam === team &&
         gameState.airborneBall.createdStep < gameState.resolutionStep) {
         log(`Airborne ball lands at (${gameState.airborneBall.x}, ${gameState.airborneBall.y}) and is uncontrolled.`);
+        setLoosePossession(team);
         clearAirborneBall();
     }
 }
@@ -2406,7 +2414,7 @@ function isValidFreePassTarget(targetCell) {
     const passerCell = getCommandFreePasser();
     if (!passerCell) return false;
     return isStandardPassTarget(passerCell, targetCell, gameState.currentTurn) &&
-        isOnsidePassTarget(targetCell, gameState.currentTurn);
+        isOnsidePassTarget(targetCell, gameState.currentTurn, passerCell);
 }
 
 function getCommandActionsForCell(card, cell) {
@@ -2557,17 +2565,27 @@ function hasActingPlayerMoved(actorCell) {
     return !!(commandState && actorCell?.player && commandState.movedPlayerIds.includes(actorCell.player.id));
 }
 
-function isOnsidePassTarget(targetCell, team) {
+function isOnsidePassTarget(targetCell, team, passerCell = null) {
     const defendingTeam = team === 'player' ? 'ai' : 'player';
     const defenders = gameState.field.filter(cell => cell.player && cell.player.team === defendingTeam);
     if (defenders.length === 0) return true;
 
+    const midfieldX = Math.floor(FIELD_WIDTH / 2);
+
     if (team === 'player') {
+        if (targetCell.x <= midfieldX) return true;
         const lastDefenderX = Math.max(...defenders.map(cell => cell.x));
+        if (passerCell && passerCell.x > lastDefenderX) {
+            return targetCell.x <= passerCell.x;
+        }
         return targetCell.x <= lastDefenderX + 1;
     }
 
     const lastDefenderX = Math.min(...defenders.map(cell => cell.x));
+    if (targetCell.x >= midfieldX) return true;
+    if (passerCell && passerCell.x < lastDefenderX) {
+        return targetCell.x >= passerCell.x;
+    }
     return targetCell.x >= lastDefenderX - 1;
 }
 
@@ -2596,7 +2614,7 @@ function isValidCommandActionTarget(action, actorCell, targetCell) {
         const allowedThirds = getPassTargetThirds(action, actorCell);
         return allowedLanes.some(lane => targetZones.lanes.includes(lane)) &&
             allowedThirds.includes(targetZones.third) &&
-            isOnsidePassTarget(targetCell, team);
+            isOnsidePassTarget(targetCell, team, actorCell);
     }
     if (action === 'cross') {
         if (!actorCell.ball || isAirborneBallCell(actorCell)) return false;
@@ -2913,7 +2931,7 @@ function rollD6Check(label, penalty) {
 function executeZonePass(passerCell, targetCell) {
     const team = gameState.currentTurn;
     const defendingTeam = team === 'player' ? 'ai' : 'player';
-    if (!isOnsidePassTarget(targetCell, team)) {
+    if (!isOnsidePassTarget(targetCell, team, passerCell)) {
         log(`Offside: pass target at (${targetCell.x}, ${targetCell.y}) is beyond the last defender line.`);
         return { success: false, forfeitAction: true };
     }
@@ -4135,6 +4153,10 @@ function movePlayer(fromCell, toCell, options = {}) {
     const recoveringAirborneBall = !!(toCell.ball && !fromCell.ball && isAirborneBallCell(toCell));
     const recoveringLooseBall = !!(toCell.ball && !fromCell.ball && gameState.loosePossessionTeam && !recoveringAirborneBall);
     const movingPlayer = fromCell.player;
+    if (recoveringAirborneBall && movingPlayer && !canControlAirborneBallWithMove(toCell, movingPlayer.team)) {
+        log('Only the crossing team can control an airborne cross by moving into its hex. The defense must use HEADER.');
+        return;
+    }
     toCell.player = movingPlayer;
     if (fromCell.ball) {
         toCell.ball = true;

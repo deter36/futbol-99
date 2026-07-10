@@ -298,6 +298,7 @@ The current prototype supports two MARK rulesets. Choose one before starting a g
 Hex MARK is the original ruleset.
 Player MARK is the experimental ruleset.
 
+The ball carrier may not take a MARK action.
 Do not mix the two during the same game.
 ________________
 

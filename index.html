@@ -2424,6 +2424,9 @@ function getCommandActionsForCell(card, cell) {
     if (selected.wasOffBalance) return [];
     const third = getPitchZones(cell, gameState.currentTurn).third;
     let actions = card.command.actions[third] || [];
+    if (cell.ball) {
+        actions = actions.filter(action => !action.startsWith('mark'));
+    }
     if (!canUseStillnessAction(cell)) {
         actions = actions.filter(action => !['shoot', 'header'].includes(action));
     }
@@ -2594,6 +2597,7 @@ function isValidCommandActionTarget(action, actorCell, targetCell) {
     const opposingTeam = team === 'player' ? 'ai' : 'player';
 
     if (action.startsWith('mark')) {
+        if (actorCell.ball) return false;
         if (gameState.markMode === 'player') {
             return targetCell.player &&
                 targetCell.player.team === opposingTeam &&

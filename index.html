@@ -651,6 +651,55 @@ main {
     border: 1px solid rgba(255, 255, 255, 0.9);
 }
 
+.player-token.player-marked-blue {
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.55),
+        0 0 0 4px rgba(30, 136, 229, 0.9);
+}
+
+.player-token.player-marked-red {
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.55),
+        0 0 0 4px rgba(229, 57, 53, 0.9);
+}
+
+.player-token.player-marked-blue.player-marked-red {
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.55),
+        0 0 0 4px rgba(30, 136, 229, 0.9),
+        0 0 0 7px rgba(229, 57, 53, 0.75);
+}
+
+.player-token.player-mark-waning {
+    opacity: 0.72;
+}
+
+.player-token.player-mark-waning .player-mark-badge {
+    border-style: dashed;
+}
+
+.player-mark-badge {
+    position: absolute;
+    bottom: -8px;
+    right: -8px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    font-size: 0.55rem;
+    line-height: 15px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    color: #fff;
+}
+
+.player-mark-badge.mark-blue {
+    background: #1E88E5;
+}
+
+.player-mark-badge.mark-red {
+    background: #E53935;
+}
+
 .airborne-ball {
     transform: rotate(90deg) translateY(-2px);
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
@@ -1117,6 +1166,93 @@ main {
     background: rgba(255, 255, 255, 0.1);
 }
 
+.coach-container {
+    background: rgba(0, 0, 0, 0.35);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+.coach-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.coach-header h3 {
+    margin: 0;
+    color: #64B5F6;
+}
+
+.coach-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.coach-style-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #e3f2fd;
+    font-size: 0.85rem;
+}
+
+.coach-style-control select {
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 6px;
+    padding: 7px 8px;
+    background: rgba(10, 24, 45, 0.95);
+    color: #fff;
+    font: inherit;
+}
+
+.coach-controls .btn {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+}
+
+.coach-panel-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+}
+
+.coach-box {
+    min-height: 150px;
+    width: 100%;
+    resize: vertical;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    padding: 8px;
+    background: rgba(10, 24, 45, 0.9);
+    color: #fff;
+    font-family: Consolas, monospace;
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.coach-option-list {
+    max-height: 180px;
+    overflow-y: auto;
+    margin: 8px 0 0;
+    padding-left: 18px;
+    font-size: 0.82rem;
+}
+
+.coach-option-list li {
+    margin-bottom: 4px;
+}
+
+@media (max-width: 900px) {
+    .coach-panel-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Responsive */
 @media (max-width: 1400px) {
     .game-layout {
@@ -1289,33 +1425,27 @@ main {
     gap: 8px;
 }
 
-.setup-control {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 10px;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.12);
-    color: #fff;
-    font-size: 0.78rem;
-    font-weight: 800;
-    text-transform: uppercase;
-}
-
-.setup-control select {
-    min-height: 28px;
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    border-radius: 5px;
-    padding: 2px 7px;
-    background: #102a4d;
-    color: #fff;
-    font-weight: 800;
-}
-
 .button-section .btn {
     width: auto;
     padding: 8px 12px;
     font-size: 0.9rem;
+}
+
+.setup-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #e3f2fd;
+    font-size: 0.85rem;
+}
+
+.setup-control select {
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 6px;
+    padding: 7px 8px;
+    background: rgba(10, 24, 45, 0.95);
+    color: #fff;
+    font: inherit;
 }
 
 /* Accessibility improvements */
@@ -1389,6 +1519,7 @@ main {
                    
                     <div class="status-section turn-section">
                         <div class="turn-display">
+                            <span id="match-round" class="turn-indicator">Half 1 · Round 1/9</span>
                             <span id="current-turn" class="turn-indicator">Your Turn</span>
                         </div>
                     </div>
@@ -1407,21 +1538,24 @@ main {
                     </div>
                    
                     <div class="button-section">
-                        <label class="setup-control" for="kickoff-team-select">
-                            <span>Kickoff</span>
-                            <select id="kickoff-team-select">
+                        <label class="setup-control">
+                            Kickoff
+                            <select id="initial-kickoff-select" aria-label="New game kickoff team">
                                 <option value="player">Blue</option>
                                 <option value="ai">Red</option>
                             </select>
                         </label>
-                        <label class="setup-control" for="mark-rule-select">
-                            <span>MARK</span>
-                            <select id="mark-rule-select">
+                        <label class="setup-control">
+                            MARK
+                            <select id="mark-mode-select" aria-label="New game MARK rule mode">
                                 <option value="hex">Hex</option>
                                 <option value="player">Player</option>
                             </select>
                         </label>
                         <button id="manual-control-btn" class="btn btn-secondary">🤖 Manual Mode: OFF</button>
+                        <button id="hidden-solo-btn" class="btn btn-secondary">🕶️ Hidden Solo: OFF</button>
+                        <button id="coach-assist-btn" class="btn btn-secondary">🧠 Coach Assist: OFF</button>
+                        <button id="auto-coach-btn" class="btn btn-secondary">🤖 LLM Auto: OFF</button>
                         <button id="field-view-btn" class="btn btn-secondary">🔵 View: Blue</button>
                         <button id="undo-move-btn" class="btn btn-secondary" style="display: none;">↶ Undo</button>
                         <button id="undo-plan-btn" class="btn btn-secondary" style="display: none;">↶ Undo Card</button>
@@ -1449,6 +1583,35 @@ main {
                 </aside>
             </div>
 
+            <div class="coach-container">
+                <div class="coach-header">
+                    <h3>LLM Coach</h3>
+                    <label class="coach-style-control">
+                        Style
+                        <select id="coach-style-select" aria-label="LLM coach style">
+                            <option value="balanced">Balanced</option>
+                            <option value="direct">Direct</option>
+                            <option value="wide">Wide</option>
+                            <option value="press">Press</option>
+                            <option value="hold">Hold</option>
+                            <option value="flow">Flow</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="coach-controls">
+                    <button id="coach-generate-btn" class="btn btn-secondary" type="button">Generate Coach Prompt</button>
+                    <button id="coach-copy-btn" class="btn btn-secondary" type="button">Copy Prompt</button>
+                    <button id="coach-apply-btn" class="btn btn-primary" type="button">Apply Coach Choice</button>
+                </div>
+                <div class="coach-panel-grid">
+                    <div>
+                        <textarea id="coach-prompt" class="coach-box" readonly aria-label="Coach prompt"></textarea>
+                        <ol id="coach-options" class="coach-option-list"></ol>
+                    </div>
+                    <textarea id="coach-response" class="coach-box" aria-label="Coach response" placeholder='Paste coach JSON here, for example: {"choice": 1}'></textarea>
+                </div>
+            </div>
+
             <div class="log-container">
                 <h3>Game Log <button id="download-log-btn" class="btn btn-secondary" type="button">Download Log</button></h3>
                 <div id="game-log" class="game-log" role="log" aria-live="polite">
@@ -1470,6 +1633,8 @@ const HAND_SIZE = 6;
 const MARKET_SIZE = 6;
 const ACTIONS_PER_TURN = 3;
 const PLAYERS_PER_TEAM = 5;
+const ROUNDS_PER_HALF = 9;
+const TOTAL_MATCH_ROUNDS = ROUNDS_PER_HALF * 2;
 
 const CARD_TYPES = {
     COMMAND: 'command',
@@ -1497,6 +1662,7 @@ let gameState = {
     field: [],
     playerScore: 0,
     aiScore: 0,
+    matchRound: 1,
     currentTurn: 'player',
     actionsRemaining: ACTIONS_PER_TURN,
     coins: 0,
@@ -1520,6 +1686,9 @@ let gameState = {
     selectedMarkCells: [],
     moveHistory: [],
     undoHistory: [],
+    gameEvents: [],
+    nextEventId: 1,
+    undoBoundaryEventId: 0,
     gameLog: ['Game started! Draw your cards and make your move!'],
     multiMove: null,
     commandActivation: null,
@@ -1533,8 +1702,8 @@ let gameState = {
     resolutionStep: 0,
     comboPassPending: null, // Stores pending pass info for combo cards like Playmaker
     pendingMoveMark: null,
-    defensiveMarks: [],
     markMode: 'hex',
+    defensiveMarks: [],
     playerMarks: [],
     offBalancePlayers: [],
     airborneBall: null,
@@ -1545,7 +1714,21 @@ let gameState = {
     gamePhase: 'action', // 'action', 'reposition_shooter', 'reposition_defender', 'defensive_reaction', 'goal_kick_selection'
     aiDebugMode: true, // DEBUG: Set to false to make AI auto-play
     manualControlMode: false, // When true, player controls both teams
+    hiddenSoloMode: false, // When true, Red hand/plans stay hidden and the local coach drives Red steps
+    coachAssistMode: false, // When true, Red waits for pasted LLM coach choices instead of auto-playing
+    coachAssistPromptKey: null,
+    coachStyle: 'balanced',
+    autoCoachMode: false, // When true, Coach Assist asks a local LLM coach server for Red choices
+    autoCoachBusy: false,
+    autoCoachEndpoint: 'http://127.0.0.1:8790/coach-choice',
+    autoCoachResetEndpoint: 'http://127.0.0.1:8790/coach-reset',
+    autoCoachSessionId: null,
+    autoCoachSessionResetPending: false,
+    autoCoachLastMemoryLesson: null,
+    autoCoachHistory: [],
+    hiddenCoachBusy: false,
     fieldViewTeam: 'player', // Visual-only field orientation: 'player' or 'ai'
+    initialKickoffTeam: 'player',
     aiActionQueue: [], // Queue of AI actions to execute step-by-step
     aiPhase: 'idle', // 'idle', 'playing_economy', 'playing_actions', 'buying', 'done'
     repositionTeam: null,
@@ -1555,7 +1738,8 @@ let gameState = {
     goalKickDefenders: null, // Defenders tied for closest during goal kick
     goalKickCell: null,
     goalKickShootingTeam: null,
-    goalKickDefendingTeam: null
+    goalKickDefendingTeam: null,
+    coachOptions: []
 };
 
 // ========================================
@@ -1712,23 +1896,37 @@ function getCardSideState(card, team = null) {
 }
 
 function clearDefensiveMarksForTeam(team) {
-    gameState.defensiveMarks = gameState.defensiveMarks.filter(mark => mark.team !== team);
+    if (isPlayerMarkMode()) {
+        gameState.playerMarks = (gameState.playerMarks || []).filter(mark => mark.team !== team);
+    } else {
+        gameState.defensiveMarks = gameState.defensiveMarks.filter(mark => mark.team !== team);
+    }
+}
+
+function isPlayerMarkMode() {
+    return gameState.markMode === 'player';
+}
+
+function getOpposingTeam(team) {
+    return team === 'player' ? 'ai' : 'player';
 }
 
 function expireDefensiveMarks() {
+    if (isPlayerMarkMode()) {
+        expirePlayerMarks();
+        return;
+    }
     gameState.defensiveMarks = gameState.defensiveMarks.filter(mark =>
-        gameState.resolutionStep <= (mark.createdStep || 0) + 2
-    );
-    gameState.playerMarks = gameState.playerMarks.filter(mark =>
         gameState.resolutionStep <= (mark.createdStep || 0) + 2
     );
 }
 
 function clearMarksForActivatedPlayer(team, playerId) {
+    if (isPlayerMarkMode()) {
+        clearPlayerMarksForActivatedMarker(team, playerId);
+        return;
+    }
     gameState.defensiveMarks = gameState.defensiveMarks.filter(mark =>
-        !(mark.team === team && mark.defender.id === playerId && gameState.resolutionStep > (mark.createdStep || 0))
-    );
-    gameState.playerMarks = gameState.playerMarks.filter(mark =>
         !(mark.team === team && mark.defender.id === playerId && gameState.resolutionStep > (mark.createdStep || 0))
     );
 }
@@ -1832,19 +2030,7 @@ function getAdjacentCells(x, y) {
 }
 
 function getMarkedThreat(cell, defendingTeam) {
-    if (gameState.markMode === 'player') {
-        if (cell.player && isPlayerMarkedByTeam(cell.player.team, cell.player.id, defendingTeam)) {
-            const mark = getPlayerMarkForTarget(cell.player.team, cell.player.id, defendingTeam);
-            const defenderCell = mark ? getCellWithPlayer(defendingTeam, mark.defender.id) : null;
-            return {
-                defenderCell,
-                threatCell: cell,
-                marked: true
-            };
-        }
-        return null;
-    }
-
+    if (isPlayerMarkMode()) return null;
     for (const mark of gameState.defensiveMarks) {
         if (mark.team !== defendingTeam) continue;
 
@@ -1883,36 +2069,167 @@ function isMarkedByTeam(cell, markingTeam) {
 }
 
 function getMarkTeamsForCell(cell) {
+    if (isPlayerMarkMode()) return [];
     const teams = new Set();
     gameState.defensiveMarks.forEach(mark => {
         if (mark.zones.some(zone => zone.x === cell.x && zone.y === cell.y)) {
             teams.add(mark.team);
         }
     });
-    if (gameState.markMode === 'player' && cell.player) {
-        gameState.playerMarks.forEach(mark => {
-            if (mark.target.team === cell.player.team && mark.target.id === cell.player.id) {
-                teams.add(mark.team);
-            }
-        });
-    }
     return [...teams];
-}
-
-function getPlayerMarkForTarget(targetTeam, targetId, markingTeam = null) {
-    return gameState.playerMarks.find(mark =>
-        mark.target.team === targetTeam &&
-        mark.target.id === targetId &&
-        (!markingTeam || mark.team === markingTeam)
-    ) || null;
-}
-
-function isPlayerMarkedByTeam(targetTeam, targetId, markingTeam) {
-    return !!getPlayerMarkForTarget(targetTeam, targetId, markingTeam);
 }
 
 function getPlayerStateKey(team, playerId) {
     return `${team}:${playerId}`;
+}
+
+function getPlayerMarkOnPlayer(team, playerId, markingTeam = null) {
+    return (gameState.playerMarks || []).find(mark =>
+        mark.marked.team === team &&
+        mark.marked.id === playerId &&
+        (!markingTeam || mark.team === markingTeam)
+    ) || null;
+}
+
+function getPlayerMarkByMarker(team, playerId) {
+    return (gameState.playerMarks || []).find(mark =>
+        mark.team === team &&
+        mark.marker.id === playerId
+    ) || null;
+}
+
+function isPlayerMarkedByTeam(cell, markingTeam) {
+    return !!(cell?.player && getPlayerMarkOnPlayer(cell.player.team, cell.player.id, markingTeam));
+}
+
+function getPlayerMarkModifier(cell, markingTeam) {
+    return isPlayerMarkMode() && isPlayerMarkedByTeam(cell, markingTeam) ? 1 : 0;
+}
+
+function expirePlayerMarks() {
+    gameState.playerMarks = (gameState.playerMarks || []).filter(mark =>
+        gameState.resolutionStep <= (mark.createdStep || 0) + 2 &&
+        getCellWithPlayer(mark.team, mark.marker.id) &&
+        getCellWithPlayer(mark.marked.team, mark.marked.id)
+    );
+}
+
+function clearPlayerMarksForActivatedMarker(team, playerId) {
+    const before = (gameState.playerMarks || []).length;
+    gameState.playerMarks = (gameState.playerMarks || []).filter(mark =>
+        !(mark.team === team && mark.marker.id === playerId && gameState.resolutionStep > (mark.createdStep || 0))
+    );
+    if (before !== gameState.playerMarks.length) {
+        log(`${getTeamLabel(team)} ${playerId} releases their MARK by activating.`);
+    }
+}
+
+function breakPlayerMark(mark, reason = 'broken') {
+    const before = (gameState.playerMarks || []).length;
+    gameState.playerMarks = (gameState.playerMarks || []).filter(existing => existing.uid !== mark.uid);
+    if (before !== gameState.playerMarks.length) {
+        log(`MARK broken: ${getTeamLabel(mark.team)} ${mark.marker.id} no longer marks ${getTeamLabel(mark.marked.team)} ${mark.marked.id} (${reason}).`);
+    }
+}
+
+function getPlayerMarkFollowTargets(mark, markedCell) {
+    const markerCell = getCellWithPlayer(mark.team, mark.marker.id);
+    if (!markerCell || !markedCell) return [];
+    if (distance(markerCell.x, markerCell.y, markedCell.x, markedCell.y) <= 1) return [];
+    return getAdjacentCells(markerCell.x, markerCell.y)
+        .filter(cell => !cell.player && distance(cell.x, cell.y, markedCell.x, markedCell.y) <= 1)
+        .sort((a, b) => {
+            const goalBias = getAttackingProgress(mark.team, b) - getAttackingProgress(mark.team, a);
+            const centerBias = Math.abs(a.y - 6) - Math.abs(b.y - 6);
+            return goalBias || centerBias || a.x - b.x || a.y - b.y;
+        });
+}
+
+function choosePlayerMarkFollowTarget(mark, targets) {
+    if (!targets.length) return null;
+    const shouldAsk = mark.team === 'player' || gameState.manualControlMode;
+    if (!shouldAsk) return targets[0];
+    if (targets.length === 1) {
+        const target = targets[0];
+        return confirm(`${getTeamLabel(mark.team)} ${mark.marker.id} can follow the MARK one hex to (${target.x}, ${target.y}). Follow?`)
+            ? target
+            : null;
+    }
+
+    const promptText = [
+        `${getTeamLabel(mark.team)} ${mark.marker.id} can follow the MARK. Choose a follow hex, or leave blank to break the MARK:`,
+        ...targets.map((target, index) => `${index + 1}: (${target.x}, ${target.y})`)
+    ].join('\n');
+    const answer = prompt(promptText);
+    if (answer === null || answer.trim() === '') return null;
+    const choice = Number(answer.trim());
+    if (!Number.isInteger(choice) || choice < 1 || choice > targets.length) return null;
+    return targets[choice - 1];
+}
+
+function movePlayerMarkingDefender(markerCell, targetCell) {
+    targetCell.player = markerCell.player;
+    if (markerCell.ball) {
+        targetCell.ball = true;
+        markerCell.ball = false;
+        setControlledPossession(targetCell.player.team);
+    }
+    markerCell.player = null;
+}
+
+function maybeResolvePlayerMarkFollow(mark, markedCell) {
+    if (!mark || !markedCell || mark.followedStep === gameState.resolutionStep) return;
+    const markerCell = getCellWithPlayer(mark.team, mark.marker.id);
+    if (!markerCell) return;
+    if (distance(markerCell.x, markerCell.y, markedCell.x, markedCell.y) <= 1) return;
+    const followTargets = getPlayerMarkFollowTargets(mark, markedCell);
+    if (!followTargets.length) {
+        breakPlayerMark(mark, 'marker cannot follow');
+        return;
+    }
+
+    const followTarget = choosePlayerMarkFollowTarget(mark, followTargets);
+    if (!followTarget) {
+        breakPlayerMark(mark, 'marker chose not to follow');
+        return;
+    }
+
+    movePlayerMarkingDefender(markerCell, followTarget);
+    mark.followedStep = gameState.resolutionStep;
+    log(`${getTeamLabel(mark.team)} ${mark.marker.id} follows their MARK to (${followTarget.x}, ${followTarget.y}).`);
+}
+
+function breakPlayerMarkIfSeparated(mark) {
+    const markerCell = getCellWithPlayer(mark.team, mark.marker.id);
+    const markedCell = getCellWithPlayer(mark.marked.team, mark.marked.id);
+    if (!markerCell || !markedCell || distance(markerCell.x, markerCell.y, markedCell.x, markedCell.y) > 1) {
+        breakPlayerMark(mark, 'players are no longer adjacent');
+    }
+}
+
+function getPlayerMarkTeamsForCell(cell) {
+    if (!isPlayerMarkMode()) return [];
+    if (!cell?.player) return [];
+    const teams = new Set();
+    (gameState.playerMarks || []).forEach(mark => {
+        if (mark.marked.team === cell.player.team && mark.marked.id === cell.player.id) {
+            teams.add(mark.team);
+        }
+    });
+    return [...teams];
+}
+
+function getPlayerMarksForCell(cell) {
+    if (!isPlayerMarkMode()) return [];
+    if (!cell?.player) return [];
+    return (gameState.playerMarks || []).filter(mark =>
+        mark.marked.team === cell.player.team &&
+        mark.marked.id === cell.player.id
+    );
+}
+
+function isPlayerMarkWaning(mark) {
+    return gameState.resolutionStep >= (mark.createdStep || 0) + 2;
 }
 
 function isPlayerOffBalance(team, playerId) {
@@ -1951,9 +2268,7 @@ function clearExpiredOffBalanceForTeam(team) {
 
 function getMovementCostDistance(fromCell, toCell, movingTeam) {
     const markingTeam = movingTeam === 'player' ? 'ai' : 'player';
-    const playerMarkedMovement = gameState.markMode === 'player' &&
-        fromCell.player &&
-        isPlayerMarkedByTeam(fromCell.player.team, fromCell.player.id, markingTeam);
+    const playerMarkMovementCost = isPlayerMarkMode() && fromCell.player && isPlayerMarkedByTeam(fromCell, markingTeam) ? 2 : null;
     const startKey = `${fromCell.x},${fromCell.y}`;
     const targetKey = `${toCell.x},${toCell.y}`;
     const costs = new Map([[startKey, 0]]);
@@ -1969,7 +2284,7 @@ function getMovementCostDistance(fromCell, toCell, movingTeam) {
         getAdjacentCells(current.x, current.y).forEach(next => {
             if (next.player && next !== toCell) return;
             if (isAirborneBallCell(next) && !canControlAirborneBallWithMove(next, movingTeam)) return;
-            const stepCost = (playerMarkedMovement || (gameState.markMode === 'hex' && isMarkedByTeam(current, markingTeam))) ? 2 : 1;
+            const stepCost = playerMarkMovementCost || (isMarkedByTeam(current, markingTeam) ? 2 : 1);
             const nextCost = currentCost + stepCost;
             const nextKey = `${next.x},${next.y}`;
             if (!costs.has(nextKey) || nextCost < costs.get(nextKey)) {
@@ -1988,7 +2303,6 @@ function finishCommandActivationState(team) {
         gameState.airborneBall.crossingTeam === team &&
         gameState.airborneBall.createdStep < gameState.resolutionStep) {
         log(`Airborne ball lands at (${gameState.airborneBall.x}, ${gameState.airborneBall.y}) and is uncontrolled.`);
-        setLoosePossession(team);
         clearAirborneBall();
     }
 }
@@ -2100,6 +2414,13 @@ function startKickoffPass(team) {
     gameState.commandActivation = null;
     gameState.pendingMoveMark = null;
     log(`${team === 'player' ? 'Your' : 'AI'} kickoff: make a free medium pass.`);
+    if (team === 'ai' && gameState.autoCoachMode) {
+        setTimeout(() => {
+            if (gameState.kickoffPending && gameState.currentTurn === 'ai') {
+                aiTakeKickoffPass();
+            }
+        }, 250);
+    }
 }
 
 function startGoalKickPass(team) {
@@ -2113,6 +2434,13 @@ function startGoalKickPass(team) {
     gameState.commandActivation = null;
     gameState.pendingMoveMark = null;
     log(`${team === 'player' ? 'Your' : 'AI'} goal kick: make a free long pass to a teammate.`);
+    if (team === 'ai' && gameState.autoCoachMode) {
+        setTimeout(() => {
+            if (gameState.goalKickPending && gameState.currentTurn === 'ai') {
+                aiTakeGoalKickPass();
+            }
+        }, 250);
+    }
 }
 
 function startGoalKickClear(team, shotGoalCell = null) {
@@ -2151,6 +2479,18 @@ function startGoalKickClear(team, shotGoalCell = null) {
 
     log(`${team === 'player' ? 'Blue' : 'Red'} goal kick: choose a CLEAR target from (${clearCell?.x}, ${clearCell?.y}).`);
     render();
+    if (team === 'ai' && gameState.autoCoachMode && clearCell) {
+        setTimeout(() => {
+            if (!gameState.goalKickPending || gameState.currentTurn !== 'ai') return;
+            const target = getDefaultClearTarget(clearCell, team);
+            executeClear(clearCell, target);
+            gameState.goalKickPending = false;
+            gameState.selectedCard = null;
+            gameState.selectedPlayer = null;
+            log('LLM Auto completed Red goal kick CLEAR restart.');
+            startPlanningRound();
+        }, 250);
+    }
 }
 
 function aiTakeKickoffPass() {
@@ -2235,13 +2575,33 @@ function getCommandMaxSelections(command) {
 
 function getCommandSelectionLane(cell, command) {
     const cellLanes = getCommandCellLanes(cell);
-    return command.lanes.find(lane => cellLanes.includes(lane)) || null;
+    const eligibleLanes = command.lanes.filter(lane => cellLanes.includes(lane));
+    if (!eligibleLanes.length) return null;
+
+    if (command.mode !== 'lane') {
+        const laneCounts = getCommandSelectedLaneCounts(gameState.commandActivation);
+        const availableLanes = eligibleLanes.filter(lane => (laneCounts[lane] || 0) < command.perLane);
+        if (!availableLanes.length) return null;
+        const outerLane = availableLanes.find(lane => lane !== 'center');
+        return outerLane || availableLanes[0];
+    }
+
+    return eligibleLanes[0];
 }
 
 function getCommandSupportSelectionLane(cell, command) {
     if (!command.supportMove) return null;
     const cellLanes = getCommandCellLanes(cell);
     return command.supportMove.lanes.find(lane => cellLanes.includes(lane)) || null;
+}
+
+function wouldCommandSelectionBeSupportOnly(cell, card) {
+    if (!gameState.commandActivation || !card?.command?.supportMove) return false;
+    const command = card.command;
+    const mainLane = getCommandSelectionLane(cell, command);
+    const supportLane = getCommandSupportSelectionLane(cell, command);
+    const mainSelected = gameState.commandActivation.selectedPlayers.filter(selected => !selected.supportOnly).length;
+    return !!(supportLane && (!mainLane || mainSelected >= command.count));
 }
 
 function getCommandSelectedLaneCounts(commandState) {
@@ -2335,9 +2695,15 @@ function completeCommandCard() {
 
     if (gameState.commandActivation.phase !== 'act') {
         if (gameState.commandActivation.phase === 'move') {
-            gameState.commandActivation.phase = 'free_pass';
-            gameState.selectedPlayer = getCommandFreePasser();
-            log(`${card.name}: movement complete. Make one optional standard pass, or skip to actions.`);
+            if (hasLegalCommandFreePass()) {
+                gameState.commandActivation.phase = 'free_pass';
+                gameState.selectedPlayer = getCommandFreePasser();
+                log(`${card.name}: movement complete. Make one optional standard pass, or skip to actions.`);
+            } else {
+                gameState.commandActivation.phase = 'act';
+                gameState.selectedPlayer = null;
+                log(`${card.name}: no legal free pass available. Choose one activated player to take an action.`);
+            }
             render();
             return;
         }
@@ -2387,6 +2753,22 @@ function getCommandFreePasser() {
     return ballCell;
 }
 
+function getRemainingCommandSelections(card) {
+    if (!gameState.commandActivation || !card?.command) return 0;
+    return Math.max(0, getCommandMaxSelections(card.command) - gameState.commandActivation.selectedPlayers.length);
+}
+
+function hasMoreCommandActivationOptions(card) {
+    if (!gameState.commandActivation || !card) return false;
+    return gameState.field.some(cell => canSelectForCommand(cell, card));
+}
+
+function hasLegalCommandFreePass() {
+    const passerCell = getCommandFreePasser();
+    if (!passerCell) return false;
+    return gameState.field.some(cell => isValidFreePassTarget(cell));
+}
+
 function getLaneIndex(lane) {
     return ['left', 'center', 'right'].indexOf(lane);
 }
@@ -2418,36 +2800,52 @@ function isValidFreePassTarget(targetCell) {
 }
 
 function getCommandActionsForCell(card, cell) {
-    const selected = getSelectedCommandPlayer(cell);
+    const liveCell = getLivePlayerCell(cell) || cell;
+    const selected = getSelectedCommandPlayer(liveCell);
     if (!selected) return [];
     if (selected.supportOnly) return [];
     if (selected.wasOffBalance) return [];
-    const third = getPitchZones(cell, gameState.currentTurn).third;
+    const third = getPitchZones(liveCell, gameState.currentTurn).third;
     let actions = card.command.actions[third] || [];
-    if (cell.ball) {
-        actions = actions.filter(action => !action.startsWith('mark'));
-    }
-    if (!canUseStillnessAction(cell)) {
+    if (!canUseStillnessAction(liveCell)) {
         actions = actions.filter(action => !['shoot', 'header'].includes(action));
     }
-    if (!canHeaderFromCell(cell)) {
+    if (!canHeaderFromCell(liveCell)) {
         actions = actions.filter(action => action !== 'header');
     }
+    const rejectedActions = gameState.commandActivation?.rejectedActions || [];
+    actions = actions.filter(action => !rejectedActions.includes(action));
+    actions = actions.filter(action => hasLegalCommandActionTarget(action, liveCell));
     return actions;
+}
+
+function getLivePlayerCell(cell) {
+    if (!cell?.player) return null;
+    return gameState.field.find(fieldCell =>
+        fieldCell.player &&
+        fieldCell.player.team === cell.player.team &&
+        fieldCell.player.id === cell.player.id
+    ) || null;
+}
+
+function hasLegalCommandActionTarget(action, actorCell) {
+    if (!actorCell) return false;
+    return gameState.field.some(cell => isValidCommandActionTarget(action, actorCell, cell));
 }
 
 function chooseCommandActionPlayer(cell) {
     recordUndoSnapshot(`choosing action player at (${cell.x}, ${cell.y})`);
     const card = gameState.selectedCard;
-    const actions = getCommandActionsForCell(card, cell);
+    const liveCell = getLivePlayerCell(cell) || cell;
+    const actions = getCommandActionsForCell(card, liveCell);
     if (actions.length === 0) {
         log(`${card.name}: no action options for that player in this third.`);
         return;
     }
 
-    gameState.selectedPlayer = cell;
+    gameState.selectedPlayer = liveCell;
     gameState.commandActivation.action = null;
-    gameState.commandActivation.actingPlayerId = cell.player.id;
+    gameState.commandActivation.actingPlayerId = liveCell.player.id;
     gameState.selectedMarkCells = [];
     log(`${card.name}: choose an action for the selected player.`);
     render();
@@ -2456,6 +2854,20 @@ function chooseCommandActionPlayer(cell) {
 function chooseCommandAction(action) {
     if (!gameState.selectedCard || !gameState.commandActivation || !gameState.selectedPlayer) return;
     recordUndoSnapshot(`choosing ${action}`);
+    const liveCell = getLivePlayerCell(gameState.selectedPlayer);
+    if (!liveCell) {
+        log(`${gameState.selectedCard.name}: selected player is no longer on the pitch.`);
+        gameState.selectedPlayer = null;
+        render();
+        return;
+    }
+    gameState.selectedPlayer = liveCell;
+    if (!getCommandActionsForCell(gameState.selectedCard, liveCell).includes(action)) {
+        log(`${gameState.selectedCard.name}: ${action} is not available for that player now.`);
+        gameState.commandActivation.action = null;
+        render();
+        return;
+    }
     if (action === 'header') {
         const airborneCell = getAirborneBallCell();
         if (!airborneCell || !canHeaderFromCell(gameState.selectedPlayer)) {
@@ -2470,6 +2882,12 @@ function chooseCommandAction(action) {
         return;
     }
     gameState.commandActivation.action = action;
+    if (!hasLegalCommandActionTarget(action, gameState.selectedPlayer)) {
+        log(`${gameState.selectedCard.name}: no legal target for ${action}.`);
+        gameState.commandActivation.action = null;
+        render();
+        return;
+    }
     gameState.selectedMarkCells = [];
     log(`${gameState.selectedCard.name}: ${action} selected. Choose a target.`);
     render();
@@ -2513,10 +2931,40 @@ function getSameOrAdjacentThirds(third) {
     return ['midfield', 'attacking'];
 }
 
-function getShotRequiredRollModifier(card, shooterCell) {
-    if (!shooterCell) return 0;
-    const zones = getPitchZones(shooterCell, gameState.currentTurn);
-    return zones.lanes.includes('center') ? 0 : 1;
+function isSplitLaneCell(cell) {
+    return !!(cell && cell.x % 2 === 1 && (cell.y === 3 || cell.y === 8));
+}
+
+function getShotCountCellCost(cell) {
+    return isSplitLaneCell(cell) ? 2 : 1;
+}
+
+function getShotDistanceRequiredRoll(shooterCell, goalCell) {
+    if (!shooterCell || !goalCell) return 6;
+
+    const startKey = `${shooterCell.x},${shooterCell.y}`;
+    const goalKey = `${goalCell.x},${goalCell.y}`;
+    const costs = new Map([[startKey, getShotCountCellCost(shooterCell)]]);
+    const pending = [{ cell: shooterCell, cost: getShotCountCellCost(shooterCell) }];
+
+    while (pending.length) {
+        pending.sort((a, b) => a.cost - b.cost);
+        const current = pending.shift();
+        const currentKey = `${current.cell.x},${current.cell.y}`;
+        if (current.cost !== costs.get(currentKey)) continue;
+        if (currentKey === goalKey) return current.cost;
+
+        getAdjacentCells(current.cell.x, current.cell.y).forEach(nextCell => {
+            const nextKey = `${nextCell.x},${nextCell.y}`;
+            const nextCost = current.cost + getShotCountCellCost(nextCell);
+            if (nextCost < (costs.get(nextKey) ?? Infinity)) {
+                costs.set(nextKey, nextCost);
+                pending.push({ cell: nextCell, cost: nextCost });
+            }
+        });
+    }
+
+    return 7;
 }
 
 function getClearPressureCells(cell, team) {
@@ -2568,25 +3016,28 @@ function hasActingPlayerMoved(actorCell) {
     return !!(commandState && actorCell?.player && commandState.movedPlayerIds.includes(actorCell.player.id));
 }
 
-function isOnsidePassTarget(targetCell, team, passerCell = null) {
+function isOnsidePassTarget(targetCell, team, passerCell = getCellWithBall()) {
+    if (!targetCell || !passerCell) return true;
+    const opponentHalfStart = team === 'player' ? 9 : 7;
+    const targetInOpponentHalf = team === 'player'
+        ? targetCell.x >= opponentHalfStart
+        : targetCell.x <= opponentHalfStart;
+    if (!targetInOpponentHalf) return true;
+
     const defendingTeam = team === 'player' ? 'ai' : 'player';
     const defenders = gameState.field.filter(cell => cell.player && cell.player.team === defendingTeam);
     if (defenders.length === 0) return true;
 
-    const midfieldX = Math.floor(FIELD_WIDTH / 2);
-
     if (team === 'player') {
-        if (targetCell.x <= midfieldX) return true;
         const lastDefenderX = Math.max(...defenders.map(cell => cell.x));
-        if (passerCell && passerCell.x > lastDefenderX) {
+        if (passerCell.x > lastDefenderX + 1) {
             return targetCell.x <= passerCell.x;
         }
         return targetCell.x <= lastDefenderX + 1;
     }
 
     const lastDefenderX = Math.min(...defenders.map(cell => cell.x));
-    if (targetCell.x >= midfieldX) return true;
-    if (passerCell && passerCell.x < lastDefenderX) {
+    if (passerCell.x < lastDefenderX - 1) {
         return targetCell.x >= passerCell.x;
     }
     return targetCell.x >= lastDefenderX - 1;
@@ -2597,12 +3048,11 @@ function isValidCommandActionTarget(action, actorCell, targetCell) {
     const opposingTeam = team === 'player' ? 'ai' : 'player';
 
     if (action.startsWith('mark')) {
-        if (actorCell.ball) return false;
-        if (gameState.markMode === 'player') {
-            return targetCell.player &&
-                targetCell.player.team === opposingTeam &&
-                distance(actorCell.x, actorCell.y, targetCell.x, targetCell.y) <= 1 &&
-                !getPlayerMarkForTarget(targetCell.player.team, targetCell.player.id);
+        if (isPlayerMarkMode()) {
+            if (!targetCell.player || targetCell.player.team !== opposingTeam) return false;
+            if (getPlayerMarkOnPlayer(targetCell.player.team, targetCell.player.id)) return false;
+            if (getPlayerMarkByMarker(actorCell.player.team, actorCell.player.id)) return false;
+            return distance(actorCell.x, actorCell.y, targetCell.x, targetCell.y) <= 1;
         }
         return getAdjacentCells(actorCell.x, actorCell.y).some(cell => cell.x === targetCell.x && cell.y === targetCell.y);
     }
@@ -2633,9 +3083,11 @@ function isValidCommandActionTarget(action, actorCell, targetCell) {
     if (action === 'dribble') {
         if (!actorCell.ball) return false;
         if (isAirborneBallCell(actorCell)) return false;
-        if (gameState.markMode === 'player') {
-            return targetCell === actorCell &&
-                isPlayerMarkedByTeam(actorCell.player.team, actorCell.player.id, opposingTeam);
+        if (isPlayerMarkMode()) {
+            if (!getPlayerMarkOnPlayer(actorCell.player.team, actorCell.player.id, opposingTeam)) return false;
+            if (targetCell === actorCell) return true;
+            if (targetCell.player) return false;
+            return distance(actorCell.x, actorCell.y, targetCell.x, targetCell.y) <= 1;
         }
         if (targetCell.player) return false;
         if (distance(actorCell.x, actorCell.y, targetCell.x, targetCell.y) > 1) return false;
@@ -2647,6 +3099,11 @@ function isValidCommandActionTarget(action, actorCell, targetCell) {
         if (isClearPressured(actorCell, team)) return false;
         return isInClearFan(actorCell, targetCell, team);
     }
+    if (action === 'header_clear') {
+        if (!actorCell.ball) return false;
+        if (isAirborneBallCell(actorCell)) return false;
+        return isInClearFan(actorCell, targetCell, team);
+    }
     if (action === 'header') {
         return canHeaderFromCell(actorCell) && isAirborneBallCell(targetCell);
     }
@@ -2654,6 +3111,7 @@ function isValidCommandActionTarget(action, actorCell, targetCell) {
         if (!actorCell.ball) return false;
         if (!canUseStillnessAction(actorCell)) return false;
         if (isAirborneBallCell(actorCell)) return false;
+        if (targetCell === actorCell) return false;
         const goalX = team === 'player' ? 16 : 0;
         return targetCell.x === goalX && targetCell.y >= 5 && targetCell.y <= 7;
     }
@@ -2666,7 +3124,7 @@ function isSelectedMarkCell(cell) {
 
 function isValidCoachActionTarget(action, actorCell, targetCell) {
     if (!isValidCommandActionTarget(action, actorCell, targetCell)) return false;
-    if (action.startsWith('mark')) {
+    if (action.startsWith('mark') && !isPlayerMarkMode()) {
         return !isSelectedMarkCell(targetCell);
     }
     return true;
@@ -2680,8 +3138,8 @@ function resolveCommandActionTarget(targetCell) {
     recordUndoSnapshot(`${action} target at (${targetCell.x}, ${targetCell.y})`, team);
 
     if (action.startsWith('mark')) {
-        if (gameState.markMode === 'player') {
-            applyPlayerMark(card, actorCell, targetCell);
+        if (isPlayerMarkMode()) {
+            applyCommandPlayerMark(card, actorCell, targetCell);
             return;
         }
         const count = parseInt(action.split(' ')[1], 10) || 2;
@@ -2706,8 +3164,22 @@ function resolveCommandActionTarget(targetCell) {
     }
 
     if (action === 'dribble') {
-        removeMarkFromCell(targetCell, team === 'player' ? 'ai' : 'player');
-        log(`Dribble: removed pressure from (${targetCell.x}, ${targetCell.y}).`);
+        if (isPlayerMarkMode()) {
+            const markingTeam = getOpposingTeam(team);
+            const mark = getPlayerMarkOnPlayer(actorCell.player.team, actorCell.player.id, markingTeam);
+            if (mark) {
+                breakPlayerMark(mark, 'dribble escape');
+            }
+            if (targetCell !== actorCell) {
+                movePlayer(actorCell, targetCell, { recordUndo: false, context: 'dribble' });
+                log(`Dribble: escaped MARK and moved to (${targetCell.x}, ${targetCell.y}).`);
+            } else {
+                log('Dribble: escaped MARK.');
+            }
+        } else {
+            removeMarkFromCell(targetCell, team === 'player' ? 'ai' : 'player');
+            log(`Dribble: removed pressure from (${targetCell.x}, ${targetCell.y}).`);
+        }
         completeCardPlay(card, team);
         return;
     }
@@ -2726,6 +3198,13 @@ function resolveCommandActionTarget(targetCell) {
 
     if (action === 'clear') {
         executeClear(actorCell, targetCell);
+        completeCardPlay(card, team);
+        return;
+    }
+
+    if (action === 'header_clear') {
+        executeClear(actorCell, targetCell);
+        log('Defensive HEADER clear complete.');
         completeCardPlay(card, team);
         return;
     }
@@ -2759,34 +3238,27 @@ function applyCommandMark(card, defenderCell, zones) {
     completeCardPlay(card, gameState.currentTurn);
 }
 
-function applyPlayerMark(card, defenderCell, targetCell) {
+function applyCommandPlayerMark(card, markerCell, targetCell) {
     const team = gameState.currentTurn;
-    if (!targetCell.player || targetCell.player.team === team) return;
-
-    gameState.playerMarks = gameState.playerMarks.filter(mark =>
-        !(mark.team === team && mark.defender.id === defenderCell.player.id) &&
-        !(mark.target.team === targetCell.player.team && mark.target.id === targetCell.player.id)
+    if (!markerCell?.player || !targetCell?.player) return;
+    gameState.playerMarks = (gameState.playerMarks || []).filter(mark =>
+        !(mark.marked.team === targetCell.player.team && mark.marked.id === targetCell.player.id) &&
+        !(mark.team === team && mark.marker.id === markerCell.player.id)
     );
     gameState.playerMarks.push({
+        uid: generateId(),
         team,
-        defender: { id: defenderCell.player.id },
-        target: { team: targetCell.player.team, id: targetCell.player.id },
-        source: gameState.commandActivation.action,
-        createdStep: gameState.resolutionStep
+        marker: { id: markerCell.player.id },
+        marked: { team: targetCell.player.team, id: targetCell.player.id },
+        source: 'mark',
+        createdStep: gameState.resolutionStep,
+        followedStep: null
     });
-
-    log(`${card.name}: ${team === 'player' ? 'Blue' : 'Red'} ${defenderCell.player.id} MARKS ${targetCell.player.team === 'player' ? 'Blue' : 'Red'} ${targetCell.player.id}.`);
-    completeCardPlay(card, team);
+    log(`${card.name}: ${getTeamLabel(team)} ${markerCell.player.id} MARKS ${getTeamLabel(targetCell.player.team)} ${targetCell.player.id}.`);
+    completeCardPlay(card, gameState.currentTurn);
 }
 
 function removeMarkFromCell(cell, markingTeam) {
-    if (gameState.markMode === 'player' && cell.player) {
-        const before = gameState.playerMarks.length;
-        gameState.playerMarks = gameState.playerMarks.filter(mark =>
-            !(mark.team === markingTeam && mark.target.team === cell.player.team && mark.target.id === cell.player.id)
-        );
-        return before !== gameState.playerMarks.length;
-    }
     gameState.defensiveMarks = gameState.defensiveMarks
         .map(mark => {
             if (mark.team !== markingTeam) return mark;
@@ -2796,7 +3268,6 @@ function removeMarkFromCell(cell, markingTeam) {
             };
         })
         .filter(mark => mark.zones.length > 0);
-    return true;
 }
 
 function countDefendersBetween(fromCell, toCell, defendingTeam) {
@@ -2812,7 +3283,7 @@ function getBlockedLineCells(fromCell, toCell, defendingTeam) {
             blocked.set(`${cell.x},${cell.y}`, cell);
             return;
         }
-        if (gameState.markMode === 'hex' && isMarkedByTeam(cell, defendingTeam)) {
+        if (isMarkedByTeam(cell, defendingTeam)) {
             blocked.set(`${cell.x},${cell.y}`, cell);
         }
     });
@@ -2830,7 +3301,7 @@ function getPassBlockInfo(fromCell, toCell, defendingTeam) {
             occupiedDefenders.push({ cell, index });
             blocked.set(`${cell.x},${cell.y}`, cell);
         }
-        if (gameState.markMode === 'hex' && isMarkedByTeam(cell, defendingTeam)) {
+        if (isMarkedByTeam(cell, defendingTeam)) {
             markedCells.push({ cell, index });
             blocked.set(`${cell.x},${cell.y}`, cell);
         }
@@ -2839,22 +3310,17 @@ function getPassBlockInfo(fromCell, toCell, defendingTeam) {
     return {
         blockedCells: [...blocked.values()],
         occupiedDefenders,
-        markedCells,
-        modifier: getPassRollModifier(fromCell, toCell, defendingTeam, blocked, occupiedDefenders, markedCells)
+        markedCells
     };
 }
 
-function getPassRollModifier(fromCell, toCell, defendingTeam, blocked, occupiedDefenders, markedCells) {
-    if (gameState.markMode !== 'player') {
-        return blocked.size * 2;
+function getPassRollModifier(passerCell, targetCell, defendingTeam, passInfo) {
+    if (!isPlayerMarkMode()) {
+        return passInfo.blockedCells.length * 2;
     }
-    let modifier = occupiedDefenders.length;
-    if (fromCell.player && isPlayerMarkedByTeam(fromCell.player.team, fromCell.player.id, defendingTeam)) {
-        modifier += 1;
-    }
-    if (toCell.player && isPlayerMarkedByTeam(toCell.player.team, toCell.player.id, defendingTeam)) {
-        modifier += 1;
-    }
+    let modifier = passInfo.occupiedDefenders.length;
+    if (isPlayerMarkedByTeam(passerCell, defendingTeam)) modifier += 1;
+    if (isPlayerMarkedByTeam(targetCell, defendingTeam)) modifier += 1;
     return modifier;
 }
 
@@ -2899,9 +3365,6 @@ function resolveFailedPass(passerCell, targetCell, defendingTeam, passInfo) {
 }
 
 function countMarkersOnCell(cell, markingTeam) {
-    if (gameState.markMode === 'player' && cell.player) {
-        return isPlayerMarkedByTeam(cell.player.team, cell.player.id, markingTeam) ? 1 : 0;
-    }
     return gameState.defensiveMarks.filter(mark =>
         mark.team === markingTeam &&
         mark.zones.some(zone => zone.x === cell.x && zone.y === cell.y)
@@ -2936,11 +3399,12 @@ function executeZonePass(passerCell, targetCell) {
     const team = gameState.currentTurn;
     const defendingTeam = team === 'player' ? 'ai' : 'player';
     if (!isOnsidePassTarget(targetCell, team, passerCell)) {
-        log(`Offside: pass target at (${targetCell.x}, ${targetCell.y}) is beyond the last defender line.`);
+        log(`Offside: pass target at (${targetCell.x}, ${targetCell.y}) is beyond the allowed attacking line.`);
         return { success: false, forfeitAction: true };
     }
     const passInfo = getPassBlockInfo(passerCell, targetCell, defendingTeam);
-    if (rollD6Required('Pass', 1, passInfo.modifier, passInfo.modifier === 0)) {
+    const modifier = getPassRollModifier(passerCell, targetCell, defendingTeam, passInfo);
+    if (rollD6Required('Pass', 1, modifier, modifier === 0)) {
         clearAirborneBall();
         getCellWithBall().ball = false;
         targetCell.ball = true;
@@ -3087,7 +3551,7 @@ function resolveShotRebound(shooterCell, goalCell, shootingTeam, defendingTeam) 
             card: gameState.selectedCard,
             resolvingTeam: gameState.currentTurn
         };
-        log('Near miss: choose the rebound hex.');
+        log(`Near miss: choose the rebound hex from ${candidates.map(cell => `(${cell.x},${cell.y})`).join(' or ')}.`);
         render();
         return true;
     }
@@ -3117,10 +3581,13 @@ function executeZoneShot(shooterCell, goalCell, options = {}) {
     const defendingTeam = team === 'player' ? 'ai' : 'player';
     const blockedCells = getBlockedLineCells(shooterCell, goalCell, defendingTeam);
     const effectiveBlocks = Math.max(0, blockedCells.length - (options.ignoreBlocks || 0));
-    const markers = countMarkersOnCell(shooterCell, defendingTeam);
-    const cardPenalty = getShotRequiredRollModifier(gameState.selectedCard, shooterCell);
-    const modifier = effectiveBlocks + markers + cardPenalty;
-    const shotRoll = rollD6Result(options.label || 'Shot', 4, modifier);
+    const markers = isPlayerMarkMode()
+        ? getPlayerMarkModifier(shooterCell, defendingTeam)
+        : countMarkersOnCell(shooterCell, defendingTeam);
+    const requiredRoll = getShotDistanceRequiredRoll(shooterCell, goalCell);
+    const modifier = effectiveBlocks + markers;
+    log(`${options.label || 'Shot'} count: base ${requiredRoll}+ from (${shooterCell.x}, ${shooterCell.y}) to goal (${goalCell.x}, ${goalCell.y})${effectiveBlocks ? `, +${effectiveBlocks} blocked` : ''}${markers ? `, +${markers} mark` : ''}.`);
+    const shotRoll = rollD6Result(options.label || 'Shot', requiredRoll, modifier);
     if (shotRoll.success) {
         if (team === 'player') gameState.playerScore++;
         else gameState.aiScore++;
@@ -3176,15 +3643,18 @@ function executeHeader(actorCell, airborneCell) {
     if (isOffensiveHeader) {
         actorCell.ball = true;
         const goalCell = getDefaultGoalCellForTeam(team);
-        log(`Header: attacking header toward goal.`);
+        log(`Header: attacking header toward goal at (${goalCell.x}, ${goalCell.y}).`);
         return executeZoneShot(actorCell, goalCell, { ignoreBlocks: 1, label: 'Header shot' });
     }
 
     actorCell.ball = true;
-    const clearTarget = getDefaultClearTarget(actorCell, team);
-    log(`Header: defensive header clears the airborne ball.`);
-    executeClear(actorCell, clearTarget);
-    return false;
+    if (gameState.commandActivation) {
+        gameState.commandActivation.action = 'header_clear';
+        gameState.selectedPlayer = actorCell;
+    }
+    log(`Header: defensive header controlled. Choose a CLEAR target.`);
+    render();
+    return 'pending';
 }
 
 function executeClear(actorCell, targetCell) {
@@ -3268,6 +3738,8 @@ function makeUndoSnapshot(label) {
     const { undoHistory, coachOptions, ...state } = gameState;
     return {
         label,
+        eventId: Math.max(0, (gameState.nextEventId || 1) - 1),
+        boundaryEventId: gameState.undoBoundaryEventId || 0,
         state: cloneForUndo(state)
     };
 }
@@ -3278,6 +3750,13 @@ function recordUndoSnapshot(label, team = gameState.currentTurn) {
     if (gameState.undoHistory.length > 100) {
         gameState.undoHistory.shift();
     }
+}
+
+function sealUndoBoundary(reason = 'turn boundary') {
+    gameState.undoHistory = [];
+    clearMoveHistory();
+    gameState.undoBoundaryEventId = Math.max(0, (gameState.nextEventId || 1) - 1);
+    recordGameEvent('turn_boundary', reason, { reason }, { silent: true });
 }
 
 function restoreUndoSnapshot(snapshot) {
@@ -3295,22 +3774,99 @@ function renderLog() {
     const logElement = document.getElementById('game-log');
     if (!logElement) return;
     logElement.innerHTML = '';
-    (gameState.gameLog || []).slice(0, 20).forEach(entry => {
+    (gameState.gameLog || []).slice(0, 40).forEach(entry => {
         const p = document.createElement('p');
         p.textContent = entry;
         logElement.appendChild(p);
     });
 }
 
+function inferEventType(message) {
+    const text = String(message || '').toLowerCase();
+    const hasWord = word => new RegExp(`\\b${word}\\b`).test(text);
+    if (text.includes('llm') ||
+        text.includes('coach assist') ||
+        text.includes('hidden solo') ||
+        text.includes('coach server') ||
+        text.includes('coach choice') ||
+        text.includes('coach response') ||
+        text.includes('coach prompt')) return 'system';
+    if (text.includes('mark mode')) return 'log';
+    if (text.includes('undid')) return 'undo';
+    if (text.includes('round complete') || text.includes('turn started') || text.includes('choose one planned card')) return 'turn_boundary';
+    if (text.includes('planned card')) return 'plan_card';
+    if (text.includes('reveals')) return 'reveal_card';
+    if (text.includes('moved') || text.includes('controls the airborne ball') || text.includes('recovers the loose ball')) return 'move_player';
+    if (text.includes('activated') || text.includes('command movement')) return 'activate_player';
+    if (text.includes('pass')) return 'pass';
+    if (text.includes('shot') || text.includes('scores') || text.includes('rebound')) return 'shot';
+    if (text.includes('cross') || text.includes('airborne')) return 'cross';
+    if (text.includes('header')) return 'header';
+    if (hasWord('mark') || hasWord('marks') || hasWord('marked')) return 'mark';
+    if (text.includes('tackle') || text.includes('turnover') || text.includes('stolen')) return 'tackle_turnover';
+    if (text.includes('clear')) return 'clear';
+    return 'log';
+}
+
+function recordGameEvent(type, message, details = {}, options = {}) {
+    if (!gameState.gameEvents) gameState.gameEvents = [];
+    if (!gameState.nextEventId) gameState.nextEventId = 1;
+    const event = {
+        id: gameState.nextEventId++,
+        type: type || inferEventType(message),
+        message,
+        details,
+        team: details.team || gameState.currentTurn || null,
+        phase: gameState.gamePhase || null,
+        resolutionStep: gameState.resolutionStep || 0,
+        matchRound: gameState.matchRound || 1,
+        createdAt: new Date().toISOString()
+    };
+    gameState.gameEvents.push(event);
+    while (gameState.gameEvents.length > 500) {
+        gameState.gameEvents.shift();
+    }
+    if (!options.silent) {
+        if (!gameState.gameLog) gameState.gameLog = [];
+        gameState.gameLog.unshift(message);
+        while (gameState.gameLog.length > 200) {
+            gameState.gameLog.pop();
+        }
+        renderLog();
+    }
+    return event;
+}
+
 function downloadGameLog() {
     const lines = (gameState.gameLog || []).slice().reverse();
+    const gameplayEvents = (gameState.gameEvents || [])
+        .filter(event => event.type !== 'system')
+        .slice(-120)
+        .map(event =>
+        `${event.id}. [${event.type}] ${event.message}`
+    );
+    const systemEvents = (gameState.gameEvents || [])
+        .filter(event => event.type === 'system')
+        .slice(-40)
+        .map(event =>
+        `${event.id}. [${event.type}] ${event.message}`
+    );
     const text = [
         `Futbol '99 playtest log`,
         `Exported: ${new Date().toLocaleString()}`,
         `Score: Blue ${gameState.playerScore} - Red ${gameState.aiScore}`,
         `Phase: ${gameState.gamePhase}`,
+        `Coach Style: ${getActiveCoachStyle()}`,
+        `MARK Mode: ${isPlayerMarkMode() ? 'Player' : 'Hex'}`,
+        `Match Clock: ${getMatchClockLabel()}`,
         '',
-        ...lines
+        ...lines,
+        '',
+        'Recent gameplay events:',
+        ...gameplayEvents,
+        '',
+        'Recent system events:',
+        ...systemEvents
     ].join('\n');
     const blob = new Blob([text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -3335,13 +3891,16 @@ function undoLastChange() {
 }
 
 function log(message) {
-    if (!gameState.gameLog) gameState.gameLog = [];
-    gameState.gameLog.unshift(message);
-    while (gameState.gameLog.length > 200) {
-        gameState.gameLog.pop();
-    }
-    renderLog();
+    recordGameEvent(inferEventType(message), message);
 }
+
+function systemLog(message) {
+    recordGameEvent('system', message);
+}
+
+window.getFutbol99EventLog = function getFutbol99EventLog() {
+    return cloneForUndo(gameState.gameEvents || []);
+};
 
     </script>
 
@@ -3403,7 +3962,7 @@ const STARTER_CARDS = [
         supportMove: { lanes: ['center'], count: 1 }
     }),
     createThirdCommandCard('attack_111', 'A 1/1/1', 'attacking', {
-        attacking: ['shoot', 'dribble']
+        attacking: ['shoot', 'dribble', 'header']
     }),
     createThirdCommandCard('defend_111', 'D 1/1/1', 'defensive', {
         defensive: ['mark 2', 'clear', 'header']
@@ -3646,6 +4205,14 @@ function planCard(card, team) {
 
 function autoPlanIfNeeded() {
     if (gameState.manualControlMode) return;
+    if (gameState.hiddenSoloMode) {
+        scheduleHiddenCoachStep();
+        return;
+    }
+    if (gameState.coachAssistMode) {
+        refreshCoachAssistPrompt('Coach Assist: Red planning is waiting for a pasted coach choice.');
+        return;
+    }
 
     if (gameState.gamePhase === 'planning_offense' && gameState.offenseTeam === 'ai') {
         autoPlanCards('ai', gameState.plannedOffense);
@@ -3718,6 +4285,7 @@ function revealNextOffenseCard() {
 }
 
 function startPlannedCardResolution(card, team, role) {
+    sealUndoBoundary(`Start ${team === 'player' ? 'Blue' : 'Red'} ${role} card ${card.name}`);
     gameState.resolutionStep++;
     expireDefensiveMarks();
     gameState.currentTurn = team;
@@ -3737,10 +4305,14 @@ function startPlannedCardResolution(card, team, role) {
         actionSpent: false,
         actionSpentReason: null,
         actingPlayerId: null,
-        action: null
+        action: null,
+        rejectedActions: []
     };
     log(`${team === 'player' ? 'Player' : 'AI'} reveals ${card.name}. Activate players, move, make one optional pass, then choose one action.`);
     render();
+    if (gameState.coachAssistMode && team === 'ai') {
+        refreshCoachAssistPrompt('Coach Assist: Red is resolving a committed card.');
+    }
 }
 
 function chooseDefenseResponse(card) {
@@ -3756,15 +4328,27 @@ function advanceResolutionAfterCard(card, team) {
     gameState.commandActivation = null;
     gameState.resolvingPlannedCard = false;
 
+    if (gameState.resolvingRole === 'defense') {
+        gameState.plannedDefense = gameState.plannedDefense.filter(plannedCard => plannedCard.uid !== card.uid);
+    }
+
+    const possessionTeam = getTeamWithPossession();
+    if (possessionTeam && possessionTeam !== gameState.offenseTeam) {
+        handleResolutionTurnover(possessionTeam);
+        return;
+    }
+
     if (gameState.resolvingRole === 'offense') {
         if (gameState.plannedDefense.length > 0) {
             gameState.gamePhase = 'choose_defense_card';
             gameState.currentTurn = gameState.defenseTeam;
             gameState.resolvingRole = null;
             log('Defense: choose one planned card to reveal and resolve.');
-            if (!gameState.manualControlMode && gameState.defenseTeam === 'ai') {
+            if (!gameState.manualControlMode && !gameState.coachAssistMode && gameState.defenseTeam === 'ai') {
                 const card = gameState.plannedDefense[0];
                 setTimeout(() => chooseDefenseResponse(card), 300);
+            } else if (gameState.coachAssistMode && gameState.defenseTeam === 'ai') {
+                refreshCoachAssistPrompt('Coach Assist: Red defense response is waiting for a pasted coach choice.');
             }
         } else {
             gameState.offenseResolveIndex++;
@@ -3772,7 +4356,6 @@ function advanceResolutionAfterCard(card, team) {
             return;
         }
     } else {
-        gameState.plannedDefense = gameState.plannedDefense.filter(plannedCard => plannedCard.uid !== card.uid);
         gameState.offenseResolveIndex++;
         gameState.resolvingRole = null;
         revealNextOffenseCard();
@@ -3782,12 +4365,70 @@ function advanceResolutionAfterCard(card, team) {
     render();
 }
 
+function handleResolutionTurnover(newOffenseTeam) {
+    const oldOffenseTeam = gameState.offenseTeam;
+    const oldDefenseTeam = gameState.defenseTeam;
+    const oldOffenseRemaining = gameState.plannedOffense.slice(gameState.offenseResolveIndex + 1);
+    let oldDefenseRemaining = [...gameState.plannedDefense];
+
+    if (gameState.resolvingRole === 'offense' && oldDefenseRemaining.length > 0) {
+        const reactionCard = oldDefenseRemaining.shift();
+        discardCardOnce(reactionCard, oldDefenseTeam);
+        log(`${oldDefenseTeam === 'player' ? 'Player' : 'AI'} spends ${reactionCard.name} face up as the turnover reaction.`);
+    }
+
+    const newDefenseTeam = newOffenseTeam === 'player' ? 'ai' : 'player';
+    gameState.offenseTeam = newOffenseTeam;
+    gameState.defenseTeam = newDefenseTeam;
+    gameState.currentTurn = newOffenseTeam;
+    gameState.plannedOffense = newOffenseTeam === oldDefenseTeam ? oldDefenseRemaining : oldOffenseRemaining;
+    gameState.plannedDefense = newDefenseTeam === oldDefenseTeam ? oldDefenseRemaining : oldOffenseRemaining;
+    gameState.offenseResolveIndex = 0;
+    gameState.resolvingRole = null;
+    gameState.resolvingPlannedCard = false;
+    gameState.selectedCard = null;
+    gameState.selectedPlayer = null;
+    gameState.selectedMarkCells = [];
+    gameState.commandActivation = null;
+    clearMoveHistory();
+
+    log(`Turnover during resolution: ${newOffenseTeam === 'player' ? 'Blue' : 'Red'} becomes Offense and remaining committed cards are reassigned.`);
+
+    if (gameState.plannedOffense.length > 0) {
+        revealNextOffenseCard();
+        return;
+    }
+
+    log('No committed cards remain for the new Offense, so the round ends.');
+    finishResolutionRound();
+}
+
 function finishResolutionRound() {
+    sealUndoBoundary('Resolution round complete');
     discardUnresolvedPlannedCards();
     drawCards('player', Math.max(0, HAND_SIZE - gameState.playerHand.length));
     drawCards('ai', Math.max(0, HAND_SIZE - gameState.aiHand.length));
     log('Round complete. Both teams draw back up to 6.');
+    advanceMatchRound();
     startPlanningRound();
+}
+
+function getMatchClockLabel() {
+    if (gameState.matchRound > TOTAL_MATCH_ROUNDS) {
+        return `Extra Round ${gameState.matchRound - TOTAL_MATCH_ROUNDS}`;
+    }
+    const half = gameState.matchRound <= ROUNDS_PER_HALF ? 1 : 2;
+    const roundInHalf = ((gameState.matchRound - 1) % ROUNDS_PER_HALF) + 1;
+    return `Half ${half} · Round ${roundInHalf}/${ROUNDS_PER_HALF}`;
+}
+
+function advanceMatchRound() {
+    gameState.matchRound++;
+    if (gameState.matchRound === ROUNDS_PER_HALF + 1) {
+        log('Halftime. Teams switch into the second half.');
+    } else if (gameState.matchRound === TOTAL_MATCH_ROUNDS + 1) {
+        log('Full time reached. You can keep playing into extra rounds for testing.');
+    }
 }
 
 function resetResolutionState() {
@@ -3804,6 +4445,7 @@ function resetResolutionState() {
 }
 
 function restartAfterGoal(scoringTeam) {
+    sealUndoBoundary('Goal scored');
     const concedingTeam = scoringTeam === 'player' ? 'ai' : 'player';
     discardUnresolvedPlannedCards();
     resetResolutionState();
@@ -3813,6 +4455,7 @@ function restartAfterGoal(scoringTeam) {
     setupRestartFormation(concedingTeam);
     startKickoffPass(concedingTeam);
     log('Goal restart: all planned cards discarded and both teams draw back to 6.');
+    advanceMatchRound();
     render();
 }
 
@@ -4118,50 +4761,24 @@ function undoLastMove() {
     render();
 }
 
-function syncPlayerMarksAfterMove(player, fromCell, toCell) {
-    if (gameState.markMode !== 'player' || !player) return;
-    gameState.playerMarks = gameState.playerMarks.filter(mark => {
-        if (mark.target.team !== player.team || mark.target.id !== player.id) return true;
-
-        const defenderCell = getCellWithPlayer(mark.team, mark.defender.id);
-        if (!defenderCell) return false;
-
-        if (distance(defenderCell.x, defenderCell.y, toCell.x, toCell.y) <= 1) {
-            return true;
-        }
-
-        const followOptions = getAdjacentCells(defenderCell.x, defenderCell.y)
-            .filter(cell => !cell.player && distance(cell.x, cell.y, toCell.x, toCell.y) <= 1);
-        if (followOptions.length === 0) {
-            log(`MARK broken: ${player.team === 'player' ? 'Blue' : 'Red'} ${player.id} escaped pressure.`);
-            return false;
-        }
-
-        followOptions.sort((a, b) =>
-            distance(a.x, a.y, toCell.x, toCell.y) - distance(b.x, b.y, toCell.x, toCell.y) ||
-            distance(a.x, a.y, fromCell.x, fromCell.y) - distance(b.x, b.y, fromCell.x, fromCell.y)
-        );
-        const followCell = followOptions[0];
-        followCell.player = defenderCell.player;
-        defenderCell.player = null;
-        log(`MARK follows: ${mark.team === 'player' ? 'Blue' : 'Red'} ${mark.defender.id} tracks to (${followCell.x}, ${followCell.y}).`);
-        return true;
-    });
-}
-
 function movePlayer(fromCell, toCell, options = {}) {
-    if (options.recordUndo) {
-        recordUndoSnapshot(`moving to (${toCell.x}, ${toCell.y})`, fromCell.player?.team || gameState.currentTurn);
-        recordMoveHistory(fromCell, toCell, options.context || 'move');
-    }
+    const movingPlayer = fromCell.player;
+    const markingTeam = movingPlayer ? getOpposingTeam(movingPlayer.team) : null;
+    const playerMark = isPlayerMarkMode() && movingPlayer
+        ? getPlayerMarkOnPlayer(movingPlayer.team, movingPlayer.id, markingTeam)
+        : null;
     const recoveringAirborneBall = !!(toCell.ball && !fromCell.ball && isAirborneBallCell(toCell));
     const recoveringLooseBall = !!(toCell.ball && !fromCell.ball && gameState.loosePossessionTeam && !recoveringAirborneBall);
-    const movingPlayer = fromCell.player;
     if (recoveringAirborneBall && movingPlayer && !canControlAirborneBallWithMove(toCell, movingPlayer.team)) {
         log('Only the crossing team can control an airborne cross by moving into its hex. The defense must use HEADER.');
         return;
     }
-    toCell.player = movingPlayer;
+
+    if (options.recordUndo) {
+        recordUndoSnapshot(`moving to (${toCell.x}, ${toCell.y})`, fromCell.player?.team || gameState.currentTurn);
+        recordMoveHistory(fromCell, toCell, options.context || 'move');
+    }
+    toCell.player = fromCell.player;
     if (fromCell.ball) {
         toCell.ball = true;
         fromCell.ball = false;
@@ -4184,7 +4801,11 @@ function movePlayer(fromCell, toCell, options = {}) {
         log(`${toCell.player.team === 'player' ? 'Blue' : 'Red'} recovers the loose ball at (${toCell.x}, ${toCell.y}); free pass spent.`);
     }
     fromCell.player = null;
-    syncPlayerMarksAfterMove(movingPlayer, fromCell, toCell);
+
+    if (playerMark) {
+        maybeResolvePlayerMarkFollow(playerMark, toCell);
+        breakPlayerMarkIfSeparated(playerMark);
+    }
 }
 
 function executeComboAction(card, targetCell) {
@@ -4245,7 +4866,8 @@ function executePass(targetCell, passingTeam, opposingTeam) {
     const passInfo = getPassBlockInfo(ballCell, targetCell, opposingTeam);
     const passLabel = `Pass from (${ballCell.x},${ballCell.y}) to (${targetCell.x},${targetCell.y})`;
 
-    if (rollD6Required(passLabel, 1, passInfo.modifier, passInfo.modifier === 0)) {
+    const modifier = getPassRollModifier(ballCell, targetCell, opposingTeam, passInfo);
+    if (rollD6Required(passLabel, 1, modifier, modifier === 0)) {
         clearAirborneBall();
         ballCell.ball = false;
         targetCell.ball = true;
@@ -4291,7 +4913,7 @@ function handleOutOfBounds(teamThatLostBall) {
    
     log(`${opposingTeam === 'player' ? 'Your' : 'AI'} throw-in! Turn starts with possession.`);
    
-    if (opposingTeam === 'ai') {
+    if (opposingTeam === 'ai' && !gameState.coachAssistMode && !gameState.hiddenSoloMode) {
         render();
         setTimeout(aiTakeTurn, 1000);
     } else {
@@ -4549,7 +5171,9 @@ function selectGoalKickDefender(defenderCell) {
 
 function executeCommandTackle(tacklerCell, ballCarrierCell) {
     if (!tacklerCell || !tacklerCell.player || !ballCarrierCell || !ballCarrierCell.ball) return;
-    const success = rollD6Required('Tackle', 4);
+    const defendingTeam = getOpposingTeam(tacklerCell.player.team);
+    const modifier = getPlayerMarkModifier(tacklerCell, defendingTeam);
+    const success = rollD6Required('Tackle', 4, modifier);
     if (success) {
         ballCarrierCell.ball = false;
         tacklerCell.ball = true;
@@ -4565,7 +5189,8 @@ function stealBall(tacklerCell, successChance) {
     const ballCell = getCellWithBall();
     if (!ballCell || !tacklerCell || !tacklerCell.player) return;
     const requiredRoll = successChance >= 0.5 ? 4 : 5;
-    const success = rollD6Required('Tackle', requiredRoll);
+    const modifier = getPlayerMarkModifier(tacklerCell, getOpposingTeam(tacklerCell.player.team));
+    const success = rollD6Required('Tackle', requiredRoll, modifier);
 
     if (success) {
         ballCell.ball = false;
@@ -4878,7 +5503,7 @@ function endTurnAfterShot() {
         render();
         if (gameState.goalKickPending) {
             aiTakeGoalKickPass();
-        } else {
+        } else if (!gameState.coachAssistMode && !gameState.hiddenSoloMode) {
             setTimeout(aiTakeTurn, 1000);
         }
     } else {
@@ -4906,6 +5531,7 @@ function endTurn() {
 
     // Keep cards in hand, draw up to hand size limit
     const currentTeam = gameState.currentTurn;
+    sealUndoBoundary(`${currentTeam === 'player' ? 'Blue' : 'Red'} ended turn`);
     const hand = currentTeam === 'player' ? gameState.playerHand : gameState.aiHand;
    
     const cardsToDraw = HAND_SIZE - hand.length;
@@ -4931,7 +5557,7 @@ function endTurn() {
             render();
            
             // Only auto-play AI when neither manual testing nor external coach assist is active.
-            if (!gameState.manualControlMode) {
+            if (!gameState.manualControlMode && !gameState.coachAssistMode && !gameState.hiddenSoloMode) {
                 setTimeout(aiTakeTurn, 1000);
             }
         } else {
@@ -4973,7 +5599,9 @@ function handleTurnover(newPossessionTeam, reason) {
     if (newPossessionTeam === 'ai') {
         log('AI turn started');
         render();
-        setTimeout(aiTakeTurn, 1000);
+        if (!gameState.coachAssistMode && !gameState.hiddenSoloMode) {
+            setTimeout(aiTakeTurn, 1000);
+        }
     } else {
         log('Your turn!');
         render();
@@ -4987,6 +5615,11 @@ function handleTurnover(newPossessionTeam, reason) {
 // ========================================
 
 function aiTakeTurn() {
+    if (gameState.coachAssistMode) {
+        refreshCoachAssistPrompt('Coach Assist is enabled. Generate/copy the prompt instead of auto-playing Red.');
+        return;
+    }
+
     log('🤖 AI is thinking...');
 
     if (gameState.kickoffPending && gameState.currentTurn === 'ai') {
@@ -5328,6 +5961,1029 @@ function getValidMoveTargets(fromCell, range) {
     return targets;
 }
 
+function getTeamLabel(team) {
+    return team === 'player' ? 'Blue' : 'Red';
+}
+
+function getTeamHand(team) {
+    return team === 'player' ? gameState.playerHand : gameState.aiHand;
+}
+
+function getTeamDiscard(team) {
+    return team === 'player' ? gameState.playerDiscard : gameState.aiDiscard;
+}
+
+function getTeamDeck(team) {
+    return team === 'player' ? gameState.playerDeck : gameState.aiDeck;
+}
+
+function getCellId(cell) {
+    return cell ? `(${cell.x},${cell.y})` : '';
+}
+
+function getActiveCoachStyle() {
+    return gameState.autoCoachMode ? 'balanced' : (gameState.coachStyle || 'balanced');
+}
+
+const COACH_STYLE_GUIDES = {
+    balanced: {
+        identity: 'Balanced coach: value possession, credible shots, central defense, and shape.',
+        priorities: [
+            'Prefer cards that activate the ball carrier or nearby support.',
+            'On defense, protect central shooting lanes and contest the ball.',
+            'Avoid cards or responses that are likely to fizzle unless forced.'
+        ]
+    },
+    direct: {
+        identity: 'Direct coach: push toward goal, shoot from credible central chances, and accept some risk.',
+        priorities: [
+            'Prefer forward progress, central attackers, free passes into scoring spots, and shots.',
+            'Do not waste turns on low-impact marks far from the ball.',
+            'Still avoid obviously impossible or fizzling cards.'
+        ]
+    },
+    wide: {
+        identity: 'Wide coach: build through flanks, create crosses, and look for header pressure.',
+        priorities: [
+            'Prefer flank activations, crosses from outside lanes, and support near the box.',
+            'Use central players as targets for crosses and rebounds.',
+            'Do not cross if there is no realistic teammate or follow-up near the airborne ball.'
+        ]
+    },
+    press: {
+        identity: 'Press coach: contest possession aggressively and create high-pressure turnovers.',
+        priorities: [
+            'On defense, prioritize tackles, marks near the ball, and activations close to possession.',
+            'On offense, prefer fast forward progression after gaining possession.',
+            'Avoid sterile lateral/backward passes in Red defensive or midfield areas.',
+            'Avoid retreating away from the ball unless protecting against an immediate shot.'
+        ]
+    },
+    hold: {
+        identity: 'Hold coach: protect the center, deny quality shots, clear emergencies, and keep structure.',
+        priorities: [
+            'On defense, prioritize central coverage, marks in shooting lanes, headers, and emergency clear chances.',
+            'Prefer safe possession and defensive shape over risky forward moves.',
+            'Avoid overcommitting wide if the center is exposed.'
+        ]
+    },
+    flow: {
+        identity: 'Flow coach: keep the ball moving, create support triangles, and avoid low-quality shots.',
+        priorities: [
+            'Prefer safe free passes, support movement, and retaining possession.',
+            'Shoot only from credible chances or when pressure is high.',
+            'Use movement to create passing outlets instead of isolated runs.'
+        ]
+    }
+};
+
+function getCoachOptionTeam() {
+    if (gameState.gamePhase === 'planning_offense') return gameState.offenseTeam;
+    if (gameState.gamePhase === 'planning_defense') return gameState.defenseTeam;
+    if (gameState.gamePhase === 'choose_defense_card') return gameState.defenseTeam;
+    if (gameState.gamePhase === 'resolving_card') return gameState.currentTurn;
+    return gameState.currentTurn || getTeamWithPossession();
+}
+
+function addCoachOption(options, label, apply) {
+    options.push({ id: options.length + 1, label, apply });
+}
+
+function cardCanActivateAnyPlayer(card, team) {
+    if (!card?.command) return false;
+    return gameState.field.some(cell => cell.player?.team === team && cardCanActivateCell(card, cell, team));
+}
+
+function cardCanActivateCell(card, cell, team) {
+    const command = card.command;
+    const zones = getPitchZones(cell, team);
+    if (command.mode === 'third') {
+        return zones.third === command.third && command.lanes.some(lane => zones.lanes.includes(lane));
+    }
+    if (command.mode === 'lane' || command.mode === 'split-lane') {
+        const mainLane = command.lanes?.some(lane => zones.lanes.includes(lane));
+        const supportLane = command.supportMove?.lanes?.some(lane => zones.lanes.includes(lane));
+        return !!(mainLane || supportLane);
+    }
+    return false;
+}
+
+function cardActivatesCellAsSupportOnly(card, cell, team) {
+    if (!card?.command?.supportMove || !cell?.player) return false;
+    const command = card.command;
+    const zones = getPitchZones(cell, team);
+    const mainLane = command.lanes?.some(lane => zones.lanes.includes(lane));
+    const supportLane = command.supportMove?.lanes?.some(lane => zones.lanes.includes(lane));
+    return !!(supportLane && !mainLane);
+}
+
+function getCardActivationSummary(card, team) {
+    const eligible = gameState.field.filter(cell => cell.player?.team === team && cardCanActivateCell(card, cell, team));
+    const ballCarrier = eligible.some(cell => cell.ball);
+    const ballCarrierMain = eligible.some(cell => cell.ball && !cardActivatesCellAsSupportOnly(card, cell, team));
+    const ballCarrierSupportOnly = eligible.some(cell => cell.ball && cardActivatesCellAsSupportOnly(card, cell, team));
+    const attacking = eligible.filter(cell => getPitchZones(cell, team).third === 'attacking').length;
+    const central = eligible.filter(cell => getPitchZones(cell, team).lanes.includes('center')).length;
+    const ballCell = getCellWithBall();
+    const nearBall = ballCell
+        ? eligible.filter(cell => distance(cell.x, cell.y, ballCell.x, ballCell.y) <= 2).length
+        : 0;
+    return { eligibleCount: eligible.length, ballCarrier, ballCarrierMain, ballCarrierSupportOnly, attacking, central, nearBall };
+}
+
+function getAttackingProgress(team, cell) {
+    if (!cell) return 0;
+    return team === 'ai' ? (FIELD_WIDTH - 1 - cell.x) : cell.x;
+}
+
+function parseCoachOptionCells(label) {
+    return [...label.matchAll(/\((\d+),\s*(\d+)\)/g)].map(match => ({
+        x: Number(match[1]),
+        y: Number(match[2])
+    }));
+}
+
+function getCoachOptionProgressDelta(label, team) {
+    const coords = parseCoachOptionCells(label);
+    if (coords.length < 2) return 0;
+    const from = coords[0];
+    const to = coords[coords.length - 1];
+    return getAttackingProgress(team, to) - getAttackingProgress(team, from);
+}
+
+function getCoachOptionBallDistanceDelta(label) {
+    const coords = parseCoachOptionCells(label);
+    const ballCell = getCellWithBall();
+    if (coords.length < 2 || !ballCell) return 0;
+    const from = coords[0];
+    const to = coords[coords.length - 1];
+    return distance(from.x, from.y, ballCell.x, ballCell.y) - distance(to.x, to.y, ballCell.x, ballCell.y);
+}
+
+function getSelectedCoachActorContext(team) {
+    const actorCell = gameState.selectedPlayer ? getLivePlayerCell(gameState.selectedPlayer) : null;
+    if (!actorCell?.player) return null;
+    return {
+        cell: actorCell,
+        zones: getPitchZones(actorCell, team),
+        progress: getAttackingProgress(team, actorCell),
+        isBallCarrier: !!actorCell.ball
+    };
+}
+
+function getCoachOptionAnalysis(option, team) {
+    const label = option.label.toLowerCase();
+    const notes = [];
+    let priority = 0;
+    const progressDelta = getCoachOptionProgressDelta(option.label, team);
+    const ballDistanceDelta = getCoachOptionBallDistanceDelta(option.label);
+    const isOffenseChoice = team === gameState.offenseTeam;
+    const actorContext = getSelectedCoachActorContext(team);
+
+    if (label.includes('commit ') || label.includes('reveal ')) {
+        const cardName = option.label
+            .replace(/^Commit\s+/i, '')
+            .replace(/^Reveal\s+/i, '')
+            .replace(/\s+from\s+.*$/i, '')
+            .replace(/\s+as\s+the\s+defensive response$/i, '');
+        const card = [...gameState.playerHand, ...gameState.aiHand, ...gameState.plannedDefense, ...gameState.plannedOffense]
+            .find(candidate => candidate.name === cardName);
+        if (card?.command) {
+            const activation = getCardActivationSummary(card, team);
+            if (activation.eligibleCount === 0) {
+                priority -= 9;
+                notes.push('likely fizzle: no currently eligible player for this card');
+            } else {
+                priority += Math.min(activation.eligibleCount, 3);
+                notes.push(`${activation.eligibleCount} currently eligible activation${activation.eligibleCount === 1 ? '' : 's'}`);
+                if (activation.ballCarrierMain) {
+                    priority += 5;
+                    notes.push('can activate the ball carrier');
+                }
+                if (activation.ballCarrierSupportOnly) {
+                    priority -= 5;
+                    notes.push('ball carrier is only eligible as support move, so it cannot take the card action');
+                }
+                if (activation.attacking) priority += 1;
+                if (activation.central) priority += 1;
+                if (!isOffenseChoice && activation.nearBall) {
+                    priority += Math.min(activation.nearBall, 3) * 3;
+                    notes.push(`${activation.nearBall} eligible player${activation.nearBall === 1 ? '' : 's'} near the ball`);
+                }
+            }
+        }
+    }
+
+    if (label.includes('with ball')) {
+        priority += 7;
+        notes.push('directly uses possession');
+    }
+    if (label.includes('support move only') && label.includes('with ball')) {
+        priority -= 8;
+        notes.push('warning: ball carrier would be support move only and cannot take the card action');
+    } else if (label.includes('support move only')) {
+        priority -= 2;
+        notes.push('support move only: useful for shape, but cannot take the card action');
+    }
+    if (label.includes('shoot')) {
+        priority += 5;
+        if (actorContext?.zones.third === 'attacking') {
+            priority += actorContext.zones.lanes.includes('center') ? 5 : 2;
+            notes.push('credible attacking shot');
+        } else if (label.includes('use shoot')) {
+            priority -= 5;
+            notes.push('shot is available but not from a strong attacking location');
+        } else {
+            notes.push('may create a scoring chance');
+        }
+    }
+    if (label.includes('free pass')) {
+        priority += 5;
+        notes.push('uses the free pass to move possession');
+        if (isOffenseChoice) {
+            if (progressDelta > 0) {
+                priority += progressDelta * 3;
+                notes.push(`advances toward goal by ${progressDelta}`);
+            } else if (progressDelta === 0) {
+                priority -= 8;
+                notes.push('sterile lateral pass: keeps possession without advancing');
+            } else {
+                priority += progressDelta * 5;
+                notes.push(`retreats from goal by ${Math.abs(progressDelta)}`);
+            }
+        }
+    }
+    if (label.includes('tackle')) {
+        priority += isOffenseChoice ? 4 : 9;
+        notes.push('can create a turnover');
+    }
+    if (label.includes('mark')) {
+        priority += isOffenseChoice ? 1 : 5;
+        notes.push(isOffenseChoice ? 'adds pressure, but possession actions usually matter more' : 'adds defensive pressure');
+        if (isPlayerMarkMode() && label.includes(' with ball')) {
+            priority += 4;
+            notes.push('player MARK on the ball carrier is high value');
+        }
+    }
+    if (label.includes('header')) {
+        priority += 6;
+        notes.push('can contest or finish an airborne ball');
+    }
+    if (label.includes('cross')) {
+        if (label.includes('use cross')) {
+            if (actorContext?.zones.third === 'attacking') {
+                priority += 3;
+                notes.push('cross from attacking flank can create danger if support exists');
+            } else {
+                priority -= 3;
+                notes.push('cross outside the attacking third is usually low value');
+            }
+        } else {
+            priority += 1;
+            notes.push('cross option exists, but only use it with a real target plan');
+        }
+    }
+    if (label.includes('resolve card without action')) {
+        priority -= 7;
+        notes.push('low value: gives up the action');
+    }
+    if (label.includes('move ') && label.includes(' from ') && label.includes(' to ')) {
+        if (isOffenseChoice) {
+            if (progressDelta > 0) {
+                priority += progressDelta * 2;
+                notes.push(`movement advances toward goal by ${progressDelta}`);
+            } else if (progressDelta < 0) {
+                priority += progressDelta * 3;
+                notes.push(`movement retreats from goal by ${Math.abs(progressDelta)}`);
+            }
+        } else {
+            if (ballDistanceDelta > 0) {
+                priority += ballDistanceDelta * 3;
+                notes.push(`defensive movement closes the ball by ${ballDistanceDelta}`);
+            } else if (ballDistanceDelta < 0) {
+                priority += ballDistanceDelta * 3;
+                notes.push(`defensive movement moves away from the ball by ${Math.abs(ballDistanceDelta)}`);
+            }
+        }
+    }
+    if (label.includes('start movement with current activations')) {
+        const remaining = getRemainingCommandSelections(gameState.selectedCard);
+        if (remaining > 0 && hasMoreCommandActivationOptions(gameState.selectedCard)) {
+            priority -= remaining * 7;
+            notes.push(`starts movement before using ${remaining} remaining activation${remaining === 1 ? '' : 's'}`);
+        }
+    }
+    if (label.includes('finish movement') || label.includes('finish movement and go to free pass')) {
+        const movedCount = gameState.commandActivation?.movedPlayerIds?.length || 0;
+        if (movedCount === 0 && gameState.commandActivation?.phase === 'move') {
+            priority -= 8;
+            notes.push('finishes movement before any activated player moved');
+        }
+    }
+    if (label.includes('skip free pass')) {
+        priority -= 1;
+    }
+    if (label.includes('dribble') && isPlayerMarkMode() && actorContext?.cell && getPlayerMarkOnPlayer(actorContext.cell.player.team, actorContext.cell.player.id, getOpposingTeam(actorContext.cell.player.team))) {
+        priority += 6;
+        notes.push('dribble escapes an active player MARK');
+    }
+
+    priority += getCoachStyleOptionBonus(label);
+    return {
+        priority,
+        notes: notes.length ? notes : ['legal but no special tactical flag']
+    };
+}
+
+function getCoachStyleOptionBonus(label) {
+    if (gameState.autoCoachMode) return 0;
+    const style = gameState.coachStyle || 'balanced';
+    let bonus = 0;
+    if (style === 'direct') {
+        if (label.includes('shoot')) bonus += 5;
+        if (label.includes('free pass')) bonus += 2;
+        if (label.includes('attacking') || label.includes(' with ball')) bonus += 2;
+        if (label.includes('mark')) bonus -= 1;
+    } else if (style === 'wide') {
+        if (label.includes(' l') || label.includes(' r') || label.includes('left') || label.includes('right')) bonus += 2;
+        if (label.includes('cross') || label.includes('header')) bonus += 6;
+        if (label.includes('center')) bonus += 1;
+    } else if (style === 'press') {
+        if (label.includes('tackle')) bonus += 6;
+        if (label.includes('mark')) bonus += 4;
+        if (label.includes('with ball')) bonus += 3;
+        if (label.includes('finish movement')) bonus -= 2;
+    } else if (style === 'hold') {
+        if (label.includes('mark')) bonus += 5;
+        if (label.includes('clear') || label.includes('header')) bonus += 4;
+        if (label.includes('center')) bonus += 3;
+        if (label.includes('shoot')) bonus -= 1;
+    } else if (style === 'flow') {
+        if (label.includes('free pass')) bonus += 6;
+        if (label.includes('move')) bonus += 2;
+        if (label.includes('with ball')) bonus += 3;
+        if (label.includes('shoot')) bonus -= 1;
+    }
+    return bonus;
+}
+
+function isHiddenCoachActive() {
+    if (!gameState.hiddenSoloMode || gameState.manualControlMode || gameState.hiddenCoachBusy) return false;
+    if (gameState.kickoffPending || gameState.goalKickPending || gameState.pendingRebound) return false;
+    if (gameState.gamePhase === 'planning_offense') return gameState.offenseTeam === 'ai';
+    if (gameState.gamePhase === 'planning_defense') return gameState.defenseTeam === 'ai';
+    if (gameState.gamePhase === 'choose_defense_card') return gameState.defenseTeam === 'ai';
+    if (gameState.gamePhase === 'resolving_card') return gameState.currentTurn === 'ai';
+    return false;
+}
+
+function scheduleHiddenCoachStep() {
+    if (!isHiddenCoachActive()) return;
+    gameState.hiddenCoachBusy = true;
+    setTimeout(() => {
+        gameState.hiddenCoachBusy = false;
+        if (!isHiddenCoachActive()) return;
+        const options = getCoachLegalOptions();
+        const option = chooseHiddenCoachOption(options);
+        if (!option) {
+            log('Hidden Solo coach has no legal option.');
+            return;
+        }
+        log(`Hidden Solo coach chooses: ${option.label}`);
+        option.apply();
+    }, 350);
+}
+
+function chooseHiddenCoachOption(options) {
+    if (!options.length) return null;
+    const phase = gameState.commandActivation?.phase || gameState.gamePhase;
+    const scored = options.map(option => ({
+        option,
+        score: scoreHiddenCoachOption(option, phase) + Math.random() * 0.01
+    }));
+    scored.sort((a, b) => b.score - a.score);
+    return scored[0].option;
+}
+
+function scoreHiddenCoachOption(option, phase) {
+    const label = option.label.toLowerCase();
+    let score = 0;
+
+    if (phase === 'planning_offense' || phase === 'planning_defense') {
+        if (label.includes('c2')) score += 8;
+        if (label.includes('c1')) score += 7;
+        if (label.includes('l1') || label.includes('r1')) score += 6;
+        if (label.includes('l+r')) score += 5;
+        if (label.includes('d 1/1/1')) score += phase === 'planning_defense' ? 8 : 2;
+        if (label.includes('a 1/1/1')) score += phase === 'planning_offense' ? 7 : 2;
+        return score;
+    }
+
+    if (phase === 'choose_defense_card') {
+        if (label.includes('tackle')) score += 8;
+        if (label.includes('c2') || label.includes('d 1/1/1')) score += 6;
+        if (label.includes('l1') || label.includes('r1')) score += 4;
+        return score;
+    }
+
+    if (phase === 'select') {
+        if (label.includes('ball')) score += 20;
+        if (label.includes('center')) score += 5;
+        if (label.includes('attacking')) score += 4;
+        if (label.includes('midfield')) score += 2;
+        return score;
+    }
+
+    if (phase === 'move') {
+        if (label.includes('finish movement')) return 1;
+        if (label.includes('choose')) {
+            if (label.includes('ball')) score += 10;
+            return score + 3;
+        }
+        const coords = [...label.matchAll(/\((\d+),(\d+)\)/g)];
+        if (coords.length) {
+            const last = coords[coords.length - 1];
+            const x = Number(last[1]);
+            score += 12 - x; // Red attacks toward x=0.
+            if (x <= 5) score += 4;
+        }
+        return score;
+    }
+
+    if (phase === 'free_pass') {
+        if (label.includes('skip')) return 1;
+        if (label.includes('free pass')) {
+            const coords = [...label.matchAll(/\((\d+),(\d+)\)/g)];
+            if (coords.length) {
+                const last = coords[coords.length - 1];
+                score += 14 - Number(last[1]); // lower x is better for Red.
+            }
+            return score + 8;
+        }
+    }
+
+    if (phase === 'act') {
+        if (label.includes('shoot')) score += 20;
+        if (label.includes('header')) score += 16;
+        if (label.includes('tackle')) score += 14;
+        if (label.includes('cross')) score += 11;
+        if (label.includes('mark 3')) score += 10;
+        if (label.includes('mark 2')) score += 8;
+        if (label.includes('dribble')) score += 6;
+        if (label.includes('clear')) score += 5;
+        if (label.includes('resolve card without action')) score -= 10;
+        if (label.includes('different')) score -= 2;
+        return score;
+    }
+
+    return score;
+}
+
+function getCoachLegalOptions() {
+    const options = [];
+    const team = getCoachOptionTeam();
+
+    if (gameState.gamePhase === 'planning_offense' || gameState.gamePhase === 'planning_defense') {
+        const hand = getTeamHand(team);
+        hand.filter(card => card.type === CARD_TYPES.COMMAND).forEach(card => {
+            addCoachOption(options, `Commit ${card.name} from ${getTeamLabel(team)} hand`, () => planCard(card, team));
+        });
+        return options;
+    }
+
+    if (gameState.gamePhase === 'choose_defense_card') {
+        gameState.plannedDefense.forEach(card => {
+            addCoachOption(options, `Reveal ${card.name} as the defensive response`, () => chooseDefenseResponse(card));
+        });
+        return options;
+    }
+
+    if (gameState.gamePhase !== 'resolving_card' || !gameState.commandActivation || !gameState.selectedCard) {
+        return options;
+    }
+
+    const commandState = gameState.commandActivation;
+    const card = gameState.selectedCard;
+    const effect = getActiveCardEffect(card, gameState.currentTurn);
+
+    if (commandState.phase === 'select') {
+        gameState.field.forEach(cell => {
+            if (canSelectForCommand(cell, card)) {
+                const zones = getPitchZones(cell, gameState.currentTurn);
+                const supportOnly = wouldCommandSelectionBeSupportOnly(cell, card);
+                addCoachOption(options, `Activate ${getTeamLabel(gameState.currentTurn)} ${cell.player.id}${cell.ball ? ' with BALL' : ''} at ${getCellId(cell)} (${zones.third} ${zones.laneLabel})${supportOnly ? ' (support move only)' : ''}`, () => selectCommandPlayer(cell, card));
+            }
+        });
+        if (commandState.selectedPlayers.length > 0) {
+            addCoachOption(options, 'Start movement with current activations', () => startCommandMovement());
+        }
+        return options;
+    }
+
+    if (commandState.phase === 'move') {
+        if (!gameState.selectedPlayer) {
+            gameState.field.forEach(cell => {
+                if (canMoveCommandPlayer(cell)) {
+                    addCoachOption(options, `Choose ${getTeamLabel(gameState.currentTurn)} ${cell.player.id} at ${getCellId(cell)} to move`, () => {
+                        gameState.selectedPlayer = cell;
+                        render();
+                    });
+                }
+            });
+            addCoachOption(options, 'Finish movement and go to free pass', () => completeCommandCard());
+            return options;
+        }
+
+        const fromCell = gameState.selectedPlayer;
+        const moveRange = getCommandMoveRangeForCell(fromCell, effect.moveRange);
+        const targets = gameState.field
+            .filter(cell => !cell.player)
+            .map(cell => ({ cell, cost: getMovementCostDistance(fromCell, cell, gameState.currentTurn) }))
+            .filter(entry => entry.cost > 0 && entry.cost <= moveRange)
+            .sort((a, b) => a.cost - b.cost || a.cell.x - b.cell.x || a.cell.y - b.cell.y);
+
+        targets.slice(0, 24).forEach(({ cell, cost }) => {
+            addCoachOption(options, `Move ${getTeamLabel(gameState.currentTurn)} ${fromCell.player.id} from ${getCellId(fromCell)} to ${getCellId(cell)} (${cost} movement)`, () => {
+                const movedPlayerId = fromCell.player.id;
+                movePlayer(fromCell, cell, { recordUndo: true, context: 'coach-command' });
+                commandState.movedPlayerIds.push(movedPlayerId);
+                commandState.movedPlayerDistances[movedPlayerId] = cost;
+                gameState.selectedPlayer = null;
+                log(`LLM Coach moved activated player to (${cell.x}, ${cell.y}) for ${cost} movement.`);
+                render();
+            });
+        });
+        addCoachOption(options, 'Cancel selected mover', () => {
+            gameState.selectedPlayer = null;
+            render();
+        });
+        addCoachOption(options, 'Finish movement and go to free pass', () => completeCommandCard());
+        return options;
+    }
+
+    if (commandState.phase === 'free_pass') {
+        const passerCell = getCommandFreePasser();
+        if (passerCell) {
+            gameState.field.forEach(cell => {
+                if (isValidFreePassTarget(cell)) {
+                    addCoachOption(options, `Free pass from ${getCellId(passerCell)} to ${getTeamLabel(gameState.currentTurn)} ${cell.player.id} at ${getCellId(cell)}`, () => executeCommandFreePass(cell));
+                }
+            });
+        }
+        addCoachOption(options, 'Skip free pass and choose action', () => completeCommandCard());
+        return options;
+    }
+
+    if (commandState.phase === 'act') {
+        if (!gameState.selectedPlayer) {
+            gameState.field.forEach(cell => {
+                if (cell.player && cell.player.team === gameState.currentTurn && getSelectedCommandPlayer(cell)) {
+                    const actions = getCommandActionsForCell(card, cell);
+                    if (actions.length > 0) {
+                        const actionLabels = actions.map(action => getCommandActionLabel(card, getPitchZones(cell, gameState.currentTurn).third, action));
+                        addCoachOption(options, `Choose ${getTeamLabel(gameState.currentTurn)} ${cell.player.id} at ${getCellId(cell)} to act (${actionLabels.join(', ')})`, () => chooseCommandActionPlayer(cell));
+                    }
+                }
+            });
+            addCoachOption(options, 'Resolve card without action', () => completeCommandCard());
+            return options;
+        }
+
+        if (!commandState.action) {
+            getCommandActionsForCell(card, gameState.selectedPlayer).forEach(action => {
+                addCoachOption(options, `Use ${action} with ${getTeamLabel(gameState.currentTurn)} ${gameState.selectedPlayer.player.id} at ${getCellId(gameState.selectedPlayer)}`, () => chooseCommandAction(action));
+            });
+            addCoachOption(options, 'Choose a different acting player', () => {
+                gameState.selectedPlayer = null;
+                commandState.actingPlayerId = null;
+                render();
+            });
+            return options;
+        }
+
+        let targetOptionCount = 0;
+        gameState.field.forEach(cell => {
+            if (isValidCoachActionTarget(commandState.action, gameState.selectedPlayer, cell)) {
+                targetOptionCount++;
+                const markProgress = commandState.action.startsWith('mark')
+                    ? ` (${gameState.selectedMarkCells.length} already selected)`
+                    : '';
+                const targetLabel = commandState.action.startsWith('mark') && isPlayerMarkMode()
+                    ? `MARK ${getTeamLabel(cell.player.team)} ${cell.player.id}${cell.ball ? ' with BALL' : ''} at ${getCellId(cell)}`
+                    : commandState.action === 'header_clear'
+                    ? `Clear defensive header to ${getCellId(cell)}`
+                    : `Target ${getCellId(cell)} for ${commandState.action}${markProgress}`;
+                addCoachOption(options, targetLabel, () => resolveCommandActionTarget(cell));
+            }
+        });
+        addCoachOption(options, 'Choose a different action', () => {
+            if (targetOptionCount === 0 && commandState.action && !commandState.rejectedActions.includes(commandState.action)) {
+                commandState.rejectedActions.push(commandState.action);
+                log(`${card.name}: ${commandState.action} rejected for this card; no useful target was chosen.`);
+            }
+            commandState.action = null;
+            gameState.selectedMarkCells = [];
+            render();
+        });
+    }
+
+    return options;
+}
+
+function getCoachBoardSummary() {
+    const occupied = gameState.field
+        .filter(cell => cell.player || cell.ball || isAirborneBallCell(cell))
+        .map(cell => {
+            const parts = [`hex ${getCellId(cell)}`];
+            if (cell.player) {
+                const zones = getPitchZones(cell, cell.player.team);
+                parts.push(`${getTeamLabel(cell.player.team)}${cell.player.id}`);
+                parts.push(`${zones.third}/${zones.laneLabel}`);
+            }
+            if (cell.ball) parts.push(isAirborneBallCell(cell) ? 'AIRBORNE BALL' : 'BALL');
+            return parts.join(' ');
+        });
+    const marks = [];
+    if (isPlayerMarkMode()) {
+        (gameState.playerMarks || []).forEach(mark => {
+            const markerCell = getCellWithPlayer(mark.team, mark.marker.id);
+            const markedCell = getCellWithPlayer(mark.marked.team, mark.marked.id);
+            marks.push(`${getTeamLabel(mark.team)}${mark.marker.id} MARKS ${getTeamLabel(mark.marked.team)}${mark.marked.id}${markerCell ? ` from ${getCellId(markerCell)}` : ''}${markedCell ? ` target at ${getCellId(markedCell)}` : ''}`);
+        });
+    } else {
+        gameState.defensiveMarks.forEach(mark => {
+            mark.zones.forEach(zone => {
+                marks.push(`${getTeamLabel(mark.team)} MARK at (${zone.x},${zone.y}) from ${getTeamLabel(mark.team)}${mark.defender.id}`);
+            });
+        });
+    }
+    return occupied.concat(marks);
+}
+
+function getCoachTacticalSummary(team) {
+    const opponent = team === 'player' ? 'ai' : 'player';
+    const ballCell = getCellWithBall();
+    const summary = [];
+    summary.push(`${getTeamLabel(team)} coach style: ${getActiveCoachStyle()}.`);
+    summary.push(`${getTeamLabel(gameState.offenseTeam)} is offense; ${getTeamLabel(gameState.defenseTeam)} is defense.`);
+
+    if (ballCell) {
+        const ballZonesForTeam = getPitchZones(ballCell, team);
+        const holder = ballCell.player ? `${getTeamLabel(ballCell.player.team)}${ballCell.player.id}` : 'loose ball';
+        summary.push(`Ball: ${holder} at ${getCellId(ballCell)} (${ballZonesForTeam.third}/${ballZonesForTeam.laneLabel} for ${getTeamLabel(team)}).`);
+    }
+
+    if (gameState.airborneBall) {
+        summary.push(`Airborne ball at (${gameState.airborneBall.x},${gameState.airborneBall.y}); prioritize legal HEADER or positioning around the drop.`);
+    }
+
+    if (gameState.pendingRebound) {
+        summary.push(`Rebound decision pending: choose between ${gameState.pendingRebound.candidates.map(cell => `(${cell.x},${cell.y})`).join(' and ')}.`);
+    }
+
+    const ownPlayers = gameState.field.filter(cell => cell.player?.team === team);
+    const enemyPlayers = gameState.field.filter(cell => cell.player?.team === opponent);
+    if (ballCell) {
+        const closestOwn = ownPlayers
+            .map(cell => ({ cell, dist: distance(cell.x, cell.y, ballCell.x, ballCell.y) }))
+            .sort((a, b) => a.dist - b.dist)[0];
+        const closestEnemy = enemyPlayers
+            .map(cell => ({ cell, dist: distance(cell.x, cell.y, ballCell.x, ballCell.y) }))
+            .sort((a, b) => a.dist - b.dist)[0];
+        if (closestOwn) summary.push(`Closest ${getTeamLabel(team)} player to ball: ${closestOwn.cell.player.id} at ${getCellId(closestOwn.cell)} (${closestOwn.dist} hexes).`);
+        if (closestEnemy) summary.push(`Closest opponent to ball: ${getTeamLabel(opponent)}${closestEnemy.cell.player.id} at ${getCellId(closestEnemy.cell)} (${closestEnemy.dist} hexes).`);
+    }
+
+    const redMarks = isPlayerMarkMode()
+        ? (gameState.playerMarks || []).filter(mark => mark.team === 'ai').length
+        : gameState.defensiveMarks.filter(mark => mark.team === 'ai').reduce((count, mark) => count + mark.zones.length, 0);
+    const blueMarks = isPlayerMarkMode()
+        ? (gameState.playerMarks || []).filter(mark => mark.team === 'player').length
+        : gameState.defensiveMarks.filter(mark => mark.team === 'player').reduce((count, mark) => count + mark.zones.length, 0);
+    summary.push(`Active marks: Red ${redMarks}, Blue ${blueMarks}.`);
+    return summary;
+}
+
+function buildCoachPrompt() {
+    const options = getCoachLegalOptions();
+    gameState.coachOptions = options;
+    const team = getCoachOptionTeam();
+    const hand = getTeamHand(team).map(card => card.name);
+    const style = getActiveCoachStyle();
+    const styleGuide = COACH_STYLE_GUIDES[style] || COACH_STYLE_GUIDES.balanced;
+    const prompt = {
+        instruction: "Choose exactly one legal option by number. Return only JSON like {\"choice\": 1, \"reason\": \"short reason\"}.",
+        response_format: { choice: "number", reason: "short explanation" },
+        coach_style: style,
+        coach_style_guide: styleGuide,
+        state: {
+            match_clock: getMatchClockLabel(),
+            match_round: gameState.matchRound,
+            mark_mode: isPlayerMarkMode() ? 'player' : 'hex',
+            phase: gameState.gamePhase,
+            current_team: getTeamLabel(team),
+            offense: getTeamLabel(gameState.offenseTeam),
+            defense: getTeamLabel(gameState.defenseTeam),
+            resolving_role: gameState.resolvingRole,
+            selected_card: gameState.selectedCard?.name || null,
+            command_phase: gameState.commandActivation?.phase || null,
+            selected_player: gameState.selectedPlayer?.player ? `${getTeamLabel(gameState.selectedPlayer.player.team)}${gameState.selectedPlayer.player.id} ${getCellId(gameState.selectedPlayer)}` : null,
+            selected_mark_hexes: gameState.selectedMarkCells.map(cell => getCellId(cell)),
+            player_marks: (gameState.playerMarks || []).map(mark => `${getTeamLabel(mark.team)}${mark.marker.id}->${getTeamLabel(mark.marked.team)}${mark.marked.id}`),
+            hand,
+            planned_offense_count: gameState.plannedOffense.length,
+            planned_defense_count: gameState.plannedDefense.length,
+            deck_count: getTeamDeck(team).length,
+            discard_count: getTeamDiscard(team).length,
+            tactical_summary: getCoachTacticalSummary(team),
+            board: getCoachBoardSummary(),
+            recent_log: (gameState.gameLog || []).slice(-8)
+        },
+        legal_options: options.map(option => {
+            const analysis = getCoachOptionAnalysis(option, team);
+            return {
+                choice: option.id,
+                option: option.label,
+                priority_hint: analysis.priority,
+                notes: analysis.notes
+            };
+        })
+    };
+    return JSON.stringify(prompt, null, 2);
+}
+
+function renderCoachPanel() {
+    const promptBox = document.getElementById('coach-prompt');
+    const optionsList = document.getElementById('coach-options');
+    if (!promptBox || !optionsList) return;
+    const team = getCoachOptionTeam();
+    if (shouldHideTeamInfo(team)) {
+        optionsList.innerHTML = '';
+        const li = document.createElement('li');
+        li.textContent = 'Hidden Solo coach is choosing privately for Red.';
+        optionsList.appendChild(li);
+        return;
+    }
+    if (!promptBox.value) {
+        gameState.coachOptions = getCoachLegalOptions();
+    }
+    optionsList.innerHTML = '';
+    gameState.coachOptions.forEach(option => {
+        const li = document.createElement('li');
+        li.textContent = option.label;
+        optionsList.appendChild(li);
+    });
+}
+
+function getCoachAssistPromptKey() {
+    return [
+        gameState.gamePhase,
+        gameState.currentTurn,
+        gameState.offenseTeam,
+        gameState.defenseTeam,
+        gameState.resolvingRole,
+        gameState.selectedCard?.uid || '',
+        gameState.commandActivation?.phase || '',
+        gameState.selectedPlayer?.player?.id || '',
+        gameState.plannedOffense.length,
+        gameState.plannedDefense.length,
+        gameState.resolutionStep,
+        getActiveCoachStyle(),
+        gameState.markMode || 'hex'
+    ].join('|');
+}
+
+function isCoachAssistDecisionActive() {
+    if (!gameState.coachAssistMode || gameState.manualControlMode || shouldHideTeamInfo(getCoachOptionTeam())) return false;
+    if (gameState.kickoffPending || gameState.goalKickPending || gameState.pendingRebound) return false;
+    if (gameState.gamePhase === 'planning_offense') return gameState.offenseTeam === 'ai';
+    if (gameState.gamePhase === 'planning_defense') return gameState.defenseTeam === 'ai';
+    if (gameState.gamePhase === 'choose_defense_card') return gameState.defenseTeam === 'ai';
+    if (gameState.gamePhase === 'resolving_card') return gameState.currentTurn === 'ai';
+    return false;
+}
+
+function applyCoachOption(option, sourceLabel = 'LLM Coach', reason = '') {
+    if (!option) return;
+    const cleanReason = String(reason || '').trim();
+    const style = getActiveCoachStyle();
+    const team = getCoachOptionTeam();
+    recordUndoSnapshot(`${sourceLabel.toLowerCase()} choice ${option.id}`, team);
+    systemLog(`${sourceLabel} [${style}] applied choice ${option.id}: ${option.label}`);
+    if (cleanReason) {
+        systemLog(`${sourceLabel} [${style}] reason: ${cleanReason}`);
+    }
+    option.apply();
+    const responseBox = document.getElementById('coach-response');
+    if (responseBox) responseBox.value = '';
+    const promptBox = document.getElementById('coach-prompt');
+    if (promptBox) promptBox.value = '';
+    gameState.coachAssistPromptKey = null;
+    gameState.coachOptions = getCoachLegalOptions();
+    gameState.autoCoachHistory.push({
+        choice: option.id,
+        label: option.label,
+        source: sourceLabel,
+        style,
+        reason: cleanReason,
+        phase: gameState.gamePhase,
+        turn: gameState.currentTurn,
+        logIndex: (gameState.gameLog || []).length
+    });
+    gameState.autoCoachHistory = gameState.autoCoachHistory.slice(-24);
+    render();
+}
+
+function maybeAutoAdvanceForcedCoachChoice(options) {
+    if (!isCoachAssistDecisionActive() || gameState.autoCoachBusy || options.length !== 1) return false;
+    const option = options[0];
+    gameState.autoCoachBusy = true;
+    log(`Coach Assist auto-advances forced Red choice: ${option.label}`);
+    setTimeout(() => {
+        gameState.autoCoachBusy = false;
+        if (!isCoachAssistDecisionActive()) return;
+        const freshOptions = getCoachLegalOptions();
+        if (freshOptions.length === 1 && freshOptions[0].label === option.label) {
+            applyCoachOption(freshOptions[0], 'Forced Coach');
+            refreshCoachAssistPrompt('Coach Assist: Red is waiting for the next choice.');
+        } else {
+            refreshCoachAssistPrompt('Coach Assist: Red options changed before forced choice resolved.');
+        }
+    }, 180);
+    return true;
+}
+
+function getAutomatedCoachPayload() {
+    const prompt = JSON.parse(buildCoachPrompt());
+    prompt.coach_session_id = getAutoCoachSessionId();
+    prompt.reset_coach_session = gameState.autoCoachSessionResetPending;
+    prompt.coach_memory = gameState.autoCoachHistory.slice(-12);
+    prompt.mode = 'automated_local_coach';
+    return prompt;
+}
+
+function createCoachSessionId() {
+    if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+    return `coach-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function getAutoCoachSessionId() {
+    if (!gameState.autoCoachSessionId) {
+        gameState.autoCoachSessionId = createCoachSessionId();
+        gameState.autoCoachSessionResetPending = true;
+    }
+    return gameState.autoCoachSessionId;
+}
+
+function resetAutoCoachSession(reason = 'new match') {
+    gameState.autoCoachSessionId = createCoachSessionId();
+    gameState.autoCoachSessionResetPending = true;
+    gameState.autoCoachHistory = [];
+    gameState.autoCoachLastMemoryLesson = null;
+    log(`LLM Coach memory reset for ${reason}.`);
+}
+
+function rememberServerCoachSession(parsed) {
+    if (parsed?.coach_session_id) {
+        gameState.autoCoachSessionId = parsed.coach_session_id;
+        gameState.autoCoachSessionResetPending = false;
+    }
+    const lessons = parsed?.coach_memory?.lessons || [];
+    if (lessons.length) {
+        const latestLesson = lessons[lessons.length - 1];
+        if (gameState.autoCoachLastMemoryLesson !== latestLesson) {
+            gameState.autoCoachLastMemoryLesson = latestLesson;
+            log(`LLM Coach memory: ${latestLesson}`);
+        }
+    }
+}
+
+async function requestAutomatedCoachChoice() {
+    if (!gameState.autoCoachMode || gameState.autoCoachBusy || !isCoachAssistDecisionActive()) return;
+    const options = gameState.coachOptions.length ? gameState.coachOptions : getCoachLegalOptions();
+    if (!options.length || maybeAutoAdvanceForcedCoachChoice(options)) return;
+
+    gameState.autoCoachBusy = true;
+    const requestPromptKey = getCoachAssistPromptKey();
+    log('🤖 LLM Auto Coach: asking local coach server...');
+    try {
+        const response = await fetch(gameState.autoCoachEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(getAutomatedCoachPayload())
+        });
+        if (!response.ok) {
+            throw new Error(`coach server returned ${response.status}`);
+        }
+        const parsed = await response.json();
+        rememberServerCoachSession(parsed);
+        const choice = Number(parsed.choice);
+        if (!isCoachAssistDecisionActive() || getCoachAssistPromptKey() !== requestPromptKey) {
+            log('LLM Auto Coach response ignored because the game state advanced.');
+            return;
+        }
+        const option = options.find(candidate => candidate.id === choice);
+        if (!option) {
+            throw new Error(`coach chose unavailable option ${choice}`);
+        }
+        applyCoachOption(option, 'LLM Auto Coach', parsed.reason);
+        refreshCoachAssistPrompt('Coach Assist: Red is waiting for the next choice.');
+    } catch (error) {
+        log(`LLM Auto Coach paused: ${error.message}. Use the visible prompt/options or start coach-server.js.`);
+    } finally {
+        gameState.autoCoachBusy = false;
+    }
+}
+
+function refreshCoachAssistPrompt(message) {
+    if (!isCoachAssistDecisionActive()) {
+        gameState.coachAssistPromptKey = null;
+        gameState.coachOptions = [];
+        const promptBox = document.getElementById('coach-prompt');
+        if (promptBox) promptBox.value = '';
+        return;
+    }
+    if (shouldHideTeamInfo(getCoachOptionTeam())) return;
+    const promptKey = getCoachAssistPromptKey();
+    if (gameState.coachAssistPromptKey === promptKey) return;
+    gameState.coachAssistPromptKey = promptKey;
+    const promptBox = document.getElementById('coach-prompt');
+    if (promptBox) {
+        promptBox.value = buildCoachPrompt();
+    } else {
+        gameState.coachOptions = getCoachLegalOptions();
+    }
+    renderCoachPanel();
+    if (maybeAutoAdvanceForcedCoachChoice(gameState.coachOptions)) return;
+    log(message || 'Coach Assist is waiting for a pasted coach choice.');
+    if (gameState.autoCoachMode && isCoachAssistDecisionActive()) {
+        setTimeout(() => requestAutomatedCoachChoice(), 120);
+    }
+}
+
+function generateCoachPrompt() {
+    if (!isCoachAssistDecisionActive()) {
+        log('No Red coach decision is waiting right now.');
+        return;
+    }
+    if (shouldHideTeamInfo(getCoachOptionTeam())) {
+        log('Hidden Solo is keeping Red coach choices private. Prompt generation is disabled during hidden Red decisions.');
+        return;
+    }
+    const promptBox = document.getElementById('coach-prompt');
+    if (!promptBox) return;
+    promptBox.value = buildCoachPrompt();
+    renderCoachPanel();
+    log('LLM Coach prompt generated. Paste it into ChatGPT/Codex, then paste back {"choice": number}.');
+}
+
+async function copyCoachPrompt() {
+    if (!isCoachAssistDecisionActive()) {
+        log('No Red coach decision is waiting right now.');
+        return;
+    }
+    const promptBox = document.getElementById('coach-prompt');
+    if (!promptBox) return;
+    if (!promptBox.value) generateCoachPrompt();
+    try {
+        await navigator.clipboard.writeText(promptBox.value);
+        log('LLM Coach prompt copied.');
+    } catch (error) {
+        promptBox.select();
+        log('Clipboard blocked. Prompt selected for manual copy.');
+    }
+}
+
+function applyCoachChoice() {
+    if (!isCoachAssistDecisionActive()) {
+        log('No Red coach decision is waiting right now.');
+        return;
+    }
+    if (shouldHideTeamInfo(getCoachOptionTeam())) {
+        log('Hidden Solo is handling Red privately. Coach choices cannot be pasted for hidden Red decisions.');
+        return;
+    }
+    const responseBox = document.getElementById('coach-response');
+    if (!responseBox) return;
+    if (!gameState.coachOptions.length) {
+        gameState.coachOptions = getCoachLegalOptions();
+    }
+    let parsed;
+    try {
+        parsed = JSON.parse(responseBox.value);
+    } catch (error) {
+        log('Coach response must be valid JSON, like {"choice": 1}.');
+        return;
+    }
+    const choice = Number(parsed.choice);
+    const option = gameState.coachOptions.find(candidate => candidate.id === choice);
+    if (!option) {
+        log(`Coach choice ${choice} is not available in the current option list.`);
+        return;
+    }
+    applyCoachOption(option, 'LLM Coach', parsed.reason);
+}
+
     </script>
 
     <script>
@@ -5341,6 +6997,8 @@ function render() {
     renderHand();
     renderMarket();
     renderUI();
+    renderCoachPanel();
+    scheduleHiddenCoachStep();
 }
 
 function renderField() {
@@ -5443,8 +7101,21 @@ function renderCell(cell, container) {
             if (isPlayerOffBalance(cell.player.team, cell.player.id)) {
                 playerIcon.classList.add('off-balance');
             }
+            const playerMarkTeams = getPlayerMarkTeamsForCell(cell);
+            const playerMarks = getPlayerMarksForCell(cell);
+            if (playerMarkTeams.includes('player')) playerIcon.classList.add('player-marked-blue');
+            if (playerMarkTeams.includes('ai')) playerIcon.classList.add('player-marked-red');
+            if (playerMarks.some(isPlayerMarkWaning)) playerIcon.classList.add('player-mark-waning');
             playerIcon.textContent = cell.player.team === 'player' ? 'B' : 'R';
-            playerIcon.title = `${cell.player.team === 'player' ? 'Blue team' : 'Red team'}${isPlayerOffBalance(cell.player.team, cell.player.id) ? ' - off balance' : ''}`;
+            playerIcon.title = `${cell.player.team === 'player' ? 'Blue team' : 'Red team'}${isPlayerOffBalance(cell.player.team, cell.player.id) ? ' - off balance' : ''}${playerMarkTeams.length ? ` - MARKED by ${playerMarkTeams.map(getTeamLabel).join(' and ')}${playerMarks.some(isPlayerMarkWaning) ? ' (waning)' : ''}` : ''}`;
+            if (playerMarkTeams.length > 0) {
+                const playerMarkBadge = document.createElement('div');
+                const markingTeam = playerMarkTeams[0];
+                playerMarkBadge.className = `player-mark-badge ${markingTeam === 'player' ? 'mark-blue' : 'mark-red'}`;
+                playerMarkBadge.textContent = markingTeam === 'player' ? 'B' : 'R';
+                playerMarkBadge.title = `MARKED by ${getTeamLabel(markingTeam)}`;
+                playerIcon.appendChild(playerMarkBadge);
+            }
             cellDiv.appendChild(playerIcon);
            
             if (cell.ball) {
@@ -5963,14 +7634,26 @@ function renderPlannedRow(title, cards, options = {}) {
             continue;
         }
 
+        const isCurrent = options.currentIndex === i || options.currentCard?.uid === card.uid;
+        const isResolved = !!(options.resolvedBefore && i < options.resolvedBefore);
+        const hideCard = shouldHidePlannedCard(options.team, card, isCurrent, isResolved);
+        if (hideCard) {
+            const hidden = document.createElement('div');
+            hidden.className = 'planned-placeholder';
+            hidden.textContent = 'Face down';
+            hidden.title = 'Hidden committed card';
+            cardWrap.appendChild(hidden);
+            continue;
+        }
+
         const cardDiv = createCardElement(card, false, card === gameState.selectedCard ? gameState.currentTurn : null);
-        if (options.currentIndex === i || options.currentCard?.uid === card.uid) {
+        if (isCurrent) {
             cardDiv.classList.add('current-card');
         }
-        if (options.resolvedBefore && i < options.resolvedBefore) {
+        if (isResolved) {
             cardDiv.classList.add('resolved-card');
         }
-        if (options.clickable) {
+        if (options.clickable && !shouldHideTeamInfo(options.team)) {
             cardDiv.classList.add('clickable');
             cardDiv.onclick = () => chooseDefenseResponse(card);
         } else {
@@ -5981,6 +7664,15 @@ function renderPlannedRow(title, cards, options = {}) {
 
     row.appendChild(cardWrap);
     return row;
+}
+
+function shouldHideTeamInfo(team) {
+    return gameState.hiddenSoloMode && !gameState.manualControlMode && team === 'ai';
+}
+
+function shouldHidePlannedCard(team, card, isCurrent, isResolved) {
+    if (!shouldHideTeamInfo(team)) return false;
+    return !isCurrent && !isResolved;
 }
 
 function renderPitchActionPanel() {
@@ -6039,7 +7731,9 @@ function renderCommandActionPanel(container) {
             const hint = document.createElement('div');
             hint.className = 'command-summary';
             hint.textContent = gameState.commandActivation.action
-                ? `Now select the target for ${gameState.commandActivation.action} on the pitch.`
+                ? (gameState.commandActivation.action === 'header_clear'
+                    ? 'Choose the CLEAR target for the defensive header.'
+                    : `Now select the target for ${gameState.commandActivation.action} on the pitch.`)
                 : 'After choosing an action, valid targets will be highlighted on the pitch.';
             panel.appendChild(hint);
         }
@@ -6351,6 +8045,7 @@ function renderCommandCard(cardDiv, card, showCost) {
 }
 
 function getCommandActionLabel(card, third, action) {
+    if (isPlayerMarkMode() && action.startsWith('mark')) return 'mark';
     return card.command.actionLabels?.[`${third}.${action}`] || action;
 }
 
@@ -6404,14 +8099,42 @@ function renderUI() {
     renderLog();
     document.getElementById('player-score').textContent = gameState.playerScore;
     document.getElementById('ai-score').textContent = gameState.aiScore;
+    document.getElementById('match-round').textContent = getMatchClockLabel();
 
     const fieldFrame = document.querySelector('.field-rotation-frame');
     const fieldViewBtn = document.getElementById('field-view-btn');
+    const hiddenSoloBtn = document.getElementById('hidden-solo-btn');
+    const coachAssistBtn = document.getElementById('coach-assist-btn');
+    const autoCoachBtn = document.getElementById('auto-coach-btn');
+    const coachStyleSelect = document.getElementById('coach-style-select');
+    const initialKickoffSelect = document.getElementById('initial-kickoff-select');
+    const markModeSelect = document.getElementById('mark-mode-select');
     if (fieldFrame && fieldViewBtn) {
         const viewingRed = gameState.fieldViewTeam === 'ai';
         fieldFrame.classList.toggle('view-red', viewingRed);
         fieldViewBtn.textContent = viewingRed ? '🔴 View: Red' : '🔵 View: Blue';
         fieldViewBtn.classList.toggle('active', viewingRed);
+    }
+    if (hiddenSoloBtn) {
+        hiddenSoloBtn.textContent = gameState.hiddenSoloMode ? '🕶️ Hidden Solo: ON' : '🕶️ Hidden Solo: OFF';
+        hiddenSoloBtn.classList.toggle('active', gameState.hiddenSoloMode);
+    }
+    if (coachAssistBtn) {
+        coachAssistBtn.textContent = gameState.coachAssistMode ? '🧠 Coach Assist: ON' : '🧠 Coach Assist: OFF';
+        coachAssistBtn.classList.toggle('active', gameState.coachAssistMode);
+    }
+    if (autoCoachBtn) {
+        autoCoachBtn.textContent = gameState.autoCoachMode ? '🤖 LLM Auto: ON' : '🤖 LLM Auto: OFF';
+        autoCoachBtn.classList.toggle('active', gameState.autoCoachMode);
+    }
+    if (coachStyleSelect) {
+        coachStyleSelect.value = gameState.coachStyle || 'balanced';
+    }
+    if (initialKickoffSelect) {
+        initialKickoffSelect.value = gameState.initialKickoffTeam || 'player';
+    }
+    if (markModeSelect) {
+        markModeSelect.value = gameState.markMode || 'hex';
     }
    
     // Update turn/phase display
@@ -6520,11 +8243,18 @@ function renderUI() {
 // ========================================
 
 function initGame() {
-    const kickoffTeam = document.getElementById('kickoff-team-select')?.value || 'player';
-    const markMode = document.getElementById('mark-rule-select')?.value || 'hex';
-    gameState.markMode = markMode;
     gameState.undoHistory = [];
     gameState.gameLog = ['Game started! Draw your cards and make your move!'];
+    gameState.gameEvents = [];
+    gameState.nextEventId = 1;
+    gameState.undoBoundaryEventId = 0;
+    resetAutoCoachSession('new match');
+    const kickoffSelect = document.getElementById('initial-kickoff-select');
+    const initialKickoffTeam = kickoffSelect?.value || gameState.initialKickoffTeam || 'player';
+    const markModeSelect = document.getElementById('mark-mode-select');
+    const markMode = markModeSelect?.value || gameState.markMode || 'hex';
+    gameState.initialKickoffTeam = initialKickoffTeam;
+    gameState.markMode = markMode;
 
     // Initialize field with rectangular shape (12-11-12-11 pattern for height)
     gameState.field = [];
@@ -6539,7 +8269,7 @@ function initGame() {
         }
     }
    
-    setupRestartFormation(kickoffTeam);
+    setupRestartFormation(initialKickoffTeam);
    
     // Initialize decks
     gameState.playerDeck = createStarterDeck();
@@ -6555,7 +8285,8 @@ function initGame() {
     // Reset game state
     gameState.playerScore = 0;
     gameState.aiScore = 0;
-    gameState.currentTurn = kickoffTeam;
+    gameState.matchRound = 1;
+    gameState.currentTurn = 'player';
     gameState.actionsRemaining = ACTIONS_PER_TURN;
     gameState.coins = 0;
     gameState.selectedCard = null;
@@ -6592,19 +8323,21 @@ function initGame() {
     gameState.goalKickCell = null;
     gameState.goalKickShootingTeam = null;
     gameState.goalKickDefendingTeam = null;
+    gameState.coachOptions = [];
+    const coachPrompt = document.getElementById('coach-prompt');
+    const coachResponse = document.getElementById('coach-response');
+    if (coachPrompt) coachPrompt.value = '';
+    if (coachResponse) coachResponse.value = '';
     // Note: manualControlMode persists across game resets (testing feature)
    
     // Draw initial hands
     drawCards('player', HAND_SIZE);
     drawCards('ai', HAND_SIZE);
 
-    startKickoffPass(kickoffTeam);
+    startKickoffPass(initialKickoffTeam);
    
     render();
-    log(`Game started with ${kickoffTeam === 'player' ? 'Blue' : 'Red'} kickoff. MARK rule: ${markMode === 'player' ? 'Player MARK' : 'Hex MARK'}.`);
-    if (kickoffTeam === 'ai' && !gameState.manualControlMode) {
-        setTimeout(() => aiTakeKickoffPass(), 300);
-    }
+    log(`Game started! ${initialKickoffTeam === 'player' ? 'Blue' : 'Red'} starts with kickoff. MARK mode: ${isPlayerMarkMode() ? 'Player' : 'Hex'}.`);
 }
 
 // ========================================
@@ -6636,6 +8369,39 @@ document.getElementById('download-log-btn').addEventListener('click', () => {
     downloadGameLog();
 });
 
+document.getElementById('coach-generate-btn').addEventListener('click', () => {
+    generateCoachPrompt();
+});
+
+document.getElementById('coach-copy-btn').addEventListener('click', () => {
+    copyCoachPrompt();
+});
+
+document.getElementById('coach-apply-btn').addEventListener('click', () => {
+    applyCoachChoice();
+});
+
+document.getElementById('coach-style-select').addEventListener('change', (event) => {
+    gameState.coachStyle = event.target.value;
+    gameState.coachAssistPromptKey = null;
+    if (gameState.coachAssistMode) {
+        refreshCoachAssistPrompt(`Coach style set to ${COACH_STYLE_GUIDES[gameState.coachStyle]?.identity || gameState.coachStyle}.`);
+    }
+    render();
+});
+
+document.getElementById('initial-kickoff-select').addEventListener('change', (event) => {
+    gameState.initialKickoffTeam = event.target.value;
+    log(`New games will start with ${gameState.initialKickoffTeam === 'player' ? 'Blue' : 'Red'} kickoff.`);
+    render();
+});
+
+document.getElementById('mark-mode-select').addEventListener('change', (event) => {
+    gameState.markMode = event.target.value;
+    log(`New games will use ${gameState.markMode === 'player' ? 'Player MARK' : 'Hex MARK'} rules.`);
+    render();
+});
+
 document.getElementById('end-reposition-btn').addEventListener('click', () => {
     // In manual mode, allow repositioning for both teams
     if (gameState.manualControlMode || gameState.repositionTeam === 'player') {
@@ -6664,11 +8430,76 @@ document.getElementById('next-ai-action-btn').addEventListener('click', () => {
 document.getElementById('manual-control-btn').addEventListener('click', () => {
     recordUndoSnapshot('toggling manual mode');
     gameState.manualControlMode = !gameState.manualControlMode;
+    if (gameState.manualControlMode) {
+        gameState.hiddenSoloMode = false;
+        gameState.coachAssistMode = false;
+        gameState.autoCoachMode = false;
+        gameState.autoCoachBusy = false;
+        gameState.coachAssistPromptKey = null;
+        gameState.hiddenCoachBusy = false;
+    }
     const btn = document.getElementById('manual-control-btn');
     btn.textContent = gameState.manualControlMode ? '🎮 Manual Mode: ON' : '🤖 Manual Mode: OFF';
     btn.classList.toggle('active', gameState.manualControlMode);
     render();
     log(gameState.manualControlMode ? '🎮 Manual control enabled - you control both teams!' : '🤖 AI control restored');
+});
+
+document.getElementById('hidden-solo-btn').addEventListener('click', () => {
+    recordUndoSnapshot('toggling hidden solo mode');
+    gameState.hiddenSoloMode = !gameState.hiddenSoloMode;
+    if (gameState.hiddenSoloMode) {
+        gameState.manualControlMode = false;
+        gameState.coachAssistMode = false;
+        gameState.autoCoachMode = false;
+        gameState.autoCoachBusy = false;
+        gameState.coachAssistPromptKey = null;
+        gameState.aiDebugMode = false;
+        gameState.hiddenCoachBusy = false;
+        log('🕶️ Hidden Solo enabled: Red hand and unrevealed committed cards are private.');
+    } else {
+        gameState.hiddenCoachBusy = false;
+        log('Hidden Solo disabled.');
+    }
+    render();
+});
+
+document.getElementById('coach-assist-btn').addEventListener('click', () => {
+    recordUndoSnapshot('toggling coach assist mode');
+    gameState.coachAssistMode = !gameState.coachAssistMode;
+    if (gameState.coachAssistMode) {
+        gameState.manualControlMode = false;
+        gameState.hiddenSoloMode = false;
+        gameState.hiddenCoachBusy = false;
+        gameState.coachAssistPromptKey = null;
+        log('🧠 Coach Assist enabled: Red waits for pasted LLM coach choices.');
+        refreshCoachAssistPrompt('Coach Assist ready. Generate/copy the prompt when Red needs a choice.');
+    } else {
+        gameState.autoCoachMode = false;
+        gameState.autoCoachBusy = false;
+        gameState.coachAssistPromptKey = null;
+        log('Coach Assist disabled. Red can auto-play when Manual Mode and Hidden Solo are off.');
+        autoPlanIfNeeded();
+    }
+    render();
+});
+
+document.getElementById('auto-coach-btn').addEventListener('click', () => {
+    recordUndoSnapshot('toggling automated LLM coach mode');
+    gameState.autoCoachMode = !gameState.autoCoachMode;
+    gameState.autoCoachBusy = false;
+    gameState.coachAssistPromptKey = null;
+    if (gameState.autoCoachMode) {
+        gameState.coachAssistMode = true;
+        gameState.manualControlMode = false;
+        gameState.hiddenSoloMode = false;
+        gameState.hiddenCoachBusy = false;
+        log('🤖 LLM Auto enabled: Red will ask the local coach server for choices.');
+        refreshCoachAssistPrompt('LLM Auto ready. Red will ask the local coach server at the next decision.');
+    } else {
+        log('LLM Auto disabled. Coach Assist copy/paste remains available if enabled.');
+    }
+    render();
 });
 
 document.getElementById('field-view-btn').addEventListener('click', () => {

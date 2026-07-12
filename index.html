@@ -191,6 +191,41 @@ main {
     font-size: 1.1rem;
 }
 
+.multiplayer-section {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.multiplayer-title {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #64B5F6;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.multiplayer-section input,
+.multiplayer-section select {
+    max-width: 150px;
+}
+
+.multiplayer-endpoint-control input {
+    width: 180px;
+    max-width: 180px;
+}
+
+.multiplayer-status {
+    min-width: 110px;
+    color: #e3f2fd;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
 /* Soccer Field */
 .game-board-container {
     grid-column: 1;
@@ -1564,6 +1599,28 @@ main {
                         <button id="end-reposition-btn" class="btn btn-primary" style="display: none;">End Repositioning</button>
                         <button id="next-ai-action-btn" class="btn btn-debug" style="display: none;">⚙️ Next AI Action (DEBUG)</button>
                     </div>
+
+                    <div class="multiplayer-section">
+                        <div class="multiplayer-title">Friendly Room</div>
+                        <label class="setup-control">
+                            Room
+                            <input id="multiplayer-room-input" type="text" value="TEST" maxlength="16" aria-label="Multiplayer room code">
+                        </label>
+                        <label class="setup-control">
+                            Side
+                            <select id="multiplayer-side-select" aria-label="Multiplayer side">
+                                <option value="player">Blue</option>
+                                <option value="ai">Red</option>
+                                <option value="observer">Observer</option>
+                            </select>
+                        </label>
+                        <label class="setup-control multiplayer-endpoint-control">
+                            Relay
+                            <input id="multiplayer-endpoint-input" type="text" value="http://127.0.0.1:8795" aria-label="Multiplayer relay URL">
+                        </label>
+                        <button id="multiplayer-connect-btn" class="btn btn-secondary">Connect Room</button>
+                        <span id="multiplayer-status" class="multiplayer-status">Offline</span>
+                    </div>
                 </aside>
 
                 <aside class="cards-panel">
@@ -1727,6 +1784,17 @@ let gameState = {
     autoCoachLastMemoryLesson: null,
     autoCoachHistory: [],
     hiddenCoachBusy: false,
+    multiplayer: {
+        connected: false,
+        room: '',
+        side: 'observer',
+        endpoint: 'http://127.0.0.1:8795',
+        clientId: null,
+        lastRemoteEventId: 0,
+        applyingRemote: false,
+        status: 'Offline',
+        eventSource: null
+    },
     fieldViewTeam: 'player', // Visual-only field orientation: 'player' or 'ai'
     initialKickoffTeam: 'player',
     aiActionQueue: [], // Queue of AI actions to execute step-by-step
@@ -3735,7 +3803,7 @@ function relinkStateReferences() {
 }
 
 function makeUndoSnapshot(label) {
-    const { undoHistory, coachOptions, ...state } = gameState;
+    const { undoHistory, coachOptions, multiplayer, ...state } = gameState;
     return {
         label,
         eventId: Math.max(0, (gameState.nextEventId || 1) - 1),
@@ -3760,10 +3828,12 @@ function sealUndoBoundary(reason = 'turn boundary') {
 }
 
 function restoreUndoSnapshot(snapshot) {
+    const multiplayer = gameState.multiplayer;
     Object.keys(gameState).forEach(key => {
-        if (key !== 'undoHistory') delete gameState[key];
+        if (key !== 'undoHistory' && key !== 'multiplayer') delete gameState[key];
     });
     Object.assign(gameState, cloneForUndo(snapshot.state));
+    gameState.multiplayer = multiplayer;
     gameState.undoHistory = gameState.undoHistory || [];
     gameState.gameLog = gameState.gameLog || [];
     gameState.coachOptions = [];
@@ -3834,6 +3904,7 @@ function recordGameEvent(type, message, details = {}, options = {}) {
         }
         renderLog();
     }
+    maybeBroadcastMultiplayerEvent(event, options);
     return event;
 }
 
@@ -3901,6 +3972,194 @@ function systemLog(message) {
 window.getFutbol99EventLog = function getFutbol99EventLog() {
     return cloneForUndo(gameState.gameEvents || []);
 };
+
+    </script>
+
+    <script>
+// ========================================
+// FRIENDLY MULTIPLAYER RELAY
+// ========================================
+
+function getMultiplayerState() {
+    if (!gameState.multiplayer) {
+        gameState.multiplayer = {
+            connected: false,
+            room: '',
+            side: 'observer',
+            endpoint: 'http://127.0.0.1:8795',
+            clientId: null,
+            lastRemoteEventId: 0,
+            applyingRemote: false,
+            status: 'Offline',
+            eventSource: null
+        };
+    }
+    if (!gameState.multiplayer.clientId) {
+        gameState.multiplayer.clientId = `client-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+    return gameState.multiplayer;
+}
+
+function normalizeRoomCode(room) {
+    return String(room || '').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 16) || 'TEST';
+}
+
+function serializeMultiplayerSnapshot() {
+    const {
+        undoHistory,
+        moveHistory,
+        coachOptions,
+        autoCoachBusy,
+        hiddenCoachBusy,
+        multiplayer,
+        ...state
+    } = gameState;
+    return cloneForUndo(state);
+}
+
+function applyMultiplayerSnapshot(snapshot) {
+    if (!snapshot) return;
+    const multiplayer = getMultiplayerState();
+    multiplayer.applyingRemote = true;
+    const keepMultiplayer = { ...multiplayer, eventSource: multiplayer.eventSource };
+    Object.keys(gameState).forEach(key => {
+        if (key !== 'multiplayer') delete gameState[key];
+    });
+    Object.assign(gameState, cloneForUndo(snapshot));
+    gameState.multiplayer = keepMultiplayer;
+    gameState.undoHistory = [];
+    gameState.moveHistory = [];
+    gameState.coachOptions = [];
+    relinkStateReferences();
+    render();
+    multiplayer.applyingRemote = false;
+}
+
+async function postMultiplayerPayload(path, payload) {
+    const multiplayer = getMultiplayerState();
+    const endpoint = multiplayer.endpoint.replace(/\/$/, '');
+    const response = await fetch(`${endpoint}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+        throw new Error(`relay returned ${response.status}`);
+    }
+    return response.json();
+}
+
+function maybeBroadcastMultiplayerEvent(event, options = {}) {
+    const multiplayer = getMultiplayerState();
+    if (!multiplayer.connected || multiplayer.applyingRemote || options.remote) return;
+    if (!event || event.type === 'system') return;
+    const payload = {
+        room: multiplayer.room,
+        clientId: multiplayer.clientId,
+        side: multiplayer.side,
+        event,
+        snapshot: serializeMultiplayerSnapshot()
+    };
+    postMultiplayerPayload('/events', payload).catch(error => {
+        multiplayer.status = `Relay error: ${error.message}`;
+        renderMultiplayerStatus();
+    });
+}
+
+function handleMultiplayerRelayEvent(relayEvent) {
+    const multiplayer = getMultiplayerState();
+    if (!relayEvent || relayEvent.clientId === multiplayer.clientId) return;
+    if (relayEvent.id && relayEvent.id <= multiplayer.lastRemoteEventId) return;
+    multiplayer.lastRemoteEventId = relayEvent.id || multiplayer.lastRemoteEventId;
+    if (relayEvent.snapshot) {
+        applyMultiplayerSnapshot(relayEvent.snapshot);
+    }
+    multiplayer.status = `Synced event ${relayEvent.id || ''}`.trim();
+    renderMultiplayerStatus();
+}
+
+async function connectMultiplayerRoom() {
+    const multiplayer = getMultiplayerState();
+    const roomInput = document.getElementById('multiplayer-room-input');
+    const sideSelect = document.getElementById('multiplayer-side-select');
+    const endpointInput = document.getElementById('multiplayer-endpoint-input');
+    multiplayer.room = normalizeRoomCode(roomInput?.value || multiplayer.room);
+    multiplayer.side = sideSelect?.value || multiplayer.side || 'observer';
+    multiplayer.endpoint = (endpointInput?.value || multiplayer.endpoint || 'http://127.0.0.1:8795').replace(/\/$/, '');
+    multiplayer.status = 'Connecting...';
+    renderMultiplayerStatus();
+
+    await postMultiplayerPayload('/rooms', { room: multiplayer.room, clientId: multiplayer.clientId, side: multiplayer.side });
+    if (multiplayer.eventSource) {
+        multiplayer.eventSource.close();
+    }
+    const eventSource = new EventSource(`${multiplayer.endpoint}/events?room=${encodeURIComponent(multiplayer.room)}&clientId=${encodeURIComponent(multiplayer.clientId)}`);
+    multiplayer.eventSource = eventSource;
+    multiplayer.connected = true;
+    multiplayer.status = `Room ${multiplayer.room} (${multiplayer.side})`;
+
+    eventSource.addEventListener('hello', () => {
+        multiplayer.status = `Room ${multiplayer.room} connected`;
+        renderMultiplayerStatus();
+    });
+    eventSource.addEventListener('game-event', event => {
+        try {
+            handleMultiplayerRelayEvent(JSON.parse(event.data));
+        } catch (error) {
+            multiplayer.status = `Bad relay event: ${error.message}`;
+            renderMultiplayerStatus();
+        }
+    });
+    eventSource.onerror = () => {
+        multiplayer.status = 'Relay disconnected';
+        renderMultiplayerStatus();
+    };
+
+    renderMultiplayerStatus();
+    systemLog(`Multiplayer connected to room ${multiplayer.room} as ${multiplayer.side}.`);
+}
+
+function disconnectMultiplayerRoom() {
+    const multiplayer = getMultiplayerState();
+    if (multiplayer.eventSource) {
+        multiplayer.eventSource.close();
+        multiplayer.eventSource = null;
+    }
+    multiplayer.connected = false;
+    multiplayer.status = 'Offline';
+    renderMultiplayerStatus();
+    systemLog('Multiplayer disconnected.');
+}
+
+function toggleMultiplayerRoom() {
+    const multiplayer = getMultiplayerState();
+    if (multiplayer.connected) {
+        disconnectMultiplayerRoom();
+        return;
+    }
+    connectMultiplayerRoom().catch(error => {
+        multiplayer.connected = false;
+        multiplayer.status = `Connect failed: ${error.message}`;
+        renderMultiplayerStatus();
+    });
+}
+
+function renderMultiplayerStatus() {
+    const multiplayer = getMultiplayerState();
+    const roomInput = document.getElementById('multiplayer-room-input');
+    const sideSelect = document.getElementById('multiplayer-side-select');
+    const endpointInput = document.getElementById('multiplayer-endpoint-input');
+    const connectBtn = document.getElementById('multiplayer-connect-btn');
+    const status = document.getElementById('multiplayer-status');
+    if (roomInput) roomInput.value = multiplayer.room || roomInput.value || 'TEST';
+    if (sideSelect) sideSelect.value = multiplayer.side || 'observer';
+    if (endpointInput) endpointInput.value = multiplayer.endpoint || 'http://127.0.0.1:8795';
+    if (connectBtn) {
+        connectBtn.textContent = multiplayer.connected ? 'Disconnect Room' : 'Connect Room';
+        connectBtn.classList.toggle('active', multiplayer.connected);
+    }
+    if (status) status.textContent = multiplayer.status || 'Offline';
+}
 
     </script>
 
@@ -6992,13 +7251,15 @@ function applyCoachChoice() {
 // ========================================
 
 function render() {
+    const applyingRemote = !!gameState.multiplayer?.applyingRemote;
     renderField();
     renderPitchActionPanel();
     renderHand();
     renderMarket();
     renderUI();
+    renderMultiplayerStatus();
     renderCoachPanel();
-    scheduleHiddenCoachStep();
+    if (!applyingRemote) scheduleHiddenCoachStep();
 }
 
 function renderField() {
@@ -8243,6 +8504,7 @@ function renderUI() {
 // ========================================
 
 function initGame() {
+    const multiplayerBeforeReset = gameState.multiplayer;
     gameState.undoHistory = [];
     gameState.gameLog = ['Game started! Draw your cards and make your move!'];
     gameState.gameEvents = [];
@@ -8324,6 +8586,7 @@ function initGame() {
     gameState.goalKickShootingTeam = null;
     gameState.goalKickDefendingTeam = null;
     gameState.coachOptions = [];
+    gameState.multiplayer = multiplayerBeforeReset;
     const coachPrompt = document.getElementById('coach-prompt');
     const coachResponse = document.getElementById('coach-response');
     if (coachPrompt) coachPrompt.value = '';
@@ -8367,6 +8630,10 @@ document.getElementById('undo-plan-btn').addEventListener('click', () => {
 
 document.getElementById('download-log-btn').addEventListener('click', () => {
     downloadGameLog();
+});
+
+document.getElementById('multiplayer-connect-btn').addEventListener('click', () => {
+    toggleMultiplayerRoom();
 });
 
 document.getElementById('coach-generate-btn').addEventListener('click', () => {

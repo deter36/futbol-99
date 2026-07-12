@@ -78,6 +78,20 @@ http://127.0.0.1:8795
 
 This is a lightweight trust-based playtest relay. It broadcasts game-state snapshots after logged play events so the other browser can follow each committed step, but it is not a secure hidden-information server.
 
+To test with friends over the internet, deploy `multiplayer-server.js` as a Render Web Service:
+
+- Service type: `Web Service`
+- Runtime: `Node`
+- Build command: `npm install`
+- Start command: `npm start`
+- Health check path: `/health`
+
+The included `render.yaml` has those settings. After Render deploys, copy the public Render URL into the game's relay URL field, for example:
+
+```text
+https://futbol-99-relay.onrender.com
+```
+
 ## Source
 
 - `index.html` is the runnable working copy.

@@ -1,0 +1,14 @@
+{
+  "name": "futbol-99",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Futbol '99 tactical soccer card game prototype and multiplayer relay.",
+  "scripts": {
+    "start": "node multiplayer-server.js",
+    "dev": "node dev-server.js",
+    "coach": "node coach-server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

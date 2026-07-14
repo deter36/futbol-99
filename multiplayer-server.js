@@ -67,7 +67,7 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    if (req.method === 'GET' && url.pathname === '/health') {
+    if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/health' || url.pathname === '/health/')) {
         sendJson(res, 200, { ok: true, rooms: rooms.size });
         return;
     }
